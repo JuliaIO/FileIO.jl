@@ -1,9 +1,14 @@
 module FileIO
-import Base: read, write 
+import Base: read, write, (==)
 # package code goes here
+
+
 immutable File{Ending}
 	abspath::UTF8String
 end
+
+(==)(a::File, b::File) = a.abspath == b.abspath
+ending{Ending}(::File{Ending}) = Ending
 function File(file)
 	@assert !isdir(file) "file string refers to a path, not a file. Path: $file"
 	file 	= abspath(file)
@@ -23,5 +28,8 @@ write{Ending}(f::File{Ending}; options...) = error("no exporter defined for file
 importall MeshIO
 importall ImageIO
 
+export ending
+export File
+export @file_str
 
 end # module
