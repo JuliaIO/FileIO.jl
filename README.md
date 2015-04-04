@@ -11,6 +11,7 @@ read(file"test.obj") # -> Mesh
 read(file"test.csv") # -> dataframe
 ```
 So far only Image is supported.
+
 It is structured the following way:
 There are three levels of abstraction, first FileIO, defining the file macro etc, then a meta package for a certain class of file, e.g. Images or Meshes. This meta package defines the Julia datatype (e.g. Mesh, Image) and organizes the importer libraries. This is also a good place to define IO library independant tests for different file formats.
 Then on the last level, there are the low-level importer libraries, which do the actual IO. 
