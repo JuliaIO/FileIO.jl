@@ -26,6 +26,7 @@ read(file"test.jpg") # takes a little longer as it needs to load the IO library
 read(file"test.jpg") # should be fast
 read(File("documents", "images", "myimage.jpg") # automatic joinpath via File constructor
 ```
-Please open issues if things are not clear. I'm a little lazy with documentations and much rather produce them on demand.
+Please open issues if things are not clear or you find flaws in the concept/implementation. 
+I'm a little lazy with documentations and much rather produce them on demand.
 If you're interested in working on this infrastructure I'll be pleased to add you to the group JuliaIO.
 
