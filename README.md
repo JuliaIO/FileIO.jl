@@ -1,6 +1,8 @@
 # FileIO
 
 [![Build Status](https://travis-ci.org/SimonDanisch/FileIO.jl.svg?branch=master)](https://travis-ci.org/SimonDanisch/FileIO.jl)
+All Packages in JuliaIO are not registered yet. Please add via `Pkg.clone("git-url").
+
 
 Meta package for FileIO. 
 Purpose is to open a file and return the respective Julia object, without doing any research on how to open the file.
