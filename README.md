@@ -8,7 +8,7 @@ Purpose is to open a file and return the respective Julia object, without doing 
 
 read(file"test.jpg") # -> Image
 read(file"test.obj") # -> Mesh
-read(file"csv") # -> dataframe
+read(file"test.csv") # -> dataframe
 ```
 So far only Image is supported.
 It is structured the following way:
