@@ -3,22 +3,28 @@
 [![Build Status](https://travis-ci.org/SimonDanisch/FileIO.jl.svg?branch=master)](https://travis-ci.org/SimonDanisch/FileIO.jl)
 
 Meta package for FileIO. 
-It follows the following principle:
-FileIO defines the abstract interface for reading a file:
+Purpose is to open a file and return the respective Julia object, without doing any research on how to open the file.
 ```Julia
-immutable File{Ending}
-	abspath::UTF8String
-end
 
-macro file_str(path::AbstractString)
-	File(path)
-end
-read{Ending}(f::File{Ending}; options...)  = error("no importer defined for file ending $T in path $(f.abspath), with options: $options")
-write{Ending}(f::File{Ending}; options...) = error("no exporter defined for file ending $T in path $(f.abspath), with options: $options")
+read(file"test.jpg") # -> Image
+read(file"test.obj") # -> Mesh
+read(file"csv") # -> dataframe
 ```
-It includes all domain specific IO packages, e.g. ImageIO. E.g. ImageIO defines the type system for the files, and also tests can be defined for the different files, independant from the actual IO library.
-It than includes all libraries, which can read/write the specific files.
-Preferable via Mike Innes [Requires](https://github.com/one-more-minute/Requires.jl) package, so that it doesn't introduce extra load time if not needed.
+So far only Image is supported.
+It is structured the following way:
+There are three levels of abstraction, first FileIO, defining the file macro etc, then a meta package for a certain class of file, e.g. Images or Meshes. This meta package defines the Julia datatype (e.g. Mesh, Image) and organizes the importer libraries. This is also a good place to define IO library independant tests for different file formats.
+Then on the last level, there are the low-level importer libraries, which do the actual IO. 
+They're included via Mike Innes [Requires](https://github.com/one-more-minute/Requires.jl) package, so that it doesn't introduce extra load time if not needed. This way, using FileIO without reading/writing anything should have short load times.
 
-All the low level IO packages, that do the actual reading, should implement the read/write methods, for the file ending they support. 
+As an implementation example please look at FileIO -> ImageIO -> ImageMagick.
+This should already somewhat work as a proof of concept.
+Try:
+```Julia
+using FileIO # should be very fast, thanks to Mike Innes Requires package
+read(file"test.jpg") # takes a little longer as it needs to load the IO library
+read(file"test.jpg") # should be fast
+read(File("documents", "images", "myimage.jpg") # automatic joinpath via File constructor
+```
+Please open issues if things are not clear. I'm a little lazy with documentations and much rather produce them on demand.
+If you're interested in working on this infrastructure I'll be pleased to add you to the group JuliaIO.
 
