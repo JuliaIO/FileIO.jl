@@ -5,10 +5,10 @@
 Meta package for FileIO. 
 Purpose is to open a file and return the respective Julia object, without doing any research on how to open the file.
 ```Julia
-
-read(file"test.jpg") # -> Image
+f = file"test.jpg" # -> File{:jpg}
+read(f) # -> Image
 read(file"test.obj") # -> Mesh
-read(file"test.csv") # -> dataframe
+read(file"test.csv") # -> DataFrame
 ```
 So far only Image is supported.
 
