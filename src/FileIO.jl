@@ -14,10 +14,10 @@ immutable File{Ending}
 end
 
 function File(file)
-	@assert !isdir(file) "file string refers to a path, not a file. Path: $file"
+	@assert isfile(file) "file string doesn't refer to a file. Path: $file"
 	file = abspath(file)
 	_, ending = splitext(file)
-	File{symbol(ending[2:end])}(file)
+	File{symbol(lowercase(ending[2:end]))}(file)
 end
 macro file_str(path::AbstractString)
 	File(path)
