@@ -33,6 +33,11 @@ readall(x::File)    = readbytes(abspath(x))
 read{Ending}(f::File{Ending}; options...)  = error("no importer defined for file ending $T in path $(f.abspath), with options: $options")
 write{Ending}(f::File{Ending}; options...) = error("no exporter defined for file ending $T in path $(f.abspath), with options: $options")
 
+readformats{T}(backend::Val{T}) = error("Read backend $T not found.")
+writeformats{T}(backend::Val{T}) = error("Write backend $T not found.")
+
+export readformats
+export writeformats
 
 export ending
 export File
