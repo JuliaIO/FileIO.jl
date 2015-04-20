@@ -1,48 +1,39 @@
-
-
-import Base: read
-import Base: write
-import Base: (==)
-import Base: open
-import Base: abspath
-import Base: readbytes
-import Base: readall
-# package code goes here
-
-
+# Type for file representation
 immutable File{Ending}
 	abspath::UTF8String
 end
 
-function File(file)
-	@assert !isdir(file) "file string refers to a path, not a file. Path: $file"
-	file 	= abspath(file)
-	path 	= dirname(file)
-	name 	= file[length(path):end]
-	ending 	= rsearch(name, ".")
-	ending  = isempty(ending) ? "" : name[first(ending)+1:end]
-	File{symbol(ending)}(file)
+# Construct File from path string
+function File(file::AbstractString)
+	@assert isfile(file) "file string doesn't refer to a file. Path: $file"
+
+	filepath = abspath(file)
+	_, ending = splitext(filepath)
+
+	File{symbol(lowercase(ending[2:end]))}(filepath)
 end
+
+# Construct File from several strings
+File(folders...) = File(joinpath(folders...))
+
+# Macro for file construction using:
+#   file"example.ex"
 macro file_str(path::AbstractString)
 	File(path)
 end
-File(folders...) = File(joinpath(folders...))
+
+# Functions for File manipulation
 ending{Ending}(::File{Ending}) = Ending
+abspath(x::File)       = x.abspath
 (==)(a::File, b::File) = a.abspath == b.abspath
-open(x::File)       = open(abspath(x))
-abspath(x::File)    = x.abspath
-readbytes(x::File)  = readbytes(abspath(x))
-readall(x::File)    = readbytes(abspath(x))
+open(x::File)          = open(abspath(x))
+readbytes(x::File)     = readbytes(abspath(x))
+readall(x::File)       = readbytes(abspath(x))
 
-read{Ending}(f::File{Ending}; options...)  = error("no importer defined for file ending $Ending in path $(f.abspath), with options: $options")
-write{Ending}(f::File{Ending}; options...) = error("no exporter defined for file ending $Ending in path $(f.abspath), with options: $options")
-
-readformats{T}(backend::Val{T}) = error("Read backend $T not found.")
-writeformats{T}(backend::Val{T}) = error("Write backend $T not found.")
-
-export readformats
-export writeformats
-
-export ending
-export File
-export @file_str
+# Fallback functions
+# Will be executed if read/write is not defined for this kind of file
+# or if there is no defined backend
+read{Ending}(f::File{Ending}; options...)  = error("no importer defined for file ending $T in path $(f.abspath), with options: $options")
+write{Ending}(f::File{Ending}; options...) = error("no exporter defined for file ending $T in path $(f.abspath), with options: $options")
+readformats{T}(backend::Val{T})  = error("Read backend $T not found.")
+writeformats{T}(backend::Val{T}) = error("Write backend $T not found.")  
