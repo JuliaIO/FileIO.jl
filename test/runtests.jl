@@ -1,8 +1,11 @@
 using FileIO
 using Base.Test
 
-# write your own tests here
-test_file = File("test.jpg")
-@test file"test.jpg" == test_file
-@test test_file.abspath == Pkg.dir("FileIO", "test", "test.jpg")
-@test ending(test_file) == :jpg
+test_file = File("test.txt")
+
+@test file"test.txt" == test_file
+@test test_file.abspath  === Pkg.dir("FileIO", "test", "test.txt")
+@test abspath(test_file) === test_file.abspath
+@test ending(test_file)  === :txt
+
+@test_throws file"inexistent_file.txt"
