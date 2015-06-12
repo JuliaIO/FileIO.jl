@@ -1,5 +1,3 @@
-module FileIOTests
-
 using FileIO
 using FactCheck
 
@@ -12,12 +10,7 @@ facts("File Creation") do
         @fact ending(test_file)  => :txt
     end
 
-    context("Inexistent file")
-        @fact_throws file"inexistent_file.txt"
-    end
 end
 
-# Remove comment to make Travis fail when tests fail:
-# FactCheck.exitstatus()
-
-end #module
+# make Travis fail when tests fail:
+FactCheck.exitstatus()
