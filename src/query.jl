@@ -32,6 +32,8 @@ For example:
 
     add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
     add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
+
+Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """ ->
 function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,AbstractVector,ByteString), extension)
     m = canonicalize_magic(magic)
