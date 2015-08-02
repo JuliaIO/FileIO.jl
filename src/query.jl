@@ -27,13 +27,13 @@ const sym2info = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
 const magic_func = Array(Pair, 0)    # for formats with complex magic #s
 
 @doc """
-`addformat(fmt, magic, extention)` registers a new `DataFormat`.
+`add_format(fmt, magic, extention)` registers a new `DataFormat`.
 For example:
 
-    addformat(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
-    addformat(format"NRRD", "NRRD", [".nrrd",".nhdr"])
+    add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
+    add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
 """ ->
-function addformat{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,AbstractVector,ByteString), extension)
+function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,AbstractVector,ByteString), extension)
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
     isempty(rng) || error("magic bytes ", m, " are already registered")
@@ -46,7 +46,7 @@ end
 
 # For when "magic" is supplied as a function (see the HDF5 example in
 # registry.jl)
-function addformat{sym}(fmt::Type{DataFormat{sym}}, magic, extension)
+function add_format{sym}(fmt::Type{DataFormat{sym}}, magic, extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     push!(magic_func, Pair(magic,sym))  # magic=>sym in 0.4
     sym2info[sym] = (magic, extension)
@@ -55,9 +55,9 @@ function addformat{sym}(fmt::Type{DataFormat{sym}}, magic, extension)
 end
 
 @doc """
-`delformat(fmt::DataFormat)` deletes `fmt` from the format registry.
+`del_format(fmt::DataFormat)` deletes `fmt` from the format registry.
 """ ->
-function delformat{sym}(fmt::Type{DataFormat{sym}})
+function del_format{sym}(fmt::Type{DataFormat{sym}})
     magic, extension = sym2info[sym]
     rng = searchsorted(magic_list, magic, lt=magic_cmp)
     @assert length(rng) == 1
@@ -134,6 +134,8 @@ immutable File{F<:DataFormat} <: Formatted{F}
 end
 File(fmt::DataFormat, filename) = File{fmt}(filename)
 
+Base.open(file::File, args...) = open(filename(file), args...)
+
 @doc """
 `filename(file)` returns the filename associated with `File` `file`.
 """ ->
@@ -152,6 +154,9 @@ end
 Stream(fmt::DataFormat, io::IO) = Stream{typeof(fmt),typeof(io)}(io, Nullable{UTF8String}())
 Stream(fmt::DataFormat, io::IO, filename) = Stream{typeof(fmt),typeof(io)}(io,utf8(filename))
 
+@doc "`stream(s)` returns the stream associated with `Stream` `s`" ->
+stream(s::Stream) = s.io
+
 @doc """
 `filename(stream)` returns a nullable-string of the filename
 associated with `Stream` `stream`.""" ->
@@ -166,6 +171,15 @@ function file!{F}(strm::Stream{F})
     File{F}(get(f))
 end
 
+@doc "`magic(fmt)` returns the magic bytes of format `fmt`" ->
+magic{F<:DataFormat}(fmt::Type{F}) = UInt8[info(fmt)[1]...]
+
+@doc "`skipmagic(io, fmt)` sets the position of `io` to be just after the magic bytes" ->
+function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
+    magic, _ = sym2info[sym]
+    seek(io, length(magic))
+end
+
 unknown{F}(::File{F}) = unknown(F)
 unknown{F}(::Stream{F}) = unknown(F)
 
@@ -177,8 +191,9 @@ function query(filename::AbstractString)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
         len = lenmagic(sym)
-        if length(len) == 1 && all(x->x==0, len)
+        if (length(len) == 1 && all(x->x==0, len)) || !isfile(filename)
             # If there are no magic bytes, trust the extension
+            # Also, if we're about to create the file, it won't exist yet
             return File{DataFormat{sym}}(filename)
         end
         if any(x->x==0, len)

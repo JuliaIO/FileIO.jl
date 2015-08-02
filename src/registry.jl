@@ -1,13 +1,15 @@
 ### Simple cases
-addformat(format"JLD", "Julia data file (HDF5)", ".jld")
+add_format(format"JLD", "Julia data file (HDF5)", ".jld")
+add_loader(format"JLD", :JLD)
+add_saver(format"JLD", :JLD)
 
 # Image formats
-addformat(format"PBMText",   b"P1", ".pbm")
-addformat(format"PGMText",   b"P2", ".pgm")
-addformat(format"PPMText",   b"P3", ".ppm")
-addformat(format"PBMBinary", b"P4", ".pbm")
-addformat(format"PGMBinary", b"P5", ".pgm")
-addformat(format"PPMBinary", b"P6", ".ppm")
+add_format(format"PBMText",   b"P1", ".pbm")
+add_format(format"PGMText",   b"P2", ".pgm")
+add_format(format"PPMText",   b"P3", ".ppm")
+add_format(format"PBMBinary", b"P4", ".pbm")
+add_format(format"PGMBinary", b"P5", ".pgm")
+add_format(format"PPMBinary", b"P6", ".ppm")
 
 
 ### Complex cases
@@ -33,4 +35,6 @@ function detecthdf5(io)
     end
     false
 end
-addformat(format"HDF5", detecthdf5, [".h5", ".hdf5"])
+add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"])
+add_loader(format"HDF5", :HDF5)
+add_saver(format"HDF5", :HDF5)

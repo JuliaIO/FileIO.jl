@@ -21,18 +21,18 @@ try
         @fact unknown(format"CSV") --> false
         @fact unknown(format"UNKNOWN") --> true
 
-        addformat(format"CSV", UInt8[], ".csv")
+        add_format(format"CSV", UInt8[], ".csv")
         @fact info(format"CSV") --> ((), ".csv")
         @fact_throws info(format"OOPS")
         @fact FileIO.ext2sym[".csv"] --> :CSV
         @fact FileIO.magic_list --> [Pair((), :CSV)]
-        delformat(format"CSV")
+        del_format(format"CSV")
         @fact isempty(FileIO.ext2sym) --> true
         @fact isempty(FileIO.magic_list) --> true
         @fact isempty(FileIO.sym2info) --> true
         @fact_throws info(format"CSV")
 
-        addformat(format"JUNK", "JUNK", [".jnk",".junk"])
+        add_format(format"JUNK", "JUNK", [".jnk",".junk"])
         @fact info(format"JUNK") --> (tuple(b"JUNK"...), [".jnk",".junk"])
         @fact FileIO.ext2sym[".jnk"]  --> :JUNK
         @fact FileIO.ext2sym[".junk"] --> :JUNK
@@ -74,7 +74,7 @@ try
         rm(fn)
 
         # Format with no magic bytes
-        addformat(format"BAD", (), ".bad")
+        add_format(format"BAD", (), ".bad")
         fn = string(tempname(), ".bad")
         open(fn, "w") do file
             write(file, "Here's some data")
