@@ -1,6 +1,11 @@
 using FileIO
 using FactCheck
 
+if VERSION < v"0.4.0-dev"
+    using Compat
+    import FileIO.Pair
+end
+
 # Before we bork things, make a copy
 ext2sym = copy(FileIO.ext2sym)
 magic_list = copy(FileIO.magic_list)
@@ -20,7 +25,7 @@ try
         @fact info(format"CSV") --> ((), ".csv")
         @fact_throws info(format"OOPS")
         @fact FileIO.ext2sym[".csv"] --> :CSV
-        @fact FileIO.magic_list --> Pair[() => :CSV]
+        @fact FileIO.magic_list --> [Pair((), :CSV)]
         delformat(format"CSV")
         @fact isempty(FileIO.ext2sym) --> true
         @fact isempty(FileIO.magic_list) --> true
@@ -31,7 +36,7 @@ try
         @fact info(format"JUNK") --> (tuple(b"JUNK"...), [".jnk",".junk"])
         @fact FileIO.ext2sym[".jnk"]  --> :JUNK
         @fact FileIO.ext2sym[".junk"] --> :JUNK
-        @fact FileIO.magic_list --> Pair[(0x4a,0x55,0x4e,0x4b) => :JUNK]
+        @fact FileIO.magic_list --> [Pair((0x4a,0x55,0x4e,0x4b),:JUNK)]
     end
 
     facts("query") do

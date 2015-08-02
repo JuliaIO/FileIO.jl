@@ -33,12 +33,12 @@ For example:
     addformat(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
     addformat(format"NRRD", "NRRD", [".nrrd",".nhdr"])
 """ ->
-function addformat{sym}(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,ByteString}, extension)
+function addformat{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,AbstractVector,ByteString), extension)
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
     isempty(rng) || error("magic bytes ", m, " are already registered")
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
-    insert!(magic_list, first(rng), m=>sym)
+    insert!(magic_list, first(rng), Pair(m, sym))  # m=>sym in 0.4
     sym2info[sym] = (m, extension)
     add_extension(extension, sym)
     fmt
@@ -48,7 +48,7 @@ end
 # registry.jl)
 function addformat{sym}(fmt::Type{DataFormat{sym}}, magic, extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
-    push!(magic_func, magic=>sym)
+    push!(magic_func, Pair(magic,sym))  # magic=>sym in 0.4
     sym2info[sym] = (magic, extension)
     add_extension(extension, sym)
     fmt

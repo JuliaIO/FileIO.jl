@@ -1,5 +1,15 @@
 module FileIO
 
+if VERSION < v"0.4.0-dev"
+    using Docile, Compat
+    immutable Pair{A,B}
+        first::A
+        second::B
+    end
+    Base.first(p::Pair) = p.first
+    Base.last(p::Pair) = p.second
+end
+
 export DataFormat,
        File,
        Formatted,
