@@ -1,35 +1,104 @@
 # FileIO
 
-[![Build Status](https://travis-ci.org/SimonDanisch/FileIO.jl.svg?branch=master)](https://travis-ci.org/SimonDanisch/FileIO.jl)
+[![Build Status](https://travis-ci.org/JuliaIO/FileIO.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/FileIO.jl)
+
+FileIO aims to provide a common framework for detecting file formats
+and dispatching to appropriate readers/writers.  The two core
+functions in this package are called `load` and `save`, and offer
+high-level support for formatted files (in contrast with julia's
+low-level `read` and `write`).  To avoid name conflicts, packages that
+provide support for standard file formats through functions named
+`load` and `save` are encouraged to extend the definitions here.
+
+## Installation
 
 All Packages in JuliaIO are not registered yet. Please add via `Pkg.clone("git-url").
 
+## Usage
 
-Meta package for FileIO. 
-Purpose is to open a file and return the respective Julia object, without doing any research on how to open the file.
-```Julia
-f = file"test.jpg" # -> File{:jpg}
-read(f) # -> Image
-read(file"test.obj") # -> Mesh
-read(file"test.csv") # -> DataFrame
+If your format has been registered, it might be as simple as
+```jl
+using FileIO
+obj = load(filename)
 ```
-So far only Images are supported and MeshIO is on the horizon.
-
-It is structured the following way:
-There are three levels of abstraction, first FileIO, defining the file_str macro etc, then a meta package for a certain class of file, e.g. Images or Meshes. This meta package defines the Julia datatype (e.g. Mesh, Image) and organizes the importer libraries. This is also a good place to define IO library independant tests for different file formats.
-Then on the last level, there are the low-level importer libraries, which do the actual IO. 
-They're included via Mike Innes [Requires](https://github.com/one-more-minute/Requires.jl) package, so that it doesn't introduce extra load time if not needed. This way, using FileIO without reading/writing anything should have short load times.
-
-As an implementation example please look at FileIO -> ImageIO -> ImageMagick.
-This should already work as a proof of concept.
-Try:
-```Julia
-using FileIO # should be very fast, thanks to Mike Innes Requires package
-read(file"test.jpg") # takes a little longer as it needs to load the IO library
-read(file"test.jpg") # should be fast
-read(File("documents", "images", "myimage.jpg") # automatic joinpath via File constructor
+to read data from a formatted file.  Likewise, saving might be as simple as
 ```
-Please open issues if things are not clear or if you find flaws in the concept/implementation. 
+save(filename, obj)
+```
 
-If you're interested in working on this infrastructure I'll be pleased to add you to the group JuliaIO.
+If you just want to inspect a file to determine its format, then
+```jl
+file = query(filename)
+s = query(io)   # io is a stream
+```
+will return a `File` or `Stream` object that also encodes the detected
+file format.
 
+## Adding new formats
+
+You register a new format by calling `add_format(fmt, magic,
+extension)`.  `fmt` is a `DataFormat` type, most conveniently created
+as `format"IDENTIFIER"`.  `magic` typically contains the magic bytes
+that identify the format.  Here are some examples:
+
+```jl
+# A straightforward format
+add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
+
+# A format that uses only ASCII characters in its magic bytes, and can
+# have one of two possible file extensions
+add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
+
+# A format whose magic bytes might not be at the beginning of the file,
+# necessitating a custom function `detecthdf5` to find them
+add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"])
+
+# A fictitious format that, unfortunately, provides no magic
+# bytes. Here we have to place our faith in the file extension.
+add_format(format"DICEY", (), ".dcy")
+```
+
+You can also declare that certain formats require certain packages for
+I/O support:
+
+```jl
+add_loader(format"HDF5", :HDF5)
+add_saver(format"PNG", :ImageMagick)
+```
+These packages will be automatically loaded as needed.
+
+Users are encouraged to contribute these definitions to the
+`registry.jl` file of this package, so that information about file
+formats exists in a centralized location.
+
+## Implementing loaders/savers
+
+In your package, write code like the following:
+
+```jl
+using FileIO
+
+function load(f::File{format"PNG"})
+    io = open(f)
+    skipmagic(io, f)  # skip over the magic bytes
+    # Now do all the stuff you need to read a PNG file
+end
+
+# You can support streams and add keywords:
+function load(s::Stream{format"PNG"}; keywords...)
+    io = stream(s)  # io is positioned after the magic bytes
+    # Do the stuff to read a PNG file
+end
+
+function save(f::File{format"PNG"}, data)
+    io = open(f, "w")
+    # Don't forget to write the magic bytes!
+    write(io, magic(format"PNG"))
+    # Do the rest of the stuff needed to save in PNG format
+end
+```
+
+## Help
+
+You can get an API overview by typing `?FileIO` at the REPL prompt.
+Individual functions have their own help too, e.g., `?add_format`.
