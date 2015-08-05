@@ -23,8 +23,10 @@ try
 
         add_format(format"CSV", UInt8[], ".csv")
         @fact info(format"CSV") --> ((), ".csv")
+        add_format(format"FOO", (), ".foo")  # issue #17
         @fact_throws info(format"OOPS")
         @fact FileIO.ext2sym[".csv"] --> :CSV
+        del_format(format"FOO")
         @fact FileIO.magic_list --> [Pair((), :CSV)]
         del_format(format"CSV")
         @fact isempty(FileIO.ext2sym) --> true

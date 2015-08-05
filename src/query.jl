@@ -36,10 +36,12 @@ For example:
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """ ->
 function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,AbstractVector,ByteString), extension)
+    haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
-    isempty(rng) || error("magic bytes ", m, " are already registered")
-    haskey(sym2info, sym) && error("format ", fmt, " is already registered")
+    if !isempty(m) && !isempty(rng)
+        error("magic bytes ", m, " are already registered")
+    end
     insert!(magic_list, first(rng), Pair(m, sym))  # m=>sym in 0.4
     sym2info[sym] = (m, extension)
     add_extension(extension, sym)
@@ -62,6 +64,18 @@ end
 function del_format{sym}(fmt::Type{DataFormat{sym}})
     magic, extension = sym2info[sym]
     rng = searchsorted(magic_list, magic, lt=magic_cmp)
+    if length(magic) == 0
+        fullrng = rng
+        found = false
+        for idx in fullrng
+            if last(magic_list[idx]) == sym
+                rng = idx:idx
+                found = true
+                break
+            end
+        end
+        found || error("format ", sym, " not found")
+    end
     @assert length(rng) == 1
     deleteat!(magic_list, first(rng))
     delete!(sym2info, sym)
