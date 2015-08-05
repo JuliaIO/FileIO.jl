@@ -43,10 +43,10 @@ the magic bytes are essential.
 - `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
 """ ->
-function load(s::Union(AbstractString,IO); options...)
+function load(s::Union(AbstractString,IO), args...; options...)
     q = query(s)
     check_loader(q)
-    load(q; options...)
+    load(q, args...; options...)
 end
 
 @doc """
