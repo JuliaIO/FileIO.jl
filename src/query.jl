@@ -150,8 +150,6 @@ immutable File{F<:DataFormat} <: Formatted{F}
 end
 File(fmt::DataFormat, filename) = File{fmt}(filename)
 
-Base.open(file::File, args...) = open(filename(file), args...)
-
 @doc """
 `filename(file)` returns the filename associated with `File` `file`.
 """ ->
@@ -168,7 +166,9 @@ immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
 end
 
 Stream(fmt::DataFormat, io::IO) = Stream{typeof(fmt),typeof(io)}(io, Nullable{UTF8String}())
-Stream(fmt::DataFormat, io::IO, filename) = Stream{typeof(fmt),typeof(io)}(io,utf8(filename))
+Stream(fmt::DataFormat, io::IO, filename::AbstractString) = Stream{typeof(fmt),typeof(io)}(io,utf8(filename))
+Stream(fmt::DataFormat, io::IO, filename) = Stream{typeof(fmt),typeof(io)}(io,filename)
+Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
 
 @doc "`stream(s)` returns the stream associated with `Stream` `s`" ->
 stream(s::Stream) = s.io
@@ -178,6 +178,9 @@ stream(s::Stream) = s.io
 associated with `Stream` `stream`.""" ->
 filename(s::Stream) = s.filename
 
+# Note this closes the stream. It's useful when you've opened
+# the file to check the magic bytes, but don't want to leave
+# a dangling stream.
 function file!{F}(strm::Stream{F})
     f = filename(strm)
     if isnull(f)
@@ -187,10 +190,39 @@ function file!{F}(strm::Stream{F})
     File{F}(get(f))
 end
 
+# Implement standard I/O operations for File and Stream
+@inline Base.open(file::File, args...) = Stream(file, open(filename(file), args...))
+Base.close(s::Stream) = close(stream(s))
+
+Base.position(s::Stream) = position(stream(s))
+Base.seek(s::Stream, offset::Integer) = (seek(stream(s), offset); s)
+Base.seekstart(s::Stream) = (seekstart(stream(s)); s)
+Base.seekend(s::Stream) = (seekend(stream(s)); s)
+Base.skip(s::Stream, offset::Integer) = (skip(stream(s), offset); s)
+Base.eof(s::Stream) = eof(stream(s))
+
+@inline Base.read(s::Stream, args...)  = read(stream(s), args...)
+Base.read!(s::Stream, array::Array) = read!(stream(s), array)
+@inline Base.write(s::Stream, args...) = write(stream(s), args...)
+# Note: we can't sensibly support the all keyword. If you need that,
+# call readbytes(stream(s), ...; all=value) manually
+Base.readbytes!(s::Stream, b) = readbytes!(stream(s), b)
+Base.readbytes!(s::Stream, b, nb) = readbytes!(stream(s), b, nb)
+Base.readbytes(s::Stream) = readbytes(stream(s))
+Base.readbytes(s::Stream, nb) = readbytes(stream(s), nb)
+Base.flush(s::Stream) = flush(stream(s))
+
+Base.isreadonly(s::Stream) = isreadonly(stream(s))
+Base.isopen(s::Stream) = isopen(stream(s))
+
 @doc "`magic(fmt)` returns the magic bytes of format `fmt`" ->
 magic{F<:DataFormat}(fmt::Type{F}) = UInt8[info(fmt)[1]...]
 
-@doc "`skipmagic(io, fmt)` sets the position of `io` to be just after the magic bytes" ->
+@doc """
+`skipmagic(s)` sets the position of `Stream` `s` to be just after the magic bytes.
+For a plain IO object, you can use `skipmagic(io, fmt)`.
+""" ->
+skipmagic{F}(s::Stream{F}) = (skipmagic(stream(s), F); s)
 function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
     magic, _ = sym2info[sym]
     seek(io, length(magic))

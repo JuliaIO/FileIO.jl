@@ -46,12 +46,17 @@ module Dummy
 
 using FileIO, Compat
 
+function FileIO.load(file::File{format"DUMMY"})
+    s = open(file)
+    skipmagic(s)
+    load(s)
+end
+
 function FileIO.load(s::Stream{format"DUMMY"})
-    io = stream(s)
     # We're already past the magic bytes
-    n = read(io, Int64)
+    n = read(s, Int64)
     out = Array(UInt8, n)
-    read!(io, out)
+    read!(s, out)
     out
 end
 
@@ -74,8 +79,12 @@ facts("Save") do
     fn = string(tempname(), ".dmy")
     FileIO.save(fn, a)
 
-    b = open(fn) do io
-        load(io)
+    b = FileIO.load(query(fn))
+    @fact a --> b
+
+    b = open(query(fn)) do io
+        skipmagic(io)
+        FileIO.load(io)
     end
     @fact a --> b
     rm(fn)
