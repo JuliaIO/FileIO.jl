@@ -18,8 +18,7 @@ const unknown_df = DataFormat{:UNKNOWN}
 @doc """
 `unknown(f)` returns true if the format of `f` is unknown.""" ->
 unknown(::Type{format"UNKNOWN"}) = true
-unknown{sym}(::DataFormat{sym}) = unknown(sym)
-unknown(::Any) = false
+unknown{sym}(::Type{DataFormat{sym}}) = false
 
 const ext2sym = Dict{ASCIIString,Union(Symbol,Vector{Symbol})}()
 const magic_list = Array(Pair, 0)    # sorted, see magic_cmp below
@@ -165,9 +164,9 @@ immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     filename::Nullable{UTF8String}
 end
 
-Stream(fmt::DataFormat, io::IO) = Stream{typeof(fmt),typeof(io)}(io, Nullable{UTF8String}())
-Stream(fmt::DataFormat, io::IO, filename::AbstractString) = Stream{typeof(fmt),typeof(io)}(io,utf8(filename))
-Stream(fmt::DataFormat, io::IO, filename) = Stream{typeof(fmt),typeof(io)}(io,filename)
+Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{UTF8String}())
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,utf8(filename))
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
 
 @doc "`stream(s)` returns the stream associated with `Stream` `s`" ->

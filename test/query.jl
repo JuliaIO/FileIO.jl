@@ -34,17 +34,38 @@ try
         @fact isempty(FileIO.sym2info) --> true
         @fact_throws info(format"CSV")
 
-        add_format(format"JUNK", "JUNK", [".jnk",".junk"])
-        @fact info(format"JUNK") --> (tuple(b"JUNK"...), [".jnk",".junk"])
+        add_format(format"JUNK", "JUNK", [".jnk",".junk",".JNK"])
+        @fact info(format"JUNK") --> (tuple(b"JUNK"...), [".jnk",".junk",".JNK"])
         @fact FileIO.ext2sym[".jnk"]  --> :JUNK
         @fact FileIO.ext2sym[".junk"] --> :JUNK
+        @fact FileIO.ext2sym[".JNK"]  --> :JUNK
         @fact FileIO.magic_list --> [Pair((0x4a,0x55,0x4e,0x4b),:JUNK)]
+        @fact_throws add_format(format"JUNK2", "JUNK", ".jnk2")  # magic bytes already registered
+    end
+
+    facts("streams") do
+        io = IOBuffer()
+        s = Stream(format"JUNK", io)
+        @fact typeof(s) --> Stream{DataFormat{:JUNK}, IOBuffer}
+        @fact isnull(filename(s)) --> true
+        @fact_throws FileIO.file!(s)
+        s = Stream(format"JUNK", io, "junk.jnk")
+        @fact get(filename(s)) --> "junk.jnk"
+        s = Stream(format"JUNK", io, Nullable("junk2.jnk"))
+        @fact get(filename(s)) --> "junk2.jnk"
     end
 
     facts("query") do
         # Streams
         io = IOBuffer()
         write(io, "Weird format")
+        seek(io, 0)
+        q = query(io)
+        @fact unknown(q) --> true
+
+        # Short "file"
+        truncate(io, 0)
+        write(io, "S")
         seek(io, 0)
         q = query(io)
         @fact unknown(q) --> true
@@ -92,8 +113,13 @@ try
         end
         @fact unknown(query(fn)) --> true
         rm(fn)
+
     end
+
+    del_format(format"JUNK")  # This triggers del_extension for multiple extensions
+
 finally
+    # Restore the registry
     empty!(FileIO.ext2sym)
     empty!(FileIO.magic_list)
     empty!(FileIO.sym2info)
