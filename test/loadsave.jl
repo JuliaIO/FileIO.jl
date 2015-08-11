@@ -29,6 +29,8 @@ try
         @fact load(joinpath("files", "file2.h5")) --> "HDF5"
         # JLD file saved with .jld extension
         @fact load(joinpath("files", "file.jld")) --> "JLD"
+
+        @fact_throws load("missing.fmt")
     end
 finally
     merge!(FileIO.sym2loader, sym2loader)
@@ -46,12 +48,17 @@ module Dummy
 
 using FileIO, Compat
 
+function FileIO.load(file::File{format"DUMMY"})
+    s = open(file)
+    skipmagic(s)
+    load(s)
+end
+
 function FileIO.load(s::Stream{format"DUMMY"})
-    io = stream(s)
     # We're already past the magic bytes
-    n = read(io, Int64)
+    n = read(s, Int64)
     out = Array(UInt8, n)
-    read!(io, out)
+    read!(s, out)
     out
 end
 
@@ -72,13 +79,37 @@ add_saver(format"DUMMY", :Dummy)
 facts("Save") do
     a = [0x01,0x02,0x03]
     fn = string(tempname(), ".dmy")
-    FileIO.save(fn, a)
+    save(fn, a)
 
-    b = open(fn) do io
-        load(io)
+    b = load(query(fn))
+    @fact a --> b
+
+    b = open(query(fn)) do s
+        skipmagic(s)
+        load(s)
     end
     @fact a --> b
+
+    # low-level I/O test
+    open(query(fn)) do s
+        @fact position(s) --> 0
+        skipmagic(s)
+        @fact position(s) --> length(magic(format"DUMMY"))
+        seek(s, 1)
+        @fact position(s) --> 1
+        seekstart(s)
+        @fact position(s) --> 0
+        seekend(s)
+        @fact eof(s) --> true
+        skip(s, -position(s)+1)
+        @fact position(s) --> 1
+        @fact isreadonly(s) --> true
+        @fact isopen(s) --> true
+        @fact readbytes(s, 2) --> b"UM"
+    end
     rm(fn)
+
+    @fact_throws save("missing.fmt", 5)
 end
 
 del_format(format"DUMMY")

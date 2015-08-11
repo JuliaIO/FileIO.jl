@@ -79,21 +79,25 @@ In your package, write code like the following:
 using FileIO
 
 function load(f::File{format"PNG"})
-    io = open(f)
-    skipmagic(io, f)  # skip over the magic bytes
-    # Now do all the stuff you need to read a PNG file
+    s = open(f)
+    skipmagic(s)  # skip over the magic bytes
+    # You can just call the method below...
+    load(s)
+    # ...or implement everything here instead
 end
 
 # You can support streams and add keywords:
 function load(s::Stream{format"PNG"}; keywords...)
-    io = stream(s)  # io is positioned after the magic bytes
+    # s is already positioned after the magic bytes
     # Do the stuff to read a PNG file
+    chunklength = read(s, UInt32)
+    ...
 end
 
 function save(f::File{format"PNG"}, data)
-    io = open(f, "w")
+    s = open(f, "w")
     # Don't forget to write the magic bytes!
-    write(io, magic(format"PNG"))
+    write(s, magic(format"PNG"))
     # Do the rest of the stuff needed to save in PNG format
 end
 ```
