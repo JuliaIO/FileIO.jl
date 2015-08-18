@@ -38,3 +38,20 @@ end
 add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"])
 add_loader(format"HDF5", :HDF5)
 add_saver(format"HDF5", :HDF5)
+
+
+
+FileIO.add_format(format"FRAG", (), ".frag")
+FileIO.add_format(format"VERT", (), ".vert")
+FileIO.add_format(format"GEOM", (), ".geom")
+FileIO.add_format(format"COMP", (), ".comp")
+
+FileIO.add_loader(format"FRAG", :GLAbstraction)
+FileIO.add_loader(format"VERT", :GLAbstraction)
+FileIO.add_loader(format"GEOM", :GLAbstraction)
+FileIO.add_loader(format"COMP", :GLAbstraction)
+
+FileIO.add_saver(format"FRAG", :GLAbstraction)
+FileIO.add_saver(format"VERT", :GLAbstraction)
+FileIO.add_saver(format"GEOM", :GLAbstraction)
+FileIO.add_saver(format"COMP", :GLAbstraction)
