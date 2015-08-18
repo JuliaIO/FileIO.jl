@@ -149,6 +149,11 @@ immutable File{F<:DataFormat} <: Formatted{F}
 end
 File(fmt::DataFormat, filename) = File{fmt}(filename)
 
+File(folders::AbstractString...) = query(joinpath(folders...))
+macro file_str(path::AbstractString)
+    :( query(path) )
+end
+
 @doc """
 `filename(file)` returns the filename associated with `File` `file`.
 """ ->
