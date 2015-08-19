@@ -35,6 +35,12 @@ s = query(io)   # io is a stream
 will return a `File` or `Stream` object that also encodes the detected
 file format.
 
+## Help & Quickstart
+
+You can get an API overview by typing `?FileIO` at the REPL prompt.
+Individual functions have their own help too, e.g., `?query`.
+
+
 ## Adding new formats
 
 You register a new format by calling `add_format(fmt, magic,
@@ -103,7 +109,23 @@ function save(f::File{format"PNG"}, data)
 end
 ```
 
-## Help
+## Issues and tricky/interesting cases
 
-You can get an API overview by typing `?FileIO` at the REPL prompt.
-Individual functions have their own help too, e.g., `?add_format`.
+**Issues**:
+1. Package A and package B can both load format FMT. They both define `FileIO.load(file::File{format"FMT"})`, in which case whichever package gets loaded last "wins."
+2. A is better at loading format FMT 80% of the time, but every once in a while A gets partway through the load and realizes it can't handle it. In that case, Package A would like to defer to package B.
+
+**Solution**: A and B should define the non-exported function `load_(file::File{format"FMT"})`, so that users (or A) can call it as `B.load_(file)`. Each package's `load` function should simply call `load_`.
+
+**Issue**:
+Package A is a low-level wrapper of some C library, and its `load` function for FMT returns a raw array. Package B sits on top of A and wraps the array in some fancy container. When the user says `load(file)` and `file` has format FMT, which return type should be chosen?
+
+**Solution**: It seems a fair assumption that if B is loaded, users probably want its extra features. However, without B loaded, it seems reasonable to choose A. Consequently, FileIO should register A (the lowest-level package) as the loader for FMT. When users say `using B`, assuming that B has the lines
+```
+using A, FileIO
+function FileIO.load(file::format"FMT")
+    obj = A.load_(file)
+    BWrapper(obj)
+end
+```
+then B's `load` function, because it will be defined second, will have precedence. 
