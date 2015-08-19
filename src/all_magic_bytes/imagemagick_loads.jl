@@ -170,18 +170,18 @@ magics_dict = Dict([magics[i, 1] => magics[i, 2] for i=1:size(magics, 1)])
 
 fs = open(Pkg.dir("FileIO", "src","imagemagick_registry.jl"), "w")
 for elem in readlist
-    format = string("format\"", elem, "\"")
     if haskey(magics_dict, elem)
+        format = string("format\"", elem, "\"")
+
         magic = magics_dict[elem]
         magic = hex2bytes(replace(string(magic), " ", ""))
         println(fs, "add_format(", format, ", ", string(magic), ", \".", lowercase(elem), "\")")
-    else # no magic bytes!?
-        println(fs, "add_format(", format, ", (), \".", lowercase(elem), "\")")
+        println(fs, "add_loader(", format, ", :ImageMagick)")
+        if elem in writelist
+            println(fs, "add_saver(", format, ", :ImageMagick)")
+        end
     end
-    println(fs, "add_loader(", format, ", :ImageMagick)")
-    if elem in writelist
-        println(fs, "add_saver(", format, ", :ImageMagick)")
-    end
+
 end
 #println(fs, "Union(\n$(join(readlist)))")
 #println(fs, "Union(\n$(join(writelist)))")
