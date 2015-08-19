@@ -49,3 +49,10 @@ add_saver(format"GLSLShader", :GLAbstraction)
 add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"])
 add_loader(format"NRRD", :NRRD)
 add_saver(format"NRRD", :NRRD)
+
+
+add_format(format"AndorSIF", "Andor Technology Multi-Channel File", ".sif")
+add_loader(format"AndorSIF", :AndorSIF)
+
+
+include("imagemagick_registry.jl")
