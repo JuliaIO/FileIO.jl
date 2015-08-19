@@ -41,17 +41,11 @@ add_saver(format"HDF5", :HDF5)
 
 
 
-FileIO.add_format(format"FRAG", (), ".frag")
-FileIO.add_format(format"VERT", (), ".vert")
-FileIO.add_format(format"GEOM", (), ".geom")
-FileIO.add_format(format"COMP", (), ".comp")
+add_format(format"GLSLShader", (), [".frag", ".vert", ".geom", ".comp"])
+add_loader(format"GLSLShader", :GLAbstraction)
+add_saver(format"GLSLShader", :GLAbstraction)
 
-FileIO.add_loader(format"FRAG", :GLAbstraction)
-FileIO.add_loader(format"VERT", :GLAbstraction)
-FileIO.add_loader(format"GEOM", :GLAbstraction)
-FileIO.add_loader(format"COMP", :GLAbstraction)
 
-FileIO.add_saver(format"FRAG", :GLAbstraction)
-FileIO.add_saver(format"VERT", :GLAbstraction)
-FileIO.add_saver(format"GEOM", :GLAbstraction)
-FileIO.add_saver(format"COMP", :GLAbstraction)
+add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"])
+add_loader(format"NRRD", :NRRD)
+add_saver(format"NRRD", :NRRD)
