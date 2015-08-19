@@ -87,6 +87,7 @@ end
 `DataFormat` `fmt`.""" ->
 Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
+
 canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
 canonicalize_magic(m::ByteString) = canonicalize_magic(m.data)
@@ -149,15 +150,17 @@ immutable File{F<:DataFormat} <: Formatted{F}
 end
 File(fmt::DataFormat, filename) = File{fmt}(filename)
 
-File(folders::AbstractString...) = query(joinpath(folders...))
-macro file_str(path::AbstractString)
-    :( query(path) )
-end
-
 @doc """
 `filename(file)` returns the filename associated with `File` `file`.
 """ ->
 filename(f::File) = f.filename
+
+@doc """
+`filename(file)` returns the file extension associated with `File` `file`.
+""" ->
+file_extension(f::File) = splitext(filename(f))[2]
+
+
 
 @doc """
 `Stream(fmt, io, [filename])` indicates that the stream `io` is
@@ -181,6 +184,14 @@ stream(s::Stream) = s.io
 `filename(stream)` returns a nullable-string of the filename
 associated with `Stream` `stream`.""" ->
 filename(s::Stream) = s.filename
+
+@doc """
+`filename(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
+""" ->
+function file_extension(f::Stream)
+    isnull(filename(f)) && return filename(f)
+    splitext(get(filename(f)))[2]
+end
 
 # Note this closes the stream. It's useful when you've opened
 # the file to check the magic bytes, but don't want to leave

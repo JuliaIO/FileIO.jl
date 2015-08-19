@@ -41,6 +41,7 @@ try
         @fact FileIO.ext2sym[".JNK"]  --> :JUNK
         @fact FileIO.magic_list --> [Pair((0x4a,0x55,0x4e,0x4b),:JUNK)]
         @fact_throws add_format(format"JUNK2", "JUNK", ".jnk2")  # magic bytes already registered
+
     end
 
     facts("streams") do
@@ -76,6 +77,7 @@ try
         q = query(io)
         @fact typeof(q) --> Stream{format"JUNK",typeof(io)}
         @fact unknown(q) --> false
+        @fact isnull(file_extension(q)) --> true
 
         # File with correct extension
         str = takebuf_string(io)
@@ -85,6 +87,8 @@ try
         end
         q = query(fn)
         @fact typeof(q) --> File{format"JUNK"}
+        @fact file_extension(q) --> ".jnk"
+
         rm(fn)
 
         # File with erroneous extension
@@ -94,6 +98,7 @@ try
         end
         q = query(fn)
         @fact typeof(q) --> File{format"JUNK"}
+        @fact file_extension(q) --> ".csv"
         rm(fn)
 
         # Format with no magic bytes
@@ -104,6 +109,7 @@ try
         end
         q = query(fn)
         @fact typeof(q) --> File{format"BAD"}
+        @fact file_extension(q) --> ".bad"
         rm(fn)
 
         # Unknown extension
