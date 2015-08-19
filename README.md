@@ -1,6 +1,7 @@
 # FileIO
 
 [![Build Status](https://travis-ci.org/JuliaIO/FileIO.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/FileIO.jl)
+[![Coverage Status](https://coveralls.io/repos/JuliaIO/FileIO.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaIO/FileIO.jl?branch=master)
 
 FileIO aims to provide a common framework for detecting file formats
 and dispatching to appropriate readers/writers.  The two core
