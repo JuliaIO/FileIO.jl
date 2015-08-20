@@ -59,6 +59,7 @@ function FileIO.load(s::Stream{format"DUMMY"})
     n = read(s, Int64)
     out = Array(UInt8, n)
     read!(s, out)
+    close(s)
     out
 end
 
