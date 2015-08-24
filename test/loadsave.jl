@@ -51,7 +51,9 @@ using FileIO, Compat
 function FileIO.load(file::File{format"DUMMY"})
     s = open(file)
     skipmagic(s)
-    load(s)
+    f = load(s)
+    close(s)
+    f
 end
 
 function FileIO.load(s::Stream{format"DUMMY"})
@@ -59,7 +61,6 @@ function FileIO.load(s::Stream{format"DUMMY"})
     n = read(s, Int64)
     out = Array(UInt8, n)
     read!(s, out)
-    close(s)
     out
 end
 
