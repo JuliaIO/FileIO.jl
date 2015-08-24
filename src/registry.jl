@@ -91,7 +91,7 @@ add_saver(format"INFO", :ImageMagick)
 add_format(format"JP2", UInt8[0x00,0x00,0x00,0x0c,0x6a,0x50,0x20,0x20], ".jp2")
 add_loader(format"JP2", :ImageMagick)
 add_saver(format"JP2", :ImageMagick)
-add_format(format"JPEG", UInt8[0xff,0xd8,0xff,0xe3], ".jpeg")
+add_format(format"JPEG", UInt8[0xff,0xd8,0xff],  [".jpeg", ".jpg", ".JPG"]) # 0xe1
 add_loader(format"JPEG", :ImageMagick)
 add_saver(format"JPEG", :ImageMagick)
 add_format(format"PCX", UInt8[0x0a,0x05,0x01,0x01], ".pcx")
@@ -125,3 +125,10 @@ add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43], ".wpg")
 add_loader(format"WPG", :ImageMagick)
 add_saver(format"WPG", :ImageMagick)
 
+
+
+# Mesh formats
+
+add_format(format"OBJ", (), ".obj")
+add_loader(format"OBJ", :WavefrontObj)
+add_saver(format"OBJ", :WavefrontObj)
