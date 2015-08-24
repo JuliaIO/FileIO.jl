@@ -156,7 +156,7 @@ File(fmt::DataFormat, filename) = File{fmt}(filename)
 filename(f::File) = f.filename
 
 @doc """
-`filename(file)` returns the file extension associated with `File` `file`.
+`file_extension(file)` returns the file extension associated with `File` `file`.
 """ ->
 file_extension(f::File) = splitext(filename(f))[2]
 
@@ -186,7 +186,7 @@ associated with `Stream` `stream`.""" ->
 filename(s::Stream) = s.filename
 
 @doc """
-`filename(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
+`file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
 """ ->
 function file_extension(f::Stream)
     isnull(filename(f)) && return filename(f)
