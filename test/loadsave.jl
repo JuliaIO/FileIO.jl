@@ -49,9 +49,10 @@ module Dummy
 using FileIO, Compat
 
 function FileIO.load(file::File{format"DUMMY"})
-    s = open(file)
-    skipmagic(s)
-    load(s)
+    open(file) do s
+        skipmagic(s)
+        load(s)
+    end
 end
 
 function FileIO.load(s::Stream{format"DUMMY"})
@@ -64,11 +65,11 @@ function FileIO.load(s::Stream{format"DUMMY"})
 end
 
 function FileIO.save(file::File{format"DUMMY"}, data)
-    open(file, "w") do io
-        write(io, magic(format"DUMMY"))  # Write the magic bytes
-        write(io, convert(Int64, length(data)))
+    open(file, "w") do s
+        write(s, magic(format"DUMMY"))  # Write the magic bytes
+        write(s, convert(Int64, length(data)))
         udata = convert(Vector{UInt8}, data)
-        write(io, udata)
+        write(s, udata)
     end
 end
 

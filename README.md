@@ -80,11 +80,12 @@ In your package, write code like the following:
 using FileIO
 
 function load(f::File{format"PNG"})
-    s = open(f)
-    skipmagic(s)  # skip over the magic bytes
-    # You can just call the method below...
-    load(s)
-    # ...or implement everything here instead
+    open(f) do s
+        skipmagic(s)  # skip over the magic bytes
+        # You can just call the method below...
+        ret = load(s)
+        # ...or implement everything here instead
+    end
 end
 
 # You can support streams and add keywords:
@@ -96,12 +97,19 @@ function load(s::Stream{format"PNG"}; keywords...)
 end
 
 function save(f::File{format"PNG"}, data)
-    s = open(f, "w")
-    # Don't forget to write the magic bytes!
-    write(s, magic(format"PNG"))
-    # Do the rest of the stuff needed to save in PNG format
+    open(f, "w") do s
+        # Don't forget to write the magic bytes!
+        write(s, magic(format"PNG"))
+        # Do the rest of the stuff needed to save in PNG format
+    end
 end
 ```
+
+Note that `load(::File)` and `save(::File)` should close any streams
+they open.  (If you use the `do` syntax, this happens for you
+automatically even if the code inside the `do` scope throws an error.)
+Conversely, `load(::Stream)` and `save(::Stream)` should not close the
+input stream.
 
 ## Help
 
