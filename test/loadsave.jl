@@ -48,12 +48,6 @@ module Dummy
 
 using FileIO, Compat
 
-function FileIO.load(file::File{format"DUMMY"})
-    open(file) do s
-        skipmagic(s)
-        load(s)
-    end
-end
 
 function FileIO.load(s::Stream{format"DUMMY"})
     # We're already past the magic bytes
