@@ -36,6 +36,7 @@ include("query.jl")
 include("loadsave.jl")
 include("registry.jl")
 
+
 @doc """
 - `load(filename)` loads the contents of a formatted file, trying to infer
 the format from `filename` and/or magic bytes in the file.
@@ -62,9 +63,16 @@ function save(s::Union(AbstractString,IO), data...; options...)
     save(q, data...; options...)
 end
 
+# default load for packages which only define load on streams
+load(fn::File, args...; options...) = open(fn) do s
+    skipmagic(s)
+    load(s, args...; options...)
+end
+
 # Fallbacks
 load{F}(f::Formatted{F}; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
 save{F}(f::Formatted{F}, data...; options...) = error("No save function defined for format ", F, " with filename ", filename(f))
+
 
 end # module
 
