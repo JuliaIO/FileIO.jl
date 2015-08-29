@@ -126,7 +126,6 @@ add_loader(format"WPG", :ImageMagick)
 add_saver(format"WPG", :ImageMagick)
 
 
-
 # Mesh formats
 
 add_format(format"OBJ", (), ".obj")
@@ -140,3 +139,7 @@ add_loader(format"PLY_ASCII", :MeshIO)
 add_loader(format"PLY_BINARY", :MeshIO)
 add_saver(format"PLY_ASCII", :MeshIO)
 add_saver(format"PLY_BINARY", :MeshIO)
+
+add_format(format"2DM", "MESH2D\n", ".2dm")
+add_loader(format"2DM", :MeshIO)
+add_saver(format"2DM", :MeshIO)
