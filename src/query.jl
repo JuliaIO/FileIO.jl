@@ -240,7 +240,9 @@ For a plain IO object, you can use `skipmagic(io, fmt)`.
 skipmagic{F}(s::Stream{F}) = (skipmagic(stream(s), F); s)
 function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
     magic, _ = sym2info[sym]
-    seek(io, length(magic))
+    if !isa(magic, Function)
+        seek(io, length(magic))
+    end
 end
 
 unknown{F}(::File{F}) = unknown(F)
