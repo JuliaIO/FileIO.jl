@@ -143,3 +143,30 @@ add_saver(format"PLY_BINARY", :MeshIO)
 add_format(format"2DM", "MESH2D\n", ".2dm")
 add_loader(format"2DM", :MeshIO)
 add_saver(format"2DM", :MeshIO)
+
+
+add_format(format"OFF", "OFF\n", ".off")
+add_loader(format"OFF", :MeshIO)
+add_saver(format"OFF", :MeshIO)
+
+function detect_stlbinary(io)
+    seekstart(io)
+    header = readbytes(io, 80)
+    header[1:6] == b"solid " && return false
+    number_of_triangle_blocks = read(io, Uint32)
+    size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16) #1 normal, 3 vertices in Float32 + attrib count, usually 0
+    skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(Uint16))
+    eof(io) && return false # should not end here
+    attrib_byte_count = read(io, Uint16) # read last attrib_byte
+    
+    attrib_byte_count != zero(Uint16) && return false # should be zero as not used
+    eof(io) && return true
+    false
+end
+
+add_format(format"STL_ASCII", "solid ", ".stl")
+add_format(format"STL_BINARY", detect_stlbinary, ".stl")
+add_loader(format"STL_ASCII", :MeshIO)
+add_saver(format"STL_BINARY", :MeshIO)
+add_saver(format"STL_ASCII", :MeshIO)
+add_loader(format"STL_BINARY", :MeshIO)
