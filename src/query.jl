@@ -148,7 +148,7 @@ file.""" ->
 immutable File{F<:DataFormat} <: Formatted{F}
     filename::UTF8String
 end
-File(fmt::DataFormat, filename) = File{fmt}(filename)
+File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
 
 @doc """
 `filename(file)` returns the filename associated with `File` `file`.
@@ -256,7 +256,7 @@ function query(filename::AbstractString)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
         len = lenmagic(sym)
-        if length(len) == 1 && (all(x->x==0, len) || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
+        if length(len) == 1 && (((all(x->x==0, len) || !isfile(filename))) || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
         elseif !isfile(filename) && length(len) > 1
             error("no file for check of magic bytes and multiple extensions possible: $sym")
@@ -265,6 +265,7 @@ function query(filename::AbstractString)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
     end
+    !isfile(filename) && File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
     file!(query(open(filename), filename))
 end
