@@ -129,23 +129,23 @@ add_saver(format"WPG", :ImageMagick)
 # Mesh formats
 
 add_format(format"OBJ", (), ".obj")
-add_loader(format"OBJ", :WavefrontObj)
-add_saver(format"OBJ", :WavefrontObj)
+add_loader(format"OBJ", :MeshIO)
+add_saver(format"OBJ", :MeshIO)
 
-add_format(format"PLY_ASCII", b"ply\nformat ascii 1.0\n", ".ply")
-add_format(format"PLY_BINARY", b"ply\nformat binary_little_endian 1.0\n", ".ply")
+add_format(format"PLY_ASCII", b"ply\nformat ascii 1.0", ".ply")
+add_format(format"PLY_BINARY", b"ply\nformat binary_little_endian 1.0", ".ply")
 
 add_loader(format"PLY_ASCII", :MeshIO)
 add_loader(format"PLY_BINARY", :MeshIO)
 add_saver(format"PLY_ASCII", :MeshIO)
 add_saver(format"PLY_BINARY", :MeshIO)
 
-add_format(format"2DM", "MESH2D\n", ".2dm")
+add_format(format"2DM", "MESH2D", ".2dm")
 add_loader(format"2DM", :MeshIO)
 add_saver(format"2DM", :MeshIO)
 
 
-add_format(format"OFF", "OFF\n", ".off")
+add_format(format"OFF", "OFF", ".off")
 add_loader(format"OFF", :MeshIO)
 add_saver(format"OFF", :MeshIO)
 
