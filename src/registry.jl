@@ -149,6 +149,16 @@ add_format(format"OFF", "OFF", ".off")
 add_loader(format"OFF", :MeshIO)
 add_saver(format"OFF", :MeshIO)
 
+function detect_stlascii(io)
+    position(io) != 0 && return false
+    seekend(io)
+    len = position(io)
+    seekstart(io)
+    len < 80 && return false
+    header = readbytes(io, 80) # skip header
+    seekstart(io)
+    return header[1:6] == b"solid " && !detect_stlbinary(io)
+end
 function detect_stlbinary(io)
     size_header = 80+sizeof(Uint32)
     size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16)
@@ -159,8 +169,7 @@ function detect_stlbinary(io)
     seekstart(io)
     len < size_header && return false
     
-    header = readbytes(io, 80)
-    header[1:6] == b"solid " && return false
+    skip(io, 80) # skip header
     number_of_triangle_blocks = read(io, Uint32)
      #1 normal, 3 vertices in Float32 + attrib count, usually 0
     len != (number_of_triangle_blocks*size_triangleblock)+size_header && return false
@@ -170,9 +179,8 @@ function detect_stlbinary(io)
     eof(io) && return true
     false
 end
-
-add_format(format"STL_ASCII", "solid ", ".stl")
-add_format(format"STL_BINARY", detect_stlbinary, ".stl")
+add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"])
+add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"])
 add_loader(format"STL_ASCII", :MeshIO)
 add_saver(format"STL_BINARY", :MeshIO)
 add_saver(format"STL_ASCII", :MeshIO)
