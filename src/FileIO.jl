@@ -65,11 +65,6 @@ function save(s::Union(AbstractString,IO), data...; options...)
     save(q, data...; options...)
 end
 
-# default load for packages which only define load on streams
-load(fn::File, args...; options...) = open(fn) do s
-    skipmagic(s)
-    load(s, args...; options...)
-end
 
 # Fallbacks
 load{F}(f::Formatted{F}; options...) = error("No load function defined for format ", F, " with filename ", filename(f))

@@ -115,7 +115,8 @@ add_saver(format"PSD", :ImageMagick)
 add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03], ".rgb")
 add_loader(format"RGB", :ImageMagick)
 add_saver(format"RGB", :ImageMagick)
-add_format(format"TIFF", UInt8[0x4d,0x4d,0x00,0x2b], ".tiff")
+add_format(format"TIFF", (), [".tiff", ".tif"]) # should really be a function!
+# wikipedia: TIFF files begin with either II or MM followed by 42 as a two-byte integer in little or big endian byte ordering. II is for Intel, which uses little endian byte ordering, so the magic number is 49 49 2A 00. MM is for Motorola, which uses big endian byte ordering, so the magic number is 4D 4D 00 2A.
 add_loader(format"TIFF", :ImageMagick)
 add_saver(format"TIFF", :ImageMagick)
 add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a], ".wmf")
