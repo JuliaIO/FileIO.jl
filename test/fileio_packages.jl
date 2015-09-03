@@ -1,7 +1,7 @@
 const all_packages = unique([values(FileIO.sym2loader)..., values(FileIO.sym2saver)...])
 
 for pkg in all_packages
-	if pkg != :ImageMagick && pkg != :GLAbstraction && pkg != :AndorSIF # temporary solution
+	if !(pkg in [:ImageMagick, :GLAbstraction, :AndorSIF, :NRRD, :MeshIO]) # temporary solution until they're registered.
 		context("Testing dependant packge: $pkg :") do
 			result = false
 			try
