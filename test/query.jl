@@ -112,6 +112,9 @@ try
         @fact file_extension(q) --> ".bad"
         rm(fn)
 
+        q = query( "some_non_existant_file.bad")
+        @fact typeof(q) --> File{format"BAD"}
+
         # Unknown extension
         fn = string("tempname", ".wrd")
         open(fn, "w") do file
@@ -119,6 +122,23 @@ try
         end
         @fact unknown(query(fn)) --> true
         rm(fn)
+
+        add_format(format"DOUBLE_1", "test1", ".double")
+        add_format(format"DOUBLE_2", "test2", ".double")
+
+        @fact_throws ErrorException query( "test.double")
+        fn = string(tempname(), ".double")
+        open(fn, "w") do file
+            write(file, "test1")
+        end
+        q = query(fn)
+        @fact typeof(q) --> File{format"DOUBLE_1"}
+        rm(fn)
+
+
+        add_format(format"MAGIC", "this so magic", ".mmm")
+        q = query( "some_non_existant_file.mmm")
+        @fact typeof(q) --> File{format"MAGIC"}
 
     end
 

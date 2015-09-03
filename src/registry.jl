@@ -115,7 +115,8 @@ add_saver(format"PSD", :ImageMagick)
 add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03], ".rgb")
 add_loader(format"RGB", :ImageMagick)
 add_saver(format"RGB", :ImageMagick)
-add_format(format"TIFF", UInt8[0x4d,0x4d,0x00,0x2b], ".tiff")
+add_format(format"TIFF", (), [".tiff", ".tif"]) # should really be a function!
+# wikipedia: TIFF files begin with either II or MM followed by 42 as a two-byte integer in little or big endian byte ordering. II is for Intel, which uses little endian byte ordering, so the magic number is 49 49 2A 00. MM is for Motorola, which uses big endian byte ordering, so the magic number is 4D 4D 00 2A.
 add_loader(format"TIFF", :ImageMagick)
 add_saver(format"TIFF", :ImageMagick)
 add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a], ".wmf")
@@ -129,17 +130,59 @@ add_saver(format"WPG", :ImageMagick)
 # Mesh formats
 
 add_format(format"OBJ", (), ".obj")
-add_loader(format"OBJ", :WavefrontObj)
-add_saver(format"OBJ", :WavefrontObj)
+add_loader(format"OBJ", :MeshIO)
+add_saver(format"OBJ", :MeshIO)
 
-add_format(format"PLY_ASCII", b"ply\nformat ascii 1.0\n", ".ply")
-add_format(format"PLY_BINARY", b"ply\nformat binary_little_endian 1.0\n", ".ply")
+add_format(format"PLY_ASCII", b"ply\nformat ascii 1.0", ".ply")
+add_format(format"PLY_BINARY", b"ply\nformat binary_little_endian 1.0", ".ply")
 
 add_loader(format"PLY_ASCII", :MeshIO)
 add_loader(format"PLY_BINARY", :MeshIO)
 add_saver(format"PLY_ASCII", :MeshIO)
 add_saver(format"PLY_BINARY", :MeshIO)
 
-add_format(format"2DM", "MESH2D\n", ".2dm")
+add_format(format"2DM", "MESH2D", ".2dm")
 add_loader(format"2DM", :MeshIO)
 add_saver(format"2DM", :MeshIO)
+
+
+add_format(format"OFF", "OFF", ".off")
+add_loader(format"OFF", :MeshIO)
+add_saver(format"OFF", :MeshIO)
+
+function detect_stlascii(io)
+    position(io) != 0 && return false
+    seekend(io)
+    len = position(io)
+    seekstart(io)
+    len < 80 && return false
+    header = readbytes(io, 80) # skip header
+    seekstart(io)
+    return header[1:6] == b"solid " && !detect_stlbinary(io)
+end
+function detect_stlbinary(io)
+    size_header = 80+sizeof(Uint32)
+    size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16)
+
+    position(io) != 0 && return false
+    seekend(io)
+    len = position(io)
+    seekstart(io)
+    len < size_header && return false
+    
+    skip(io, 80) # skip header
+    number_of_triangle_blocks = read(io, Uint32)
+     #1 normal, 3 vertices in Float32 + attrib count, usually 0
+    len != (number_of_triangle_blocks*size_triangleblock)+size_header && return false
+    skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(Uint16))
+    attrib_byte_count = read(io, Uint16) # read last attrib_byte
+    attrib_byte_count != zero(Uint16) && return false # should be zero as not used
+    eof(io) && return true
+    false
+end
+add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"])
+add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"])
+add_loader(format"STL_ASCII", :MeshIO)
+add_saver(format"STL_BINARY", :MeshIO)
+add_saver(format"STL_ASCII", :MeshIO)
+add_loader(format"STL_BINARY", :MeshIO)
