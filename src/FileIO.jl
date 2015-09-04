@@ -1,3 +1,5 @@
+VERSION >= v"0.4.0-dev+6641" && __precompile__()
+
 module FileIO
 
 if VERSION < v"0.4.0-dev"
