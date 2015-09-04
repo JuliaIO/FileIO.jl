@@ -90,11 +90,8 @@ Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
 canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
-function canonicalize_magic(m::ByteString)
-    @windows_only m = replace(m, "\n", "\r\n")
-    println(escape_string(m))
-    canonicalize_magic(m.data)
-end
+canonicalize_magic(m::ByteString) = canonicalize_magic(m.data)
+
 
 
 function add_extension(ext::ASCIIString, sym)
@@ -322,6 +319,7 @@ seekable(::Any) = false
 function iter_eq(A, B)
     length(A) == length(B) || return false
     for (a,b) in zip(A,B)
+        b == convert(eltype(B), '\r') && continue # this seems like the shadiest solution to deal with windows \r\n
         a == b || return false
     end
     true
