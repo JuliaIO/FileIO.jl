@@ -133,8 +133,8 @@ add_format(format"OBJ", (), ".obj")
 add_loader(format"OBJ", :MeshIO)
 add_saver(format"OBJ", :MeshIO)
 
-add_format(format"PLY_ASCII", b"ply\nformat ascii 1.0", ".ply")
-add_format(format"PLY_BINARY", b"ply\nformat binary_little_endian 1.0", ".ply")
+add_format(format"PLY_ASCII", "ply\nformat ascii 1.0", ".ply")
+add_format(format"PLY_BINARY", "ply\nformat binary_little_endian 1.0", ".ply")
 
 add_loader(format"PLY_ASCII", :MeshIO)
 add_loader(format"PLY_BINARY", :MeshIO)
