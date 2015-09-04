@@ -90,7 +90,12 @@ Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
 canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
-canonicalize_magic(m::ByteString) = canonicalize_magic(m.data)
+function canonicalize_magic(m::ByteString)
+    @windows_only m = replace(m, "\n", "\r\n")
+    println(escape_string(m))
+    canonicalize_magic(m.data)
+end
+
 
 function add_extension(ext::ASCIIString, sym)
     if haskey(ext2sym, ext)
