@@ -318,9 +318,13 @@ seekable(::Any) = false
 
 function iter_eq(A, B)
     length(A) == length(B) || return false
-    for (a,b) in zip(A,B)
-        b == convert(eltype(B), '\r') && continue # this seems like the shadiest solution to deal with windows \r\n
-        a == b || return false
+    i,j = 1,1
+    for _=1:length(A)
+        a=A[i]; b=B[j]
+        a == b && (i+=1; j+=1; continue)
+        a == '\r' && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
+        b == '\r' && (j+=1; continue) 
+        return false #now both must be unequal, and no \r windows excemption any more
     end
     true
 end
