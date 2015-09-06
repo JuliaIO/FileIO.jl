@@ -258,7 +258,7 @@ function query(filename::AbstractString)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
         len = lenmagic(sym)
-        if length(len) == 1 && (((all(x->x==0, len) || !isfile(filename))) || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
+        if length(len) == 1 && ((all(x->x==0, len) || !isfile(filename)) || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
         elseif !isfile(filename) && length(len) > 1
             error("no file for check of magic bytes and multiple extensions possible: $sym")
