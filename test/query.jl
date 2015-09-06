@@ -155,11 +155,17 @@ finally
     merge!(FileIO.sym2info, sym2info)
 end
 
-
+file_dir = joinpath(dirname(@__FILE__), "files")
 facts("STL detection") do 
-    file_dir = joinpath(dirname(@__FILE__), "files")
     q = query(joinpath(file_dir, "ascii.stl"))
     @fact typeof(q) --> File{format"STL_ASCII"}
     q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
     @fact typeof(q) --> File{format"STL_BINARY"}
+end
+
+facts("PLY detection") do 
+    q = query(joinpath(file_dir, "ascii.ply"))
+    @fact typeof(q) --> File{format"PLY_ASCII"}
+    q = query(joinpath(file_dir, "binary.ply"))
+    @fact typeof(q) --> File{format"PLY_BINARY"}
 end
