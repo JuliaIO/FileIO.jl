@@ -154,3 +154,12 @@ finally
     append!(FileIO.magic_list, magic_list)
     merge!(FileIO.sym2info, sym2info)
 end
+
+
+facts("STL detection") do 
+    file_dir = joinpath(dirname(@__FILE__), "files")
+    q = query(joinpath(file_dir, "ascii.stl"))
+    @fact typeof(q) --> File{format"STL_ASCII"}
+    q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
+    @fact typeof(q) --> File{format"STL_BINARY"}
+end
