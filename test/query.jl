@@ -162,7 +162,6 @@ facts("STL detection") do
     q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
     @fact typeof(q) --> File{format"STL_BINARY"}
 end
-
 facts("PLY detection") do 
     q = query(joinpath(file_dir, "ascii.ply"))
     @fact typeof(q) --> File{format"PLY_ASCII"}
