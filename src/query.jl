@@ -92,6 +92,8 @@ canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
 canonicalize_magic(m::ByteString) = canonicalize_magic(m.data)
 
+
+
 function add_extension(ext::ASCIIString, sym)
     if haskey(ext2sym, ext)
         v = ext2sym[ext]
@@ -148,7 +150,7 @@ file.""" ->
 immutable File{F<:DataFormat} <: Formatted{F}
     filename::UTF8String
 end
-File(fmt::DataFormat, filename) = File{fmt}(filename)
+File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
 
 @doc """
 `filename(file)` returns the filename associated with `File` `file`.
@@ -240,7 +242,9 @@ For a plain IO object, you can use `skipmagic(io, fmt)`.
 skipmagic{F}(s::Stream{F}) = (skipmagic(stream(s), F); s)
 function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
     magic, _ = sym2info[sym]
-    seek(io, length(magic))
+    if !isa(magic, Function)
+        seek(io, length(magic))
+    end
 end
 
 unknown{F}(::File{F}) = unknown(F)
@@ -263,6 +267,7 @@ function query(filename::AbstractString)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
     end
+    !isfile(filename) && File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
     file!(query(open(filename), filename))
 end
@@ -313,8 +318,13 @@ seekable(::Any) = false
 
 function iter_eq(A, B)
     length(A) == length(B) || return false
-    for (a,b) in zip(A,B)
-        a == b || return false
+    i,j = 1,1
+    for _=1:length(A)
+        a=A[i]; b=B[j]
+        a == b && (i+=1; j+=1; continue)
+        a == '\r' && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
+        b == '\r' && (j+=1; continue) 
+        return false #now both must be unequal, and no \r windows excemption any more
     end
     true
 end

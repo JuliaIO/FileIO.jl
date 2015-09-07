@@ -112,6 +112,9 @@ try
         @fact file_extension(q) --> ".bad"
         rm(fn)
 
+        q = query( "some_non_existant_file.bad")
+        @fact typeof(q) --> File{format"BAD"}
+
         # Unknown extension
         fn = string("tempname", ".wrd")
         open(fn, "w") do file
@@ -119,6 +122,23 @@ try
         end
         @fact unknown(query(fn)) --> true
         rm(fn)
+
+        add_format(format"DOUBLE_1", "test1", ".double")
+        add_format(format"DOUBLE_2", "test2", ".double")
+
+        @fact_throws ErrorException query( "test.double")
+        fn = string(tempname(), ".double")
+        open(fn, "w") do file
+            write(file, "test1")
+        end
+        q = query(fn)
+        @fact typeof(q) --> File{format"DOUBLE_1"}
+        rm(fn)
+
+
+        add_format(format"MAGIC", "this so magic", ".mmm")
+        q = query( "some_non_existant_file.mmm")
+        @fact typeof(q) --> File{format"MAGIC"}
 
     end
 
@@ -133,4 +153,18 @@ finally
     merge!(FileIO.ext2sym, ext2sym)
     append!(FileIO.magic_list, magic_list)
     merge!(FileIO.sym2info, sym2info)
+end
+
+file_dir = joinpath(dirname(@__FILE__), "files")
+facts("STL detection") do 
+    q = query(joinpath(file_dir, "ascii.stl"))
+    @fact typeof(q) --> File{format"STL_ASCII"}
+    q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
+    @fact typeof(q) --> File{format"STL_BINARY"}
+end
+facts("PLY detection") do 
+    q = query(joinpath(file_dir, "ascii.ply"))
+    @fact typeof(q) --> File{format"PLY_ASCII"}
+    q = query(joinpath(file_dir, "binary.ply"))
+    @fact typeof(q) --> File{format"PLY_BINARY"}
 end
