@@ -146,18 +146,22 @@ add_saver(format"HDF5", :HDF5)
 
 
 function detect_stlascii(io)
-    position(io) != 0 && return false
-    seekend(io)
-    len = position(io)
-    seekstart(io)
-    len < 80 && return false
-    header = readbytes(io, 80) # skip header
-    seekstart(io)
-    return header[1:6] == b"solid " && !detect_stlbinary(io)
+    try
+        position(io) != 0 && return false
+        seekend(io)
+        len = position(io)
+        seekstart(io)
+        len < 80 && return false
+        header = readbytes(io, 80) # skip header
+        seekstart(io)
+        header[1:6] == b"solid " && !detect_stlbinary(io)
+    finally
+        seekstart(io)
+    end
 end
 function detect_stlbinary(io)
-    size_header = 80+sizeof(Uint32)
-    size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16)
+    const size_header = 80+sizeof(Uint32)
+    const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16)
 
     position(io) != 0 && return false
     seekend(io)
@@ -181,3 +185,4 @@ add_loader(format"STL_ASCII", :MeshIO)
 add_saver(format"STL_BINARY", :MeshIO)
 add_saver(format"STL_ASCII", :MeshIO)
 add_loader(format"STL_BINARY", :MeshIO)
+
