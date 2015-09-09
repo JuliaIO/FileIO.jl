@@ -1,6 +1,7 @@
 # FileIO
 
 [![Build Status](https://travis-ci.org/JuliaIO/FileIO.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/FileIO.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/j02repoyo75mtyjn/branch/master?svg=true)](https://ci.appveyor.com/project/SimonDanisch/fileio-jl-t5dw5/branch/master)
 [![Coverage Status](https://coveralls.io/repos/JuliaIO/FileIO.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaIO/FileIO.jl?branch=master)
 
 FileIO aims to provide a common framework for detecting file formats
