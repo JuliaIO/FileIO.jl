@@ -162,11 +162,22 @@ try
         q = query(fn)
         @fact typeof(q) --> File{format"DOUBLE_MAGIC"}
         io = open(q)
+        @fact file_extension(q) --> ".dd2"
         skipmagic(io)
         @fact position(io) --> 3
         close(io)
+        open(fn, "w") do file
+            write(file, randstring(19)) # corrupt magic bytes
+        end
+        open(fn, "r") do file
+            @fact_throws skipmagic(file)
+        end
         rm(fn)
-
+        lene0 = length(FileIO.ext2sym)
+        lenm0 = length(FileIO.magic_list)
+        del_format(format"DOUBLE_MAGIC")
+        @fact lene0 - 1 --> length(FileIO.ext2sym)
+        @fact lenm0 - 2 --> length(FileIO.magic_list)
     end
 
     del_format(format"JUNK")  # This triggers del_extension for multiple extensions
@@ -188,12 +199,18 @@ facts("STL detection") do
     @fact typeof(q) --> File{format"STL_ASCII"}
     q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
     @fact typeof(q) --> File{format"STL_BINARY"}
+    open(q) do io 
+        @fact position(io) --> 0
+        skipmagic(io)
+        @fact position(io) --> 0 # no skipping for functions
+    end
 end
 facts("PLY detection") do 
     q = query(joinpath(file_dir, "ascii.ply"))
     @fact typeof(q) --> File{format"PLY_ASCII"}
     q = query(joinpath(file_dir, "binary.ply"))
     @fact typeof(q) --> File{format"PLY_BINARY"}
+
 end
 facts("Multiple Magic bytes") do 
     q = query(joinpath(file_dir, "magic1.tiff"))

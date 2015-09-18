@@ -86,7 +86,7 @@ function del_format{sym}(fmt::Type{DataFormat{sym}})
 end
 
 # Deletes mutliple magic bytes
-del_magic{T <: Tuple}(magic::Tuple{T, Vararg{T}}, sym) = for m in magic
+del_magic(magic::Tuple, sym) = for m in magic
     del_magic(m, sym)
 end
 # Deletes single magic bytes
