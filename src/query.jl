@@ -274,7 +274,7 @@ function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
 end
 skipmagic(io, magic::Function) = nothing
 skipmagic{N}(io, magic::NTuple{N,UInt8}) = seek(io, length(magic))
-function skipmagic{T <: Tuple}(io, magic::Tuple{T, Vararg{T}})
+function skipmagic(io, magic::Tuple)
     lengths = map(length, magic)
     all(x->lengths[1] == x, lengths) && return seek(io, lengths[1]) # it doesn't matter what magic bytes get skipped as they all have the same length
     magic = [magic...]
@@ -293,8 +293,8 @@ function skipmagic{T <: Tuple}(io, magic::Tuple{T, Vararg{T}})
     error("tried to skip magic bytes of an IO that does not contain the magic bytes of the format. IO: $io")
 end
 function magic_equal(magic, buffer)
-    for (i,elem) in m
-        buffer[i] != elem && false
+    for (i,elem) in enumerate(magic)
+        buffer[i] != elem && return false
     end
     true
 end
@@ -310,13 +310,13 @@ function query(filename::AbstractString)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
-        len = lenmagic(sym)
-        if length(len) == 1 && (all(x->x==0, len) || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
+        no_magic = !hasmagic(sym)
+        if lensym(sym) == 1 && (no_magic || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
-        elseif !isfile(filename) && length(len) > 1
+        elseif !isfile(filename) && lensym(sym) > 1
             error("no file for check of magic bytes and multiple extensions possible: $sym")
         end
-        if any(x->x==0, len)
+        if no_magic && !hasfunction(sym)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
     end
@@ -325,11 +325,19 @@ function query(filename::AbstractString)
     file!(query(open(filename), filename))
 end
 
-lenmagic(s::Symbol) = lenm(sym2info[s][1])
-lenmagic(v::Vector) = map(lenmagic, v)
+lensym(s::Symbol) = 1
+lensym(v::Vector) = length(v)
 
-lenm(t::Tuple) = length(t)
-lenm(::Any) = -1   # for when magic is a function
+hasmagic(s::Symbol) = hasmagic(sym2info[s][1])
+hasmagic(v::Vector) = any(hasmagic, v)
+
+hasmagic(t::Tuple) = !isempty(t)
+hasmagic(::Any) = false   # for when magic is a function
+
+hasfunction(s::Symbol) = hasfunction(sym2info[s][1])
+hasfunction(v::Vector) = any(hasfunction, v)
+hasfunction(s::Any) = true #has function
+hasfunction(s::Tuple) = false #has magic
 
 @doc """
 `query(io, [filename])` returns a `Stream` object with information about the

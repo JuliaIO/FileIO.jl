@@ -140,6 +140,33 @@ try
         q = query( "some_non_existant_file.mmm")
         @fact typeof(q) --> File{format"MAGIC"}
 
+        add_format(format"DOUBLE_MAGIC", (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00]), ".dd2")
+
+        fn = string(tempname(), ".dd2")
+        open(fn, "w") do file
+            write(file, UInt8[0x4d,0x4d,0x00,0x2a])
+            write(file, randstring(19))
+        end
+        q = query(fn)
+        @fact typeof(q) --> File{format"DOUBLE_MAGIC"}
+        io = open(q)
+        skipmagic(io)
+        @fact position(io) --> 4
+        close(io)
+        rm(fn)
+
+        open(fn, "w") do file
+            write(file, UInt8[0x4d,0x4d,0x00])
+            write(file, randstring(19))
+        end
+        q = query(fn)
+        @fact typeof(q) --> File{format"DOUBLE_MAGIC"}
+        io = open(q)
+        skipmagic(io)
+        @fact position(io) --> 3
+        close(io)
+        rm(fn)
+
     end
 
     del_format(format"JUNK")  # This triggers del_extension for multiple extensions
@@ -167,4 +194,15 @@ facts("PLY detection") do
     @fact typeof(q) --> File{format"PLY_ASCII"}
     q = query(joinpath(file_dir, "binary.ply"))
     @fact typeof(q) --> File{format"PLY_BINARY"}
+end
+facts("Multiple Magic bytes") do 
+    q = query(joinpath(file_dir, "magic1.tiff"))
+    @fact typeof(q) --> File{format"TIFF"}
+    q = query(joinpath(file_dir, "magic2.tiff"))
+    @fact typeof(q) --> File{format"TIFF"}
+    open(q) do io
+        @fact position(io) --> 0
+        skipmagic(io)
+        @fact position(io) --> 4
+    end
 end

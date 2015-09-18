@@ -1,0 +1,25 @@
+
+Michael J. Lyons, Shigeru Akemastu, Miyuki Kamachi, Jiro Gyoba.
+Coding Facial Expressions with Gabor Wavelets, 3rd IEEE International Conference on Automatic Face and Gesture Recognition, pp. 200-205 (1998).
+
+Information about the JAFFE database is available at:
+
+http://www.kasrl.org/jaffe.html
+
+Images are in .tiff format, no compression.
+
+Included below, are files containing semantic rating data from
+psychological experiments using the images. I send it because I
+believe it is important to realize that expression are never pure
+expressions of one emotion, but always admixtures of different
+emotions. The expression labels on the images just represent the
+predominant expression in that image - the expression that the subject
+was asked to pose.
+
+Best regards,
+
+Michael J. Lyons, Ph.D.
+Professor of Image Arts and Sciences
+Ritsumeikan University
+Kyoto, Japan
+michael (dot) lyons(you know)gmail (dot) com
