@@ -177,10 +177,7 @@ function detect_stlbinary(io)
     skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(Uint16))
     attrib_byte_count = read(io, Uint16) # read last attrib_byte
     attrib_byte_count != zero(Uint16) && (seekstart(io); return false) # should be zero as not used
-    eof(io) && (seekstart(io); return true)
-    
-    seekstart(io)
-    false
+    (seekstart(io); return eof(io)) # if end of file, we have a stl!
 end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"])
