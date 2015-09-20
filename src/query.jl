@@ -29,6 +29,7 @@ const magic_func = Array(Pair, 0)    # for formats with complex magic #s
 `add_format(fmt, magic, extention)` registers a new `DataFormat`.
 For example:
 
+    add_format(format"PNG", (UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]), [".tiff", ".tif"])
     add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
     add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
 
@@ -43,6 +44,22 @@ function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,Abstract
     end
     insert!(magic_list, first(rng), Pair(m, sym))  # m=>sym in 0.4
     sym2info[sym] = (m, extension)
+    add_extension(extension, sym)
+    fmt
+end
+
+# for multiple magic bytes
+function add_format{sym, T <: Vector{Uint8}, N}(fmt::Type{DataFormat{sym}}, magics::NTuple{N, T}, extension)
+    haskey(sym2info, sym) && error("format ", fmt, " is already registered")
+    magics = map(canonicalize_magic, magics)
+    for magic in magics
+        rng = searchsorted(magic_list, magic, lt=magic_cmp)
+        if !isempty(magic) && !isempty(rng)
+            error("magic bytes ", magic, " are already registered")
+        end
+        insert!(magic_list, first(rng), Pair(magic, sym))  # m=>sym in 0.4
+    end
+    sym2info[sym] = (magics, extension)
     add_extension(extension, sym)
     fmt
 end
@@ -62,6 +79,18 @@ end
 """ ->
 function del_format{sym}(fmt::Type{DataFormat{sym}})
     magic, extension = sym2info[sym]
+    del_magic(magic, sym)
+    delete!(sym2info, sym)
+    del_extension(extension)
+    nothing
+end
+
+# Deletes mutliple magic bytes
+del_magic(magic::Tuple, sym) = for m in magic
+    del_magic(m, sym)
+end
+# Deletes single magic bytes
+function del_magic{N}(magic::NTuple{N, Uint8}, sym)
     rng = searchsorted(magic_list, magic, lt=magic_cmp)
     if length(magic) == 0
         fullrng = rng
@@ -77,8 +106,6 @@ function del_format{sym}(fmt::Type{DataFormat{sym}})
     end
     @assert length(rng) == 1
     deleteat!(magic_list, first(rng))
-    delete!(sym2info, sym)
-    del_extension(extension)
     nothing
 end
 
@@ -242,10 +269,36 @@ For a plain IO object, you can use `skipmagic(io, fmt)`.
 skipmagic{F}(s::Stream{F}) = (skipmagic(stream(s), F); s)
 function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
     magic, _ = sym2info[sym]
-    if !isa(magic, Function)
-        seek(io, length(magic))
-    end
+    skipmagic(io, magic)
+    nothing
 end
+skipmagic(io, magic::Function) = nothing
+skipmagic{N}(io, magic::NTuple{N,UInt8}) = seek(io, length(magic))
+function skipmagic(io, magic::Tuple)
+    lengths = map(length, magic)
+    all(x->lengths[1] == x, lengths) && return seek(io, lengths[1]) # it doesn't matter what magic bytes get skipped as they all have the same length
+    magic = [magic...]
+    sort!(magic, lt=(a,b)-> length(a)>= length(b)) # start with longest first, to avoid overlapping magic bytes
+    seekend(io)
+    len = position(io)
+    seekstart(io)
+    filter!(x-> length(x) <= len, magic) # throw out magic bytes that are longer than IO
+    tmp = readbytes(io, length(first(magic))) # now, first is both the longest and guaranteed to fit into io, so we can just read the bytes
+    for m in magic
+        if magic_equal(m, tmp)
+            seek(io, length(m))
+            return nothing
+        end
+    end
+    error("tried to skip magic bytes of an IO that does not contain the magic bytes of the format. IO: $io")
+end
+function magic_equal(magic, buffer)
+    for (i,elem) in enumerate(magic)
+        buffer[i] != elem && return false
+    end
+    true
+end
+
 
 unknown{F}(::File{F}) = unknown(F)
 unknown{F}(::Stream{F}) = unknown(F)
@@ -257,13 +310,13 @@ function query(filename::AbstractString)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
-        len = lenmagic(sym)
-        if length(len) == 1 && (all(x->x==0, len) || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
+        no_magic = !hasmagic(sym)
+        if lensym(sym) == 1 && (no_magic || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
-        elseif !isfile(filename) && length(len) > 1
+        elseif !isfile(filename) && lensym(sym) > 1
             error("no file for check of magic bytes and multiple extensions possible: $sym")
         end
-        if any(x->x==0, len)
+        if no_magic && !hasfunction(sym)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
     end
@@ -272,11 +325,19 @@ function query(filename::AbstractString)
     file!(query(open(filename), filename))
 end
 
-lenmagic(s::Symbol) = lenm(sym2info[s][1])
-lenmagic(v::Vector) = map(lenmagic, v)
+lensym(s::Symbol) = 1
+lensym(v::Vector) = length(v)
 
-lenm(t::Tuple) = length(t)
-lenm(::Any) = -1   # for when magic is a function
+hasmagic(s::Symbol) = hasmagic(sym2info[s][1])
+hasmagic(v::Vector) = any(hasmagic, v)
+
+hasmagic(t::Tuple) = !isempty(t)
+hasmagic(::Any) = false   # for when magic is a function
+
+hasfunction(s::Symbol) = hasfunction(sym2info[s][1])
+hasfunction(v::Vector) = any(hasfunction, v)
+hasfunction(s::Any) = true #has function
+hasfunction(s::Tuple) = false #has magic
 
 @doc """
 `query(io, [filename])` returns a `Stream` object with information about the

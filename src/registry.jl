@@ -78,7 +78,8 @@ add_saver(format"PSD", :ImageMagick)
 add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03], ".rgb")
 add_loader(format"RGB", :ImageMagick)
 add_saver(format"RGB", :ImageMagick)
-add_format(format"TIFF", UInt8[0x4d,0x4d,0x00,0x2b], ".tiff")
+
+add_format(format"TIFF", (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]), [".tiff", "tif"])
 add_loader(format"TIFF", :ImageMagick)
 add_saver(format"TIFF", :ImageMagick)
 add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a], ".wmf")
@@ -147,7 +148,7 @@ add_saver(format"HDF5", :HDF5)
 
 function detect_stlascii(io)
     try
-        position(io) != 0 && return false
+        position(io) != 0 && (seekstart(io); return false)
         seekend(io)
         len = position(io)
         seekstart(io)
@@ -163,7 +164,7 @@ function detect_stlbinary(io)
     const size_header = 80+sizeof(Uint32)
     const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16)
 
-    position(io) != 0 && return false
+    position(io) != 0 && (seekstart(io); return false)
     seekend(io)
     len = position(io)
     seekstart(io)
@@ -172,12 +173,13 @@ function detect_stlbinary(io)
     skip(io, 80) # skip header
     number_of_triangle_blocks = read(io, Uint32)
      #1 normal, 3 vertices in Float32 + attrib count, usually 0
-    len != (number_of_triangle_blocks*size_triangleblock)+size_header && return false
+    len != (number_of_triangle_blocks*size_triangleblock)+size_header && (seekstart(io); return false)
     skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(Uint16))
     attrib_byte_count = read(io, Uint16) # read last attrib_byte
-    attrib_byte_count != zero(Uint16) && return false # should be zero as not used
-    eof(io) && return true
-    false
+    attrib_byte_count != zero(Uint16) && (seekstart(io); return false) # should be zero as not used
+    result = eof(io) # if end of file, we have a stl!
+    seekstart(io)
+    return result
 end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"])
