@@ -1,20 +1,18 @@
-const sym2loader = Dict{Symbol,Symbol}()
-const sym2saver  = Dict{Symbol,Symbol}()
+const sym2loader = Dict{Symbol,Vector{Symbol}}()
+const sym2saver  = Dict{Symbol,Vector{Symbol}}()
 
-for (fchk,fadd,dct) in ((:check_loader, :add_loader, :sym2loader),
-                        (:check_saver,  :add_saver,  :sym2saver))
+for (appl,fchk,fadd,dct) in ((:applicable_loaders, :check_loader, :add_loader, :sym2loader),
+                        (:applicable_savers, :check_saver,  :add_saver,  :sym2saver))
     @eval begin
-        function $fchk{sym}(::Formatted{DataFormat{sym}})
-            if haskey($dct, sym)
-                pkg = $dct[sym]
-                if !isdefined(Main, pkg)
-                    eval(Main, Expr(:using, pkg))
-                end
+        $appl{sym}(::Formatted{DataFormat{sym}}) = get($dct, sym, [:nothing])
+        function $fchk(pkg::Symbol)
+            if !isdefined(Main, pkg)
+                eval(Main, Expr(:using, pkg))
             end
         end
-
         function $fadd{sym}(::Type{DataFormat{sym}}, pkg::Symbol)
-            $dct[sym] = pkg
+            list = get($dct, sym, Symbol[])
+            $dct[sym] = push!(list, pkg)
         end
     end
 end
