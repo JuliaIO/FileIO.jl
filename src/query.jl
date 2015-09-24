@@ -140,7 +140,7 @@ function add_extension(ext::@compat(Union{Array,Tuple}), sym)
 end
 
 del_extension(ext::ASCIIString) = delete!(ext2sym, ext)
-function del_extension(ext::@compat(Union{Array,Tuple})
+function del_extension(ext::@compat(Union{Array,Tuple}))
     for e in ext
         del_extension(e)
     end

@@ -1,9 +1,10 @@
 VERSION >= v"0.4.0-dev+6641" && __precompile__()
 
 module FileIO
+using Compat
 
 if VERSION < v"0.4.0-dev"
-    using Docile, Compat
+    using Docile
     immutable Pair{A,B}
         first::A
         second::B
