@@ -320,7 +320,7 @@ function query(filename::AbstractString)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
     end
-    !isfile(filename) && File{unknown_df}(filename) # (no extension || no magic byte) && no file
+    !isfile(filename) && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
     file!(query(open(filename), filename))
 end
