@@ -20,7 +20,7 @@ const unknown_df = DataFormat{:UNKNOWN}
 unknown(::Type{format"UNKNOWN"}) = true
 unknown{sym}(::Type{DataFormat{sym}}) = false
 
-const ext2sym = Dict{ASCIIString,Union(Symbol,Vector{Symbol})}()
+const ext2sym = Dict{ASCIIString, @compat(Union{Symbol,Vector{Symbol}})}()
 const magic_list = Array(Pair, 0)    # sorted, see magic_cmp below
 const sym2info = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
 const magic_func = Array(Pair, 0)    # for formats with complex magic #s
@@ -35,7 +35,7 @@ For example:
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """ ->
-function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,AbstractVector,ByteString), extension)
+function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::@compat(Union{Tuple,AbstractVector,ByteString}), extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
@@ -49,7 +49,7 @@ function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union(Tuple,Abstract
 end
 
 # for multiple magic bytes
-function add_format{sym, T <: Vector{Uint8}, N}(fmt::Type{DataFormat{sym}}, magics::NTuple{N, T}, extension)
+function add_format{sym, T <: Vector{UInt8}, N}(fmt::Type{DataFormat{sym}}, magics::NTuple{N, T}, extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     magics = map(canonicalize_magic, magics)
     for magic in magics
@@ -90,7 +90,7 @@ del_magic(magic::Tuple, sym) = for m in magic
     del_magic(m, sym)
 end
 # Deletes single magic bytes
-function del_magic{N}(magic::NTuple{N, Uint8}, sym)
+function del_magic{N}(magic::NTuple{N, UInt8}, sym)
     rng = searchsorted(magic_list, magic, lt=magic_cmp)
     if length(magic) == 0
         fullrng = rng
@@ -133,14 +133,14 @@ function add_extension(ext::ASCIIString, sym)
     end
     ext2sym[ext] = sym
 end
-function add_extension(ext::Union(Array,Tuple), sym)
+function add_extension(ext::@compat(Union{Array,Tuple}), sym)
     for e in ext
         add_extension(e, sym)
     end
 end
 
 del_extension(ext::ASCIIString) = delete!(ext2sym, ext)
-function del_extension(ext::Union(Array,Tuple))
+function del_extension(ext::@compat(Union{Array,Tuple})
     for e in ext
         del_extension(e)
     end
