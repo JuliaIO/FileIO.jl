@@ -52,13 +52,12 @@ the magic bytes are essential.
 function load(s::@compat(Union{AbstractString,IO}), args...; options...)
     q = query(s)
     libraries = applicable_loaders(q)
-
+    last_exception = ErrorException("No library available to load $s")
     for library in libraries
         try
             check_loader(library)
             return load(q, args...; options...)
         catch e
-            warn(e)
             last_exception = e
         end
     end
@@ -74,14 +73,13 @@ trying to infer the format from `filename`.
 function save(s::@compat(Union{AbstractString,IO}), data...; options...)
     q = query(s)
     libraries = applicable_savers(q)
+    last_exception = ErrorException("No library available to save $s")
     for library in libraries
         try
-            println(library)
             check_saver(library)
             return save(q, data...; options...)
         catch e
-            warn(e)
-            last_exception = e
+            last_exception = e #TODO, better and standardized exception propagation system
         end
     end
     rethrow(last_exception)
