@@ -89,6 +89,16 @@ add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43], ".wpg")
 add_loader(format"WPG", :ImageMagick)
 add_saver(format"WPG", :ImageMagick)
 
+#=
+add_format(format"NPY", UInt8[0x93, 'N', 'U', 'M', 'P', 'Y'], ".npy")
+add_loader(format"NPZ", :NPZ)
+add_saver(format"NPZ", :NPZ)
+
+add_format(format"ZIP", [0x50,0x4b,0x03,0x04], ".zip")
+add_loader(format"ZIP", :ZipeFile)
+add_saver(format"ZIP", :ZipeFile)
+=#
+
 #Shader files
 add_format(format"GLSLShader", (), [".frag", ".vert", ".geom", ".comp"])
 add_loader(format"GLSLShader", :GLAbstraction)
@@ -114,7 +124,6 @@ add_saver(format"2DM", :MeshIO)
 add_format(format"OFF", "OFF", ".off")
 add_loader(format"OFF", :MeshIO)
 add_saver(format"OFF", :MeshIO)
-
 
 
 
@@ -161,8 +170,8 @@ function detect_stlascii(io)
     end
 end
 function detect_stlbinary(io)
-    const size_header = 80+sizeof(Uint32)
-    const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(Uint16)
+    const size_header = 80+sizeof(UInt32)
+    const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
 
     position(io) != 0 && (seekstart(io); return false)
     seekend(io)
@@ -171,12 +180,12 @@ function detect_stlbinary(io)
     len < size_header && return false
     
     skip(io, 80) # skip header
-    number_of_triangle_blocks = read(io, Uint32)
+    number_of_triangle_blocks = read(io, UInt32)
      #1 normal, 3 vertices in Float32 + attrib count, usually 0
     len != (number_of_triangle_blocks*size_triangleblock)+size_header && (seekstart(io); return false)
-    skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(Uint16))
-    attrib_byte_count = read(io, Uint16) # read last attrib_byte
-    attrib_byte_count != zero(Uint16) && (seekstart(io); return false) # should be zero as not used
+    skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(UInt16))
+    attrib_byte_count = read(io, UInt16) # read last attrib_byte
+    attrib_byte_count != zero(UInt16) && (seekstart(io); return false) # should be zero as not used
     result = eof(io) # if end of file, we have a stl!
     seekstart(io)
     return result

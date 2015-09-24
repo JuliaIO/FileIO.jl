@@ -1,9 +1,10 @@
 VERSION >= v"0.4.0-dev+6641" && __precompile__()
 
 module FileIO
+using Compat
 
 if VERSION < v"0.4.0-dev"
-    using Docile, Compat
+    using Docile
     immutable Pair{A,B}
         first::A
         second::B
@@ -46,7 +47,7 @@ the magic bytes are essential.
 - `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
 """ ->
-function load(s::Union(AbstractString,IO), args...; options...)
+function load(s::@compat(Union{AbstractString,IO}), args...; options...)
     q = query(s)
     check_loader(q)
     load(q, args...; options...)
@@ -58,7 +59,7 @@ trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """ ->
-function save(s::Union(AbstractString,IO), data...; options...)
+function save(s::@compat(Union{AbstractString,IO}), data...; options...)
     q = query(s)
     check_saver(q)
     save(q, data...; options...)
