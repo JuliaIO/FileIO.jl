@@ -34,6 +34,13 @@ add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a],                     ".wmf", 
 add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43],                     ".wpg", [:ImageMagick])
 
 add_format(
+    format"TGA", 
+    (),
+    ".tga", 
+    [:OSXNativeIO, LOAD, OSX], 
+    [:ImageMagick]
+)
+add_format(
     format"GIF", 
     UInt8[0x47,0x49,0x46,0x38],
     ".gif", 
