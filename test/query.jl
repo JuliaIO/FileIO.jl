@@ -219,20 +219,17 @@ try
         @fact lenload0 + 1 --> length(FileIO.sym2loader)
         @fact length(FileIO.sym2loader[:MultiLib]) --> 2
         @fact length(FileIO.sym2saver[:MultiLib]) --> 1
-
-        mktempdir() do tmpdir
-            fn = joinpath(tmpdir, "test.mlb")
-            save(fn)
-            x = load(fn)
-            open(query(fn), "r") do io
-                skipmagic(io)
-                a = read(io, Int)
-                @fact a --> 42 #make sure that LoadTest2 is used for saving, even though its at position 2
-            end
-            @fact isdefined(:LoadTest1) --> true # first module should load first but fail
-            @fact x --> 42
+        fn = string(tempname(), ".mlb")
+        save(fn)
+        x = load(fn)
+        open(query(fn), "r") do io
+            skipmagic(io)
+            a = read(io, Int)
+            @fact a --> 42 #make sure that LoadTest2 is used for saving, even though its at position 2
         end
-
+        @fact isdefined(:LoadTest1) --> true # first module should load first but fail
+        @fact x --> 42
+        rm(fn)
     end
 finally
     # Restore the registry
