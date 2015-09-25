@@ -15,7 +15,7 @@ try
     empty!(FileIO.sym2loader)
     empty!(FileIO.sym2saver)
     file_dir = joinpath(dirname(@__FILE__), "files")
-    facts("Load") do
+    context("Load") do
         @fact load(joinpath(file_dir, "file1.pbm")) --> "PBMText"
         @fact load(joinpath(file_dir, "file2.pbm")) --> "PBMBinary"
         # Regular HDF5 file with magic bytes starting at position 0
@@ -78,7 +78,7 @@ end
 add_loader(format"DUMMY", :Dummy)
 add_saver(format"DUMMY", :Dummy)
 
-facts("Save") do
+context("Save") do
     a = [0x01,0x02,0x03]
     fn = string(tempname(), ".dmy")
     save(fn, a)

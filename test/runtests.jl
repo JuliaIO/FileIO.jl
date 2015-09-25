@@ -1,8 +1,9 @@
 using FileIO
 using FactCheck
 
-include("query.jl")
-include("loadsave.jl")
-
+facts("FileIO") do
+	include("query.jl")
+	include("loadsave.jl")
+end
 # make Travis fail when tests fail:
 FactCheck.exitstatus()
