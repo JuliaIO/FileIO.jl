@@ -390,11 +390,13 @@ function query(io::IO, filename::Nullable{UTF8String}=Nullable{UTF8String}())
         length(m) == 0 && continue
         while length(m) > length(magic)
             if eof(io)
+                seek(io, pos)
                 return Stream{unknown_df,typeof(io)}(io, filename)
             end
             push!(magic, read(io, UInt8))
         end
         if iter_eq(magic, m)
+            seek(io, pos)
             return Stream{DataFormat{last(p)},typeof(io)}(io, filename)
         end
     end
