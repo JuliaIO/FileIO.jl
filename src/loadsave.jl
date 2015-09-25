@@ -6,9 +6,9 @@ for (appl,fchk,fadd,dct) in ((:applicable_loaders, :check_loader, :add_loader, :
     @eval begin
         $appl{sym}(::Formatted{DataFormat{sym}}) = get($dct, sym, [:nothing])
         function $fchk(pkg::Symbol)
-            if !isdefined(Main, pkg)
-                eval(Main, Expr(:using, pkg))
-            end
+            pkg == :nothing && return FileIO #nothing is the symbol for no load/save specific lib. see above
+            !isdefined(Main, pkg) && eval(Main, Expr(:import, pkg))
+            return Main.(pkg)
         end
         function $fadd{sym}(::Type{DataFormat{sym}}, pkg::Symbol)
             list = get($dct, sym, Symbol[])

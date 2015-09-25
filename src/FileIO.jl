@@ -55,8 +55,8 @@ function load(s::@compat(Union{AbstractString,IO}), args...; options...)
     last_exception = ErrorException("No library available to load $s")
     for library in libraries
         try
-            check_loader(library)
-            return load(q, args...; options...)
+            Library = check_loader(library)
+            return Library.load(q, args...; options...)
         catch e
             last_exception = e
         end
@@ -76,8 +76,8 @@ function save(s::@compat(Union{AbstractString,IO}), data...; options...)
     last_exception = ErrorException("No library available to save $s")
     for library in libraries
         try
-            check_saver(library)
-            return save(q, data...; options...)
+            Library = check_saver(library)
+            return Library.save(q, data...; options...)
         catch e
             last_exception = e #TODO, better and standardized exception propagation system
         end
