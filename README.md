@@ -68,6 +68,24 @@ add_loader(format"HDF5", :HDF5)
 add_saver(format"PNG", :ImageMagick)
 ```
 These packages will be automatically loaded as needed.
+You can also define the loaders and savers in a short form like this:
+```jl
+add_format(format"OFF", "OFF", ".off", [:MeshIO])
+```
+This means MeshIO supports loading and saving of the `off` format.
+You can add multiple loaders and specifiers like this:
+```jl
+add_format(
+    format"BMP", 
+    UInt8[0x42,0x4d],
+    ".bmp",
+    [:OSXNativeIO, LOAD, OSX], 
+    [:ImageMagick]
+)
+```
+This means, OSXNative has first priority (gets loaded first) and only supports loading `bmp` on `OSX`.
+So on windows, `OSXNativeIO` will be ignored and `ImageMagick` has first priority.
+You can add any combination of `LOAD`, `SAVE`, `OSX`, `Unix`, `Windows` and `Linux`.
 
 Users are encouraged to contribute these definitions to the
 `registry.jl` file of this package, so that information about file

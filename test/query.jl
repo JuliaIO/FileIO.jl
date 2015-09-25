@@ -11,12 +11,34 @@ ext2sym = copy(FileIO.ext2sym)
 magic_list = copy(FileIO.magic_list)
 sym2info = copy(FileIO.sym2info)
 
+
+module LoadTest1
+import FileIO: @format_str, File
+load(file::File{format"MultiLib"}) = error()
+
+save(file::File{format"MultiLib"}) = open(file, "w") do s
+    write(s, magic(format"MultiLib"))  # Write the magic bytes
+    write(s, 0)
+end
+
+end
+module LoadTest2
+import FileIO: @format_str, File, magic
+load(file::File{format"MultiLib"}) = 42
+
+save(file::File{format"MultiLib"}) = open(file, "w") do s
+    write(s, magic(format"MultiLib"))  # Write the magic bytes
+    write(s, 42)
+end
+
+end
+
 try
     empty!(FileIO.ext2sym)
     empty!(FileIO.magic_list)
     empty!(FileIO.sym2info)
 
-    facts("DataFormat") do
+    context("DataFormat") do
         @fact DataFormat{:CSV} --> format"CSV"
         @fact unknown(format"CSV") --> false
         @fact unknown(format"UNKNOWN") --> true
@@ -44,7 +66,7 @@ try
 
     end
 
-    facts("streams") do
+    context("streams") do
         io = IOBuffer()
         s = Stream(format"JUNK", io)
         @fact typeof(s) --> Stream{DataFormat{:JUNK}, IOBuffer}
@@ -56,7 +78,7 @@ try
         @fact get(filename(s)) --> "junk2.jnk"
     end
 
-    facts("query") do
+    context("query") do
         # Streams
         io = IOBuffer()
         write(io, "Weird format")
@@ -182,6 +204,33 @@ try
 
     del_format(format"JUNK")  # This triggers del_extension for multiple extensions
 
+    context("multiple libs") do
+        lensave0 = length(FileIO.sym2saver)
+        lenload0 = length(FileIO.sym2loader)
+        OSKey = @osx ? FileIO.OSX : @windows? FileIO.Windows : @linux ? FileIO.Linux : error("os not supported")
+        add_format(
+            format"MultiLib", 
+            UInt8[0x42,0x4d],
+            ".mlb",
+            [:LoadTest1, FileIO.LOAD, OSKey], 
+            [:LoadTest2]
+        )
+        @fact lensave0 + 1 --> length(FileIO.sym2saver)
+        @fact lenload0 + 1 --> length(FileIO.sym2loader)
+        @fact length(FileIO.sym2loader[:MultiLib]) --> 2
+        @fact length(FileIO.sym2saver[:MultiLib]) --> 1
+        fn = string(tempname(), ".mlb")
+        save(fn)
+        x = load(fn)
+        open(query(fn), "r") do io
+            skipmagic(io)
+            a = read(io, Int)
+            @fact a --> 42 #make sure that LoadTest2 is used for saving, even though its at position 2
+        end
+        @fact isdefined(:LoadTest1) --> true # first module should load first but fail
+        @fact x --> 42
+        rm(fn)
+    end
 finally
     # Restore the registry
     empty!(FileIO.ext2sym)
@@ -194,7 +243,7 @@ finally
 end
 
 file_dir = joinpath(dirname(@__FILE__), "files")
-facts("STL detection") do 
+context("STL detection") do 
     q = query(joinpath(file_dir, "ascii.stl"))
     @fact typeof(q) --> File{format"STL_ASCII"}
     q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
@@ -205,14 +254,14 @@ facts("STL detection") do
         @fact position(io) --> 0 # no skipping for functions
     end
 end
-facts("PLY detection") do 
+context("PLY detection") do 
     q = query(joinpath(file_dir, "ascii.ply"))
     @fact typeof(q) --> File{format"PLY_ASCII"}
     q = query(joinpath(file_dir, "binary.ply"))
     @fact typeof(q) --> File{format"PLY_BINARY"}
 
 end
-facts("Multiple Magic bytes") do 
+context("Multiple Magic bytes") do 
     q = query(joinpath(file_dir, "magic1.tiff"))
     @fact typeof(q) --> File{format"TIFF"}
     q = query(joinpath(file_dir, "magic2.tiff"))

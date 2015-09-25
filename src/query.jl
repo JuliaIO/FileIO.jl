@@ -1,4 +1,33 @@
 ### Format registry infrastructure
+abstract OS 
+abstract Unix <: OS 
+immutable Windows <: OS end
+immutable OSX <: Unix end
+immutable Linux <: Unix end
+
+immutable LOAD end
+immutable SAVE end
+
+split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
+applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
+applies_to_os{O <: OS}(os::Type{O}) = false
+@unix_only applies_to_os{U <: Unix}(os::Type{U}) = true
+@windows_only applies_to_os(os::Type{Windows})   = true
+@osx_only applies_to_os(os::Type{OSX})           = true
+@linux_only applies_to_os(os::Type{Linux})       = true
+
+function add_loadsave(format, predicates)
+    library = shift!(predicates)
+    os, loadsave = split_predicates(predicates)
+    if applies_to_os(os)
+        if isempty(loadsave) || (LOAD in loadsave)
+            add_loader(format, library)
+        end
+        if isempty(loadsave) || (SAVE in loadsave)
+            add_saver(format, library)
+        end
+    end
+end
 
 @doc """
 `DataFormat{sym}()` indicates a known binary or text format of kind `sym`,
@@ -24,6 +53,15 @@ const ext2sym = Dict{ASCIIString, @compat(Union{Symbol,Vector{Symbol}})}()
 const magic_list = Array(Pair, 0)    # sorted, see magic_cmp below
 const sym2info = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
 const magic_func = Array(Pair, 0)    # for formats with complex magic #s
+
+
+function add_format(fmt, magic, extension, load_save_libraries...)
+    add_format(fmt, magic, extension)
+    for library in load_save_libraries
+        add_loadsave(fmt, library)
+    end
+    fmt
+end
 
 @doc """
 `add_format(fmt, magic, extention)` registers a new `DataFormat`.

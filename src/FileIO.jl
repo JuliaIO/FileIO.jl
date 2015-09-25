@@ -39,6 +39,8 @@ include("query.jl")
 include("loadsave.jl")
 include("registry.jl")
 
+
+
 @doc """
 - `load(filename)` loads the contents of a formatted file, trying to infer
 the format from `filename` and/or magic bytes in the file.
@@ -49,8 +51,17 @@ the magic bytes are essential.
 """ ->
 function load(s::@compat(Union{AbstractString,IO}), args...; options...)
     q = query(s)
-    check_loader(q)
-    load(q, args...; options...)
+    libraries = applicable_loaders(q)
+    last_exception = ErrorException("No library available to load $s")
+    for library in libraries
+        try
+            Library = check_loader(library)
+            return Library.load(q, args...; options...)
+        catch e
+            last_exception = e
+        end
+    end
+    rethrow(last_exception)
 end
 
 @doc """
@@ -61,8 +72,17 @@ trying to infer the format from `filename`.
 """ ->
 function save(s::@compat(Union{AbstractString,IO}), data...; options...)
     q = query(s)
-    check_saver(q)
-    save(q, data...; options...)
+    libraries = applicable_savers(q)
+    last_exception = ErrorException("No library available to save $s")
+    for library in libraries
+        try
+            Library = check_saver(library)
+            return Library.save(q, data...; options...)
+        catch e
+            last_exception = e #TODO, better and standardized exception propagation system
+        end
+    end
+    rethrow(last_exception)
 end
 
 # Fallbacks
