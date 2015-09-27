@@ -35,45 +35,45 @@ add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43],                     ".wpg", 
 add_format(format"Imagine", "IMAGINE",                                  ".imagine", [:ImagineFormat])
 
 add_format(
-    format"TGA", 
+    format"TGA",
     (),
-    ".tga", 
-    [:OSXNativeIO, LOAD, OSX], 
+    ".tga",
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 )
 add_format(
-    format"GIF", 
+    format"GIF",
     UInt8[0x47,0x49,0x46,0x38],
-    ".gif", 
-    [:OSXNativeIO, LOAD, OSX], 
+    ".gif",
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 )
 add_format(
-    format"PNG", 
-    UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], 
-    ".png", 
-    [:OSXNativeIO, LOAD, OSX], 
+    format"PNG",
+    UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
+    ".png",
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 )
 add_format(
-    format"TIFF", 
-    (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]), 
-    [".tiff", ".tif"], 
-    [:OSXNativeIO, LOAD, OSX], 
+    format"TIFF",
+    (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]),
+    [".tiff", ".tif"],
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 )
 add_format(
-    format"JPEG", 
+    format"JPEG",
     UInt8[0xff,0xd8,0xff],
-    [".jpeg", ".jpg", ".JPG"], 
-    [:OSXNativeIO, LOAD, OSX], 
+    [".jpeg", ".jpg", ".JPG"],
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 ) # 0xe1
 add_format(
-    format"BMP", 
+    format"BMP",
     UInt8[0x42,0x4d],
     ".bmp",
-    [:OSXNativeIO, LOAD, OSX], 
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 )
 
@@ -147,7 +147,7 @@ function detect_stlbinary(io)
     len = position(io)
     seekstart(io)
     len < size_header && return false
-    
+
     skip(io, 80) # skip header
     number_of_triangle_blocks = read(io, UInt32)
      #1 normal, 3 vertices in Float32 + attrib count, usually 0
@@ -161,4 +161,3 @@ function detect_stlbinary(io)
 end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [:MeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [:MeshIO])
-
