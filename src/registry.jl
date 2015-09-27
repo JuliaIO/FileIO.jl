@@ -32,6 +32,7 @@ add_format(format"PSD", UInt8[0x38,0x42,0x50,0x53],                     ".psd", 
 add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03],           ".rgb", [:ImageMagick])
 add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a],                     ".wmf", [:ImageMagick])
 add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43],                     ".wpg", [:ImageMagick])
+add_format(format"Imagine", "IMAGINE",                                  ".imagine", [:ImagineFormat])
 
 add_format(
     format"TGA", 
