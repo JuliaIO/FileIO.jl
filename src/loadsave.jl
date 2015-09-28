@@ -4,9 +4,8 @@ const sym2saver  = Dict{Symbol,Vector{Symbol}}()
 for (appl,fchk,fadd,dct) in ((:applicable_loaders, :check_loader, :add_loader, :sym2loader),
                         (:applicable_savers, :check_saver,  :add_saver,  :sym2saver))
     @eval begin
-        $appl{sym}(::Formatted{DataFormat{sym}}) = get($dct, sym, [:nothing])
+        $appl{sym}(::Formatted{DataFormat{sym}}) = get($dct, sym, [:FileIO]) # if no loader is declared, fallback to FileIO
         function $fchk(pkg::Symbol)
-            pkg == :nothing && return FileIO #nothing is the symbol for no load/save specific lib. see above
             !isdefined(Main, pkg) && eval(Main, Expr(:import, pkg))
             return Main.(pkg)
         end
