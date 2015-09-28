@@ -115,3 +115,23 @@ context("Save") do
 end
 
 del_format(format"DUMMY")
+
+# PPM/PBM can be either binary or text. Test that the defaults work,
+# and that we can force a choice.
+using Images
+context("Ambiguous extension") do
+    A = rand(UInt8, 3, 2)
+    fn = string(tempname(), ".pgm")
+    # Test the forced version first: we wouldn't want some method in Netpbm
+    # coming to the rescue here, we want to rely on FileIO's logic.
+    # `save(fn, A)` will load Netpbm, which could conceivably mask a failure
+    # in the next line.
+    save(format"PGMBinary", fn, A)
+    B = load(fn)
+    @fact raw(convert(Array, B)) --> A
+    save(fn, A)
+    B = load(fn)
+    @fact raw(convert(Array, B)) --> A
+
+    rm(fn)
+end

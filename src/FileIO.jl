@@ -86,6 +86,19 @@ function save(s::@compat(Union{AbstractString,IO}), data...; options...)
     rethrow(last_exception)
 end
 
+# Forced format
+function save{sym}(::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+    libraries = sym2saver[sym]
+    check_saver(libraries[1])
+    save(File(DataFormat{sym}, f), data...; options...)
+end
+
+function save{sym}(::Type{DataFormat{sym}}, s::IO, data...; options...)
+    libraries = sym2saver[sym]
+    check_saver(libraries[1])
+    save(Stream(DataFormat{sym}, s), data...; options...)
+end
+
 function Base.writemime(io::IO, mime::MIME, x)
     handlers = applicable_mime(mime)
     last_exception = ErrorException("No package available to writemime $mime")
@@ -102,7 +115,7 @@ function Base.writemime(io::IO, mime::MIME, x)
 end
 
 # Fallbacks
-load{F}(f::Formatted{F}; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
+load{F}(f::Formatted{F}, args...; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
 save{F}(f::Formatted{F}, data...; options...) = error("No save function defined for format ", F, " with filename ", filename(f))
 
 end # module

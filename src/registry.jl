@@ -2,12 +2,12 @@
 add_format(format"JLD", "Julia data file (HDF5)", ".jld", [:JLD])
 
 # Image formats
-add_format(format"PBMText",   b"P1", ".pbm")
-add_format(format"PGMText",   b"P2", ".pgm")
-add_format(format"PPMText",   b"P3", ".ppm")
-add_format(format"PBMBinary", b"P4", ".pbm")
-add_format(format"PGMBinary", b"P5", ".pgm")
-add_format(format"PPMBinary", b"P6", ".ppm")
+add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
+add_format(format"PGMBinary", b"P5", ".pgm", [:Netpbm])
+add_format(format"PPMBinary", b"P6", ".ppm", [:Netpbm])
+add_format(format"PBMText",   b"P1", ".pbm", [:ImageMagick, LOAD])
+add_format(format"PGMText",   b"P2", ".pgm", [:ImageMagick, LOAD])
+add_format(format"PPMText",   b"P3", ".ppm", [:ImageMagick, LOAD])
 
 add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"], [:NRRD])
 

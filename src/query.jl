@@ -1,6 +1,6 @@
 ### Format registry infrastructure
-abstract OS 
-abstract Unix <: OS 
+abstract OS
+abstract Unix <: OS
 immutable Windows <: OS end
 immutable OSX <: Unix end
 immutable Linux <: Unix end
@@ -352,7 +352,7 @@ function query(filename::AbstractString)
         if lensym(sym) == 1 && (no_magic || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
         elseif !isfile(filename) && lensym(sym) > 1
-            error("no file for check of magic bytes and multiple extensions possible: $sym")
+            return File{DataFormat{sym[1]}}(filename)
         end
         if no_magic && !hasfunction(sym)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
@@ -424,7 +424,7 @@ function iter_eq(A, B)
         a=A[i]; b=B[j]
         a == b && (i+=1; j+=1; continue)
         a == '\r' && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
-        b == '\r' && (j+=1; continue) 
+        b == '\r' && (j+=1; continue)
         return false #now both must be unequal, and no \r windows excemption any more
     end
     true
