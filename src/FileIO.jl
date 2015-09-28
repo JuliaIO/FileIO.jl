@@ -23,6 +23,7 @@ export DataFormat,
        add_format,
        del_format,
        add_loader,
+       add_mime,
        add_saver,
        filename,
        file_extension,
@@ -80,6 +81,21 @@ function save(s::@compat(Union{AbstractString,IO}), data...; options...)
             return Library.save(q, data...; options...)
         catch e
             last_exception = e #TODO, better and standardized exception propagation system
+        end
+    end
+    rethrow(last_exception)
+end
+
+function Base.writemime(io::IO, mime::MIME, x)
+    handlers = applicable_mime(mime)
+    last_exception = ErrorException("No package available to writemime $mime")
+    for (T,pkg) in handlers
+        isa(x, T) || continue
+        try
+            check_mime(pkg)
+            return writemime(Stream(DataFormat{pkg}, io), mime, x)
+        catch e
+            last_exception = e
         end
     end
     rethrow(last_exception)
