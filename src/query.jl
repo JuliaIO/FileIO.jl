@@ -352,7 +352,7 @@ function query(filename::AbstractString)
         if lensym(sym) == 1 && (no_magic || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
         elseif !isfile(filename) && lensym(sym) > 1
-            error("no file for check of magic bytes and multiple extensions possible: $sym")
+            return File{DataFormat{sym[1]}}(filename)
         end
         if no_magic && !hasfunction(sym)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
