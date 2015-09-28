@@ -1,6 +1,6 @@
 ### Format registry infrastructure
-abstract OS 
-abstract Unix <: OS 
+abstract OS
+abstract Unix <: OS
 immutable Windows <: OS end
 immutable OSX <: Unix end
 immutable Linux <: Unix end
@@ -424,7 +424,7 @@ function iter_eq(A, B)
         a=A[i]; b=B[j]
         a == b && (i+=1; j+=1; continue)
         a == '\r' && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
-        b == '\r' && (j+=1; continue) 
+        b == '\r' && (j+=1; continue)
         return false #now both must be unequal, and no \r windows excemption any more
     end
     true

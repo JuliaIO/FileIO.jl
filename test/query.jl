@@ -148,7 +148,6 @@ try
         add_format(format"DOUBLE_1", "test1", ".double")
         add_format(format"DOUBLE_2", "test2", ".double")
 
-        @fact_throws ErrorException query( "test.double")
         fn = string(tempname(), ".double")
         open(fn, "w") do file
             write(file, "test1")
@@ -209,10 +208,10 @@ try
         lenload0 = length(FileIO.sym2loader)
         OSKey = @osx ? FileIO.OSX : @windows? FileIO.Windows : @linux ? FileIO.Linux : error("os not supported")
         add_format(
-            format"MultiLib", 
+            format"MultiLib",
             UInt8[0x42,0x4d],
             ".mlb",
-            [:LoadTest1, FileIO.LOAD, OSKey], 
+            [:LoadTest1, FileIO.LOAD, OSKey],
             [:LoadTest2]
         )
         @fact lensave0 + 1 --> length(FileIO.sym2saver)
@@ -243,25 +242,25 @@ finally
 end
 
 file_dir = joinpath(dirname(@__FILE__), "files")
-context("STL detection") do 
+context("STL detection") do
     q = query(joinpath(file_dir, "ascii.stl"))
     @fact typeof(q) --> File{format"STL_ASCII"}
     q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
     @fact typeof(q) --> File{format"STL_BINARY"}
-    open(q) do io 
+    open(q) do io
         @fact position(io) --> 0
         skipmagic(io)
         @fact position(io) --> 0 # no skipping for functions
     end
 end
-context("PLY detection") do 
+context("PLY detection") do
     q = query(joinpath(file_dir, "ascii.ply"))
     @fact typeof(q) --> File{format"PLY_ASCII"}
     q = query(joinpath(file_dir, "binary.ply"))
     @fact typeof(q) --> File{format"PLY_BINARY"}
 
 end
-context("Multiple Magic bytes") do 
+context("Multiple Magic bytes") do
     q = query(joinpath(file_dir, "magic1.tiff"))
     @fact typeof(q) --> File{format"TIFF"}
     q = query(joinpath(file_dir, "magic2.tiff"))
