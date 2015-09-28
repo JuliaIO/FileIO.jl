@@ -115,7 +115,7 @@ function Base.writemime(io::IO, mime::MIME, x)
 end
 
 # Fallbacks
-load{F}(f::Formatted{F}; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
+load{F}(f::Formatted{F}, args...; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
 save{F}(f::Formatted{F}, data...; options...) = error("No save function defined for format ", F, " with filename ", filename(f))
 
 end # module
