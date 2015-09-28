@@ -76,10 +76,10 @@ This means MeshIO supports loading and saving of the `off` format.
 You can add multiple loaders and specifiers like this:
 ```jl
 add_format(
-    format"BMP", 
+    format"BMP",
     UInt8[0x42,0x4d],
     ".bmp",
-    [:OSXNativeIO, LOAD, OSX], 
+    [:OSXNativeIO, LOAD, OSX],
     [:ImageMagick]
 )
 ```
@@ -90,6 +90,18 @@ You can add any combination of `LOAD`, `SAVE`, `OSX`, `Unix`, `Windows` and `Lin
 Users are encouraged to contribute these definitions to the
 `registry.jl` file of this package, so that information about file
 formats exists in a centralized location.
+
+Handling MIME outputs is similar, except that one also provides the
+type of the object to be written:
+```jl
+mimewritable(::MIME"image/png", img::AbstractArray) = ndims(img) == 2
+add_mime(MIME("image/png"), AbstractArray, :ImageMagick)
+```
+
+In cases where the type is defined in Base julia, such declarations
+can by included in FileIO's `registry` file.  In contrast, when the
+type is defined in a package, that package should call them. Note that
+`add_mime` should be called from the package's `__init__` function.
 
 ## Implementing loaders/savers
 
@@ -129,6 +141,19 @@ they open.  (If you use the `do` syntax, this happens for you
 automatically even if the code inside the `do` scope throws an error.)
 Conversely, `load(::Stream)` and `save(::Stream)` should not close the
 input stream.
+
+For MIME output, you would implement a method like this:
+```jl
+function Base.writemime(s::Stream{format"ImageMagick"}, ::MIME"image/png", x)
+    io = stream(s)
+    # Do the stuff needed to create the output
+end
+```
+
+It's perfectly acceptable to also create a `Base.writemime(s::IO,
+::MIME"image/png", x)` method.  Such methods will generally take
+precedence over FileIO's generic fallback `writemime` function, and
+therefore in some cases might improve performance.
 
 ## Help
 
