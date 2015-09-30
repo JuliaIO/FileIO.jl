@@ -13,8 +13,8 @@ applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
 applies_to_os{O <: OS}(os::Type{O}) = false
 @unix_only applies_to_os{U <: Unix}(os::Type{U}) = true
 @windows_only applies_to_os(os::Type{Windows})   = true
-@osx_only applies_to_os(os::Type{OSX})           = true
-@linux_only applies_to_os(os::Type{Linux})       = true
+@linux_only applies_to_os(os::Type{OSX})         = false
+@osx_only applies_to_os(os::Type{Linux})         = false
 
 function add_loadsave(format, predicates)
     library = shift!(predicates)
