@@ -6,6 +6,27 @@ if VERSION < v"0.4.0-dev"
     import FileIO.Pair
 end
 
+context("OS") do
+    @linux_only begin
+        @fact FileIO.applies_to_os(FileIO.Linux)   --> true
+        @fact FileIO.applies_to_os(FileIO.OSX)     --> false
+        @fact FileIO.applies_to_os(FileIO.Unix)    --> true
+        @fact FileIO.applies_to_os(FileIO.Windows) --> false
+    end
+    @osx_only begin
+        @fact FileIO.applies_to_os(FileIO.Linux)   --> false
+        @fact FileIO.applies_to_os(FileIO.OSX)     --> true
+        @fact FileIO.applies_to_os(FileIO.Unix)    --> true
+        @fact FileIO.applies_to_os(FileIO.Windows) --> false
+    end
+    @windows_only begin
+        @fact FileIO.applies_to_os(FileIO.Linux)   --> false
+        @fact FileIO.applies_to_os(FileIO.OSX)     --> false
+        @fact FileIO.applies_to_os(FileIO.Unix)    --> false
+        @fact FileIO.applies_to_os(FileIO.Windows) --> true
+    end
+end
+
 # Before we bork things, make a copy
 ext2sym = copy(FileIO.ext2sym)
 magic_list = copy(FileIO.magic_list)
