@@ -36,11 +36,35 @@ export DataFormat,
        stream,
        unknown
 
+import Base.showerror
+
 include("query.jl")
 include("loadsave.jl")
 include("registry.jl")
 
+@doc """
+`LoaderError` should be thrown when loader library code fails, and other libraries should
+be given the chance to recover from the error.  Reports the library name and an error message:
+LoaderError("ImageMagick", "Foo not available")
+""" ->
+type LoaderError <: Exception
+    library::UTF8String
+    msg::UTF8String
+end
+Base.showerror(io::IO, e::LoaderError) = println(io, e.library, " load error: ",
+                                                 msg, "\n  Will try next loader.")
 
+@doc """
+`WriterError` should be thrown when writer library code fails, and other libraries should
+be given the chance to recover from the error.  Reports the library name and an error message:
+WriterError("ImageMagick", "Foo not available")
+""" ->
+type WriterError <: Exception
+    library::UTF8String
+    msg::UTF8String
+end
+Base.showerror(io::IO, e::WriterError) = println(io, e.library, " writer error: ",
+                                                 msg, "\n  Will try next writer.")
 
 @doc """
 - `load(filename)` loads the contents of a formatted file, trying to infer
@@ -59,10 +83,14 @@ function load(s::@compat(Union{AbstractString,IO}), args...; options...)
             Library = check_loader(library)
             return Library.load(q, args...; options...)
         catch e
-            last_exception = e
+            if isa(e, LoaderError)
+                info(e.library, " failed. ", e.msg)
+                info("  Will try next loader, if available")
+            else
+                rethrow(e)
+            end
         end
     end
-    rethrow(last_exception)
 end
 
 @doc """
@@ -80,10 +108,14 @@ function save(s::@compat(Union{AbstractString,IO}), data...; options...)
             Library = check_saver(library)
             return Library.save(q, data...; options...)
         catch e
-            last_exception = e #TODO, better and standardized exception propagation system
+            if isa(e, WriterError)
+                info(e.library, " failed. ", e.msg)
+                info("  Will try next writer, if available")
+            else
+                rethrow(e)
+            end
         end
     end
-    rethrow(last_exception)
 end
 
 # Forced format
@@ -108,10 +140,14 @@ function Base.writemime(io::IO, mime::MIME, x)
             check_mime(pkg)
             return writemime(Stream(DataFormat{pkg}, io), mime, x)
         catch e
-            last_exception = e
+            if isa(e, WriterError)
+                info(e.library, " failed. ", e.msg)
+                info("  Will try next writer, if available")
+            else
+                rethrow(e)
+            end
         end
     end
-    rethrow(last_exception)
 end
 
 # Fallbacks
