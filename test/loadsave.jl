@@ -118,20 +118,47 @@ del_format(format"DUMMY")
 
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
-using Images
+
+FileIO.load(f::File{format"AmbigExt1"}) = open(f) do io
+    skipmagic(io)
+    readall(stream(io))
+end 
+FileIO.load(f::File{format"AmbigExt2"}) = open(f) do io
+    skipmagic(io)
+    readall(stream(io))
+end
+
+FileIO.save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
+    s = stream(io)
+    print(s, "ambigext1")
+    print(s, testdata)
+end 
+FileIO.save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
+    s = stream(io)
+    print(s, "ambigext2")
+    print(s, testdata)
+end
+
 context("Ambiguous extension") do
-    A = rand(UInt8, 3, 2)
-    fn = string(tempname(), ".pgm")
+    add_format(format"AmbigExt1", "ambigext1", ".aext")
+    add_format(format"AmbigExt2", "ambigext2", ".aext")
+    A = "this is a test"
+    fn = string(tempname(), ".aext")
     # Test the forced version first: we wouldn't want some method in Netpbm
     # coming to the rescue here, we want to rely on FileIO's logic.
     # `save(fn, A)` will load Netpbm, which could conceivably mask a failure
     # in the next line.
-    save(format"PGMBinary", fn, A)
+    save(format"AmbigExt2", fn, A)
+
     B = load(fn)
-    @fact raw(convert(Array, B)) --> A
+    @fact B --> A
+    @fact typeof(query(fn)) --> File{format"AmbigExt2"}
+    rm(fn)
+
     save(fn, A)
     B = load(fn)
-    @fact raw(convert(Array, B)) --> A
+    @fact B --> A
+    @fact typeof(query(fn)) --> File{format"AmbigExt1"}
 
     rm(fn)
 end

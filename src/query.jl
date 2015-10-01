@@ -10,7 +10,7 @@ immutable SAVE end
 
 split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
 applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
-applies_to_os{O <: OS}(os::Type{O}) = false
+applies_to_os{O <: OS}(os::Type{O})              = false
 @unix_only applies_to_os{U <: Unix}(os::Type{U}) = true
 @windows_only applies_to_os(os::Type{Windows})   = true
 @linux_only applies_to_os(os::Type{OSX})         = false
@@ -46,12 +46,12 @@ const unknown_df = DataFormat{:UNKNOWN}
 
 @doc """
 `unknown(f)` returns true if the format of `f` is unknown.""" ->
-unknown(::Type{format"UNKNOWN"}) = true
+unknown(::Type{format"UNKNOWN"})    = true
 unknown{sym}(::Type{DataFormat{sym}}) = false
 
-const ext2sym = Dict{ASCIIString, @compat(Union{Symbol,Vector{Symbol}})}()
+const ext2sym    = Dict{ASCIIString, @compat(Union{Symbol,Vector{Symbol}})}()
 const magic_list = Array(Pair, 0)    # sorted, see magic_cmp below
-const sym2info = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
+const sym2info   = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
 const magic_func = Array(Pair, 0)    # for formats with complex magic #s
 
 
