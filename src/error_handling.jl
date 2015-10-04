@@ -42,9 +42,9 @@ function handle_current_error(e, islast)
     bt = catch_backtrace()
     bts = sprint(io->Base.show_backtrace(io, bt))
     message = islast ? "" : "\nTrying next loading library! Please report this issue on Github"
-    warn(e, bts, message)
+    warn(string(e, bts, message))
 end
-handle_current_error(e::NotInstalledError) = warn("lib ", e.library, " not installed, trying next library")
+handle_current_error(e::NotInstalledError) = warn(string("lib ", e.library, " not installed, trying next library"))
 
 @doc """
 Handles a list of thrown errors after no IO library was found working
