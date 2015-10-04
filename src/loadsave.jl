@@ -1,6 +1,5 @@
 const sym2loader = Dict{Symbol,Vector{Symbol}}()
 const sym2saver  = Dict{Symbol,Vector{Symbol}}()
-const mimedict   = Dict{Symbol,Vector{@compat(Tuple{DataType, Symbol})}}()
 
 function is_installed(pkg::Symbol)
     isdefined(pkg) && isa(Main.(pkg), Module) && return true # is a module defined in Main scope
@@ -28,15 +27,6 @@ for (applicable_, add_, dict_) in (
     end
 end
 
-applicable_mime{sym}(::MIME{sym}) = get(mimedict, sym, [(Any, :FileIO)])
-
-@doc """
-`add_mime(mime, T, :Package)`  triggers `using Package` before attempting to write object of type `T` in format `mime`.
-""" ->
-function add_mime{sym,T}(::MIME{sym}, ::Type{T}, pkg::Symbol)
-    list = get(mimedict, sym, @compat(Tuple{DataType, Symbol})[])
-    mimedict[sym] = push!(list, (T,pkg))
-end
 
 @doc "`add_loader(fmt, :Package)` triggers `using Package` before loading format `fmt`" -> add_loader
 @doc "`add_saver(fmt, :Package)` triggers `using Package` before saving format `fmt`" -> add_saver
@@ -99,20 +89,6 @@ function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
     save(Stream(DataFormat{sym}, s), data...; options...)
 end
 
-function Base.writemime(io::IO, mime::MIME, x)
-    handlers = applicable_mime(mime)
-    failures = Any[]
-    for (T,pkg) in handlers
-        isa(x, T) || continue
-        try
-            save_import(pkg)
-            return writemime(Stream(DataFormat{pkg}, io), mime, x)
-        catch e
-            push!(failures, (library, e))
-        end
-    end
-    handle_error(failures)
-end
 
 # Fallbacks
 load{F}(f::Formatted{F}, args...; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
