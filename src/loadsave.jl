@@ -8,7 +8,7 @@ function is_installed(pkg::Symbol)
     return isfile(path)
 end
 
-function save_import(pkg::Symbol)
+function checked_import(pkg::Symbol)
     !is_installed(pkg)      && throw(NotInstalledError(pkg, ""))
     !isdefined(Main, pkg)   && eval(Main, Expr(:import, pkg))
     return Main.(pkg)
@@ -46,10 +46,11 @@ function load(s::@compat(Union{AbstractString,IO}), args...; options...)
     failures    = Any[]
     for library in libraries
         try
-            Library = save_import(library)
+            Library = checked_import(library)
             return Library.load(q, args...; options...)
         catch e
-            push!(failures, (e, q, args, options))
+            handle_current_error(e, library == last(libraries))
+            push!(failures, (e, q))
         end
     end
     handle_error(failures)
@@ -67,10 +68,11 @@ function save(s::@compat(Union{AbstractString,IO}), data...; options...)
     failures    = Any[]
     for library in libraries
         try
-            Library = save_import(library)
+            Library = checked_import(library)
             return Library.save(q, data...; options...)
         catch e
-            push!(failures, (library, e))
+            handle_current_error(e, library == last(libraries))
+            push!(failures, (e, q))
         end
     end
     handle_error(failures)
@@ -79,13 +81,13 @@ end
 # Forced format
 function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
     libraries = applicable_savers(df)
-    save_import(libraries[1])
+    checked_import(libraries[1])
     save(File(DataFormat{sym}, f), data...; options...)
 end
 
 function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
     libraries = applicable_savers(df)
-    save_import(libraries[1])
+    checked_import(libraries[1])
     save(Stream(DataFormat{sym}, s), data...; options...)
 end
 

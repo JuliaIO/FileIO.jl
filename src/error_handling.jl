@@ -35,11 +35,39 @@ immutable NotInstalledError <: Exception
 end
 Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not installed.")
 
-function handle_error(e)
-	rethrow(last(first(e)))
+@doc """
+Handles error as soon as they get thrown while doing IO
+""" ->
+function handle_current_error(e, islast)
+    bt = catch_backtrace()
+    bts = sprint(io->Base.show_backtrace(io, bt))
+    message = islast ? "" : "\nTrying next loading library! Please report this issue on Github"
+    warn(e, bts, message)
+end
+handle_current_error(e::NotInstalledError) = warn("lib ", e.library, " not installed, trying next library")
+
+@doc """
+Handles a list of thrown errors after no IO library was found working
+""" ->
+function handle_error(exceptions::Vector)
+    for exception in exceptions
+        continue_ = handle_error(exception...)
+        continue_ || break
+    end
 end
 
-function handle_error(e::LoaderError)
-	
+handle_error(e::NotInstalledError, q) = rethrow(e)
 
+function handle_error(e::NotInstalledError, q)
+    println("Library ", e.library, " is not installed but can load format: ", q)
+    println("should we install ", e.library, " for you? (y/n):")
+    input = chomp(strip(readline(STDIN)))
+    if input == "y"
+        info("Start installing ", e.library, "...")
+        Pkg.add(string(e.library))
+        return false # don't continue
+    end
+    true # User does not install, continue going through errors. 
 end
+
+
