@@ -56,7 +56,7 @@ function handle_error(exceptions::Vector)
     end
 end
 
-handle_error(e::NotInstalledError, q) = rethrow(e)
+handle_error(e, q) = rethrow(e)
 
 function handle_error(e::NotInstalledError, q)
     println("Library ", e.library, " is not installed but can load format: ", q)
