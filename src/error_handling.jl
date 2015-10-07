@@ -64,11 +64,11 @@ function handle_error(e::NotInstalledError, q)
     while true
         input = lowercase(chomp(strip(readline(STDIN))))
         if input == "y"
-            info("Start installing ", e.library, "...")
+            info(string("Start installing ", e.library, "..."))
             Pkg.add(string(e.library))
             return false # don't continue
         elseif input == "n"
-            info("Not installing ", e.library)
+            info(string("Not installing ", e.library))
             return true
         else
             println("$input is not a valid choice. Try typing y or n")
