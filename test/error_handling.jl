@@ -4,12 +4,7 @@ context("Not installed") do
 	ref = @async save("test.not_installed")
 	println(wr, "y")
 	if VERSION < v"0.4.0-dev"
-		try
-			wait(ref) #("unknown package NotInstalled")
-		catch e
-			println(e)
-			@fact isa(e, ErrorException) --> true
-		end
+		@fact_throws ErrorException wait(ref) #("unknown package NotInstalled")
 	else
 		@fact_throws CompositeException wait(ref) #("unknown package NotInstalled")
 	end
