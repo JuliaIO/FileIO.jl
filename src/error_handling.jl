@@ -59,11 +59,10 @@ end
 handle_error(e, q) = rethrow(e)
 
 function handle_error(e::NotInstalledError, q)
-    time_out_time = 50 #tempted to make this global, but only makes sense if we allow to set it.
     println("Library ", e.library, " is not installed but can load format: ", q)
-    println("should we install ", e.library, " for you? (y/n):")
-    start_time = time()
-    while time() - start_time < time_out_time # give user time_out_time seconds to react, then time out
+    !isinteractive() && rethrow(e) # if we're not in interactive mode just throw
+    while true
+        println("should we install ", e.library, " for you? (y/n):")
         input = lowercase(chomp(strip(readline(STDIN))))
         if input == "y"
             info(string("Start installing ", e.library, "..."))
@@ -76,7 +75,6 @@ function handle_error(e::NotInstalledError, q)
             println("$input is not a valid choice. Try typing y or n")
         end
     end
-    info(string("Time out after $time_out_time seconds! Not installing ", e.library))
     true # User does not install, continue going through errors. 
 end
 

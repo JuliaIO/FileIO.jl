@@ -1,6 +1,6 @@
+eval(Base, :(is_interactive = true)) # for interactive error handling
 using FileIO
 using FactCheck
-
 facts("FileIO") do
 	include("query.jl")
 	include("loadsave.jl")
