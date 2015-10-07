@@ -1,4 +1,6 @@
 context("Not installed") do
+	eval(Base, :(is_interactive = true)) # for interactive error handling
+
 	add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
 	stdin_copy = STDIN
 	rs, wr = redirect_stdin()
@@ -16,4 +18,6 @@ context("Not installed") do
 	@fact istaskdone(ref) --> true
 	redirect_stdin(stdin_copy)
 	close(rs);close(wr);
+	eval(Base, :(is_interactive = false)) # for interactive error handling
+
 end
