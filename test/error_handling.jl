@@ -1,5 +1,6 @@
 context("Not installed") do
 	add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
+	stdin_copy = STDIN
 	rs, wr = redirect_stdin()
 	ref = @async save("test.not_installed")
 	println(wr, "y")
@@ -13,4 +14,6 @@ context("Not installed") do
 	println(wr, "n") # don't install
 	wait(ref)
 	@fact istaskdone(ref) --> true
+	redirect_stdin(stdin_copy)
+	close(rs);close(wr);
 end
