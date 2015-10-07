@@ -61,11 +61,18 @@ handle_error(e, q) = rethrow(e)
 function handle_error(e::NotInstalledError, q)
     println("Library ", e.library, " is not installed but can load format: ", q)
     println("should we install ", e.library, " for you? (y/n):")
-    input = chomp(strip(readline(STDIN)))
-    if input == "y"
-        info("Start installing ", e.library, "...")
-        Pkg.add(string(e.library))
-        return false # don't continue
+    while true
+        input = lowercase(chomp(strip(readline(STDIN))))
+        if input == "y"
+            info("Start installing ", e.library, "...")
+            Pkg.add(string(e.library))
+            return false # don't continue
+        elseif input == "n"
+            info("Not installing ", e.library)
+            return true
+        else
+            println("$input is not a valid choice. Try typing y or n")
+        end
     end
     true # User does not install, continue going through errors. 
 end
