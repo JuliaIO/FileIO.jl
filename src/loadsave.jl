@@ -40,21 +40,8 @@ the magic bytes are essential.
 - `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
 """ ->
-function load(s::@compat(Union{AbstractString,IO}), args...; options...)
-    q           = query(s)
-    libraries   = applicable_loaders(q)
-    failures    = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            return Library.load(q, args...; options...)
-        catch e
-            handle_current_error(e, library == last(libraries))
-            push!(failures, (e, q))
-        end
-    end
-    handle_error(failures)
-end
+load(s::@compat(Union{AbstractString,IO}), args...; options...) =
+    load(query(s), args...; options...)
 
 @doc """
 - `save(filename, data...)` saves the contents of a formatted file,
@@ -62,21 +49,8 @@ trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """ ->
-function save(s::@compat(Union{AbstractString,IO}), data...; options...)
-    q           = query(s)
-    libraries   = applicable_savers(q)
-    failures    = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            return Library.save(q, data...; options...)
-        catch e
-            handle_current_error(e, library == last(libraries))
-            push!(failures, (e, q))
-        end
-    end
-    handle_error(failures)
-end
+save(s::@compat(Union{AbstractString,IO}), data...; options...) = 
+    save(query(s), data...; options...)
 
 # Forced format
 function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
@@ -93,5 +67,33 @@ end
 
 
 # Fallbacks
-load{F}(f::Formatted{F}, args...; options...) = error("No load function defined for format ", F, " with filename ", filename(f))
-save{F}(f::Formatted{F}, data...; options...) = error("No save function defined for format ", F, " with filename ", filename(f))
+function load{F}(q::Formatted{F}, args...; options...)
+    unknown(q) && throw(UnknownFormat(q))
+    libraries   = applicable_loaders(q)
+    failures    = Any[]
+    for library in libraries
+        try
+            Library = checked_import(library)
+            return Library.load(q, args...; options...)
+        catch e
+            handle_current_error(e, library == last(libraries))
+            push!(failures, (e, q))
+        end
+    end
+    handle_error(failures)
+end
+function save{F}(q::Formatted{F}, data...; options...)
+    unknown(q) && throw(UnknownFormat(q))
+    libraries   = applicable_savers(q)
+    failures    = Any[]
+    for library in libraries
+        try
+            Library = checked_import(library)
+            return Library.save(q, data...; options...)
+        catch e
+            handle_current_error(e, library == last(libraries))
+            push!(failures, (e, q))
+        end
+    end
+    handle_error(failures)
+end

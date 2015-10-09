@@ -38,8 +38,8 @@ export DataFormat,
 
 import Base.showerror
 
-include("error_handling.jl")
 include("query.jl")
+include("error_handling.jl")
 include("loadsave.jl")
 include("registry.jl")
 

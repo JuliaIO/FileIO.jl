@@ -25,7 +25,6 @@ Base.showerror(io::IO, e::WriterError) = println(
     msg, "\n  Will try next writer."
 )
 
-
 @doc """
 `NotInstalledError` should be thrown when a library is currently not installed.
 """ ->
@@ -34,6 +33,15 @@ immutable NotInstalledError <: Exception
     message::UTF8String
 end
 Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not installed.")
+
+@doc """
+`UnknownFormat` gets thrown when FileIO can't recognize the format of a file.
+""" ->
+immutable UnknownFormat{T <: Formatted} <: Exception
+    format::T
+end
+Base.showerror(io::IO, e::UnknownFormat) = println(io, e.format, " couldn't be recognized by FileIO.")
+
 
 @doc """
 Handles error as soon as they get thrown while doing IO
