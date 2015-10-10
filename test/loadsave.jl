@@ -3,10 +3,13 @@ using FactCheck
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
-FileIO.load(file::File{format"PBMText"})   = "PBMText"
-FileIO.load(file::File{format"PBMBinary"}) = "PBMBinary"
-FileIO.load(file::File{format"HDF5"})      = "HDF5"
-FileIO.load(file::File{format"JLD"})       = "JLD"
+module TestLoadSave
+import FileIO: File, @format_str
+load(file::File{format"PBMText"})   = "PBMText"
+load(file::File{format"PBMBinary"}) = "PBMBinary"
+load(file::File{format"HDF5"})      = "HDF5"
+load(file::File{format"JLD"})       = "JLD"
+end
 
 sym2loader = copy(FileIO.sym2loader)
 sym2saver = copy(FileIO.sym2saver)
@@ -16,6 +19,12 @@ try
     empty!(FileIO.sym2saver)
     file_dir = joinpath(dirname(@__FILE__), "files")
     context("Load") do
+        
+        add_loader(format"PBMText", :TestLoadSave)
+        add_loader(format"PBMBinary", :TestLoadSave)
+        add_loader(format"HDF5", :TestLoadSave)
+        add_loader(format"JLD", :TestLoadSave)
+
         @fact load(joinpath(file_dir, "file1.pbm")) --> "PBMText"
         @fact load(joinpath(file_dir, "file2.pbm")) --> "PBMBinary"
         # Regular HDF5 file with magic bytes starting at position 0
@@ -118,20 +127,50 @@ del_format(format"DUMMY")
 
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
-using Images
+module AmbigExt
+import FileIO: File, @format_str, Streamm, stream, skipmagic
+
+load(f::File{format"AmbigExt1"}) = open(f) do io
+    skipmagic(io)
+    readall(stream(io))
+end 
+load(f::File{format"AmbigExt2"}) = open(f) do io
+    skipmagic(io)
+    readall(stream(io))
+end
+
+save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
+    s = stream(io)
+    print(s, "ambigext1")
+    print(s, testdata)
+end 
+save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
+    s = stream(io)
+    print(s, "ambigext2")
+    print(s, testdata)
+end
+end
+
 context("Ambiguous extension") do
-    A = rand(UInt8, 3, 2)
-    fn = string(tempname(), ".pgm")
+    add_format(format"AmbigExt1", "ambigext1", ".aext", [:AmbigExt])
+    add_format(format"AmbigExt2", "ambigext2", ".aext", [:AmbigExt])
+    A = "this is a test"
+    fn = string(tempname(), ".aext")
     # Test the forced version first: we wouldn't want some method in Netpbm
     # coming to the rescue here, we want to rely on FileIO's logic.
     # `save(fn, A)` will load Netpbm, which could conceivably mask a failure
     # in the next line.
-    save(format"PGMBinary", fn, A)
+    save(format"AmbigExt2", fn, A)
+
     B = load(fn)
-    @fact raw(convert(Array, B)) --> A
+    @fact B --> A
+    @fact typeof(query(fn)) --> File{format"AmbigExt2"}
+    rm(fn)
+
     save(fn, A)
     B = load(fn)
-    @fact raw(convert(Array, B)) --> A
+    @fact B --> A
+    @fact typeof(query(fn)) --> File{format"AmbigExt1"}
 
     rm(fn)
 end
