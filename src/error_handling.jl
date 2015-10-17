@@ -46,10 +46,10 @@ Base.showerror(io::IO, e::UnknownFormat) = println(io, e.format, " couldn't be r
 @doc """
 Handles error as soon as they get thrown while doing IO
 """ ->
-function handle_current_error(e, islast)
+function handle_current_error(e, library, islast::Bool)
     bt = catch_backtrace()
     bts = sprint(io->Base.show_backtrace(io, bt))
-    message = islast ? "" : "\nTrying next loading library! Please report this issue on Github"
+    message = islast ? "" : "\nTrying next loading library! Please report this issue on the Github page for $library"
     warn(string(e, bts, message))
 end
 handle_current_error(e::NotInstalledError) = warn(string("lib ", e.library, " not installed, trying next library"))
