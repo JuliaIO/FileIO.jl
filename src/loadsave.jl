@@ -76,7 +76,7 @@ function load{F}(q::Formatted{F}, args...; options...)
             Library = checked_import(library)
             return Library.load(q, args...; options...)
         catch e
-            handle_current_error(e, library == last(libraries))
+            handle_current_error(e, library, library == last(libraries))
             push!(failures, (e, q))
         end
     end
@@ -91,7 +91,7 @@ function save{F}(q::Formatted{F}, data...; options...)
             Library = checked_import(library)
             return Library.save(q, data...; options...)
         catch e
-            handle_current_error(e, library == last(libraries))
+            handle_current_error(e, library, library == last(libraries))
             push!(failures, (e, q))
         end
     end
