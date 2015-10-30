@@ -14,7 +14,7 @@ provide support for standard file formats through functions named
 
 ## Installation
 
-All Packages in JuliaIO are not registered yet. Please add via `Pkg.clone("git-url").
+Install FileIO via `Pkg.add("FileIO")`.
 
 ## Usage
 
