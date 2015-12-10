@@ -14,7 +14,6 @@ add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"], [:NRRD])
 add_format(format"AndorSIF", "Andor Technology Multi-Channel File", ".sif", [:AndorSIF, LOAD])
 
 
-add_format(format"AVI", UInt8[0x52,0x49,0x46,0x46],                     ".avi", [:ImageMagick])
 add_format(format"CRW", UInt8[0x49,0x49,0x1a,0x00,0x00,0x00,0x48,0x45], ".crw", [:ImageMagick])
 add_format(format"CUR", UInt8[0x00,0x00,0x02,0x00],                     ".cur", [:ImageMagick])
 add_format(format"DCX", UInt8[0xb1,0x68,0xde,0x3a],                     ".dcx", [:ImageMagick])
@@ -100,6 +99,19 @@ add_format(format"OFF", "OFF", ".off", [:MeshIO])
 
 
 ### Complex cases
+
+# AVI is a subtype of RIFF, as is WAV
+function detectavi(io)
+    seekstart(io)
+    magic = ascii(read(io, UInt8, 4))
+    magic == "RIFF" || return false
+    seek(s, 8)
+    submagic = ascii(read(io, UInt8, 4))
+
+    submagic == "AVI "
+end
+add_format(format"AVI", detectavi, ".avi", [:ImageMagick])
+
 # HDF5: the complication is that the magic bytes may start at
 # 0, 512, 1024, 2048, or any multiple of 2 thereafter
 h5magic = (0x89,0x48,0x44,0x46,0x0d,0x0a,0x1a,0x0a)
