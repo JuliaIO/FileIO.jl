@@ -292,3 +292,7 @@ context("Multiple Magic bytes") do
         @fact position(io) --> 4
     end
 end
+context("AVI Detection") do
+    q = query(joinpath(file_dir, "bees.avi"))
+    @fact typeof(q) --> File{format"AVI"}
+end
