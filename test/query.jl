@@ -292,3 +292,16 @@ context("Multiple Magic bytes") do
         @fact position(io) --> 4
     end
 end
+context("AVI Detection") do
+    open(joinpath(file_dir, "bees.avi")) do s
+        @fact FileIO.detectavi(s) --> true
+    end
+    open(joinpath(file_dir, "sin.wav")) do s
+        @fact FileIO.detectavi(s) --> false
+    end
+    open(joinpath(file_dir, "magic1.tiff")) do s
+        @fact FileIO.detectavi(s) --> false
+    end
+    q = query(joinpath(file_dir, "bees.avi"))
+    @fact typeof(q) --> File{format"AVI"}
+end
