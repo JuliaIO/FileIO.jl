@@ -105,7 +105,7 @@ function detectavi(io)
     seekstart(io)
     magic = ascii(read(io, UInt8, 4))
     magic == "RIFF" || return false
-    seek(s, 8)
+    seek(io, 8)
     submagic = ascii(read(io, UInt8, 4))
 
     submagic == "AVI "
