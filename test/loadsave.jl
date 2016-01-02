@@ -19,7 +19,7 @@ try
     empty!(FileIO.sym2saver)
     file_dir = joinpath(dirname(@__FILE__), "files")
     context("Load") do
-        
+
         add_loader(format"PBMText", :TestLoadSave)
         add_loader(format"PBMBinary", :TestLoadSave)
         add_loader(format"HDF5", :TestLoadSave)
@@ -128,12 +128,12 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
-import FileIO: File, @format_str, Streamm, stream, skipmagic
+import FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io
     skipmagic(io)
     readall(stream(io))
-end 
+end
 load(f::File{format"AmbigExt2"}) = open(f) do io
     skipmagic(io)
     readall(stream(io))
@@ -143,7 +143,7 @@ save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
     s = stream(io)
     print(s, "ambigext1")
     print(s, testdata)
-end 
+end
 save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
     s = stream(io)
     print(s, "ambigext2")
