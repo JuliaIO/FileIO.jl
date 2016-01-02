@@ -29,7 +29,7 @@ function loadsave2string(load_save_libraries)
 
         os, loadsave = FileIO.split_predicates(predicates)
         if isempty(loadsave)
-            print(io, "loads and saves on **all** platforms with ", library2string(library))
+            print(io, "loads and saves on **all** platforms with ", library2string(library), " ")
         elseif (LOAD in loadsave)
             print(io, "loads with ", library2string(library), " on: ", os2string(os), " ")
         elseif (SAVE in loadsave)
