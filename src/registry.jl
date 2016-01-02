@@ -37,42 +37,42 @@ add_format(
     format"TGA",
     (),
     ".tga",
-    [:QuartzImageIO, LOAD, OSX],
+    [:QuartzImageIO, OSX],
     [:ImageMagick]
 )
 add_format(
     format"GIF",
     UInt8[0x47,0x49,0x46,0x38],
     ".gif",
-    [:QuartzImageIO, LOAD, OSX],
+    [:QuartzImageIO, OSX],
     [:ImageMagick]
 )
 add_format(
     format"PNG",
     UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
     ".png",
-    [:QuartzImageIO, LOAD, OSX],
+    [:QuartzImageIO, OSX],
     [:ImageMagick]
 )
 add_format(
     format"TIFF",
     (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]),
     [".tiff", ".tif"],
-    [:QuartzImageIO, LOAD, OSX],
+    [:QuartzImageIO, OSX],
     [:ImageMagick]
 )
 add_format(
     format"JPEG",
     UInt8[0xff,0xd8,0xff],
     [".jpeg", ".jpg", ".JPG"],
-    [:QuartzImageIO, LOAD, OSX],
+    [:QuartzImageIO, OSX],
     [:ImageMagick]
 ) # 0xe1
 add_format(
     format"BMP",
     UInt8[0x42,0x4d],
     ".bmp",
-    [:QuartzImageIO, LOAD, OSX],
+    [:QuartzImageIO, OSX],
     [:ImageMagick]
 )
 
@@ -150,6 +150,7 @@ function detect_stlascii(io)
         seekstart(io)
     end
 end
+
 function detect_stlbinary(io)
     const size_header = 80+sizeof(UInt32)
     const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
