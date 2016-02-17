@@ -11,6 +11,7 @@ high-level support for formatted files (in contrast with julia's
 low-level `read` and `write`).  To avoid name conflicts, packages that
 provide support for standard file formats through functions named
 `load` and `save` are encouraged to extend the definitions here.
+[Supported Files](docs/registry.md)
 
 ## Installation
 
