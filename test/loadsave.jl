@@ -174,3 +174,7 @@ context("Ambiguous extension") do
 
     rm(fn)
 end
+
+context("Absent file") do
+    @fact_throws SystemError load("nonexistent.oops")
+end

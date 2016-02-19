@@ -49,7 +49,7 @@ trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """ ->
-save(s::@compat(Union{AbstractString,IO}), data...; options...) = 
+save(s::@compat(Union{AbstractString,IO}), data...; options...) =
     save(query(s), data...; options...)
 
 # Forced format
@@ -68,7 +68,10 @@ end
 
 # Fallbacks
 function load{F}(q::Formatted{F}, args...; options...)
-    unknown(q) && throw(UnknownFormat(q))
+    if unknown(q)
+        isfile(filename(q)) || open(filename(q))  # force systemerror
+        throw(UnknownFormat(q))
+    end
     libraries   = applicable_loaders(q)
     failures    = Any[]
     for library in libraries
