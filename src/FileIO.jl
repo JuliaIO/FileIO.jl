@@ -43,13 +43,6 @@ include("error_handling.jl")
 include("loadsave.jl")
 include("registry.jl")
 
-
-end # module
-
-if VERSION < v"0.4.0-dev"
-    using Docile
-end
-
 @doc """
 `FileIO` API (brief summary, see individual functions for more detail):
 
@@ -73,3 +66,5 @@ end
 - `add_loader(fmt, :Package)`: indicate that `Package` supports loading files of type `fmt`
 - `add_saver(fmt, :Package)`: indicate that `Package` supports saving files of type `fmt`
 """ -> FileIO
+
+end
