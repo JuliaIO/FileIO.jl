@@ -39,8 +39,9 @@ file format.
 
 ## Adding new formats
 
-You register a new format by calling `add_format(fmt, magic,
-extension)`.  `fmt` is a `DataFormat` type, most conveniently created
+You register a new format by adding `add_format(fmt, magic,
+extension)` to the [registry](https://github.com/JuliaIO/FileIO.jl/blob/master/src/registry.jl). To do so, please just open a pull request (you can just edit the file in Github).
+`fmt` is a `DataFormat` type, most conveniently created
 as `format"IDENTIFIER"`.  `magic` typically contains the magic bytes
 that identify the format.  Here are some examples:
 
