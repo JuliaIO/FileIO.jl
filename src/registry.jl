@@ -99,6 +99,20 @@ add_format(format"OFF", "OFF", ".off", [:MeshIO])
 
 
 
+### Audio formats
+function detectwav(io)
+    seekstart(io)
+    magic = ascii(read(io, UInt8, 4))
+    magic == "RIFF" || return false
+    seek(io, 8)
+    submagic = ascii(read(io, UInt8, 4))
+
+    submagic == "WAVE"
+end
+add_format(format"WAV", detectwav, "wav", [:FLAC])
+add_format(format"FLAC","fLaC",".flac",[:FLAC])
+
+
 ### Complex cases
 # HDF5: the complication is that the magic bytes may start at
 # 0, 512, 1024, 2048, or any multiple of 2 thereafter
