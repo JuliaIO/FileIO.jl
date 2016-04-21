@@ -98,6 +98,20 @@ add_format(format"OFF", "OFF", ".off", [:MeshIO])
 
 
 
+### Audio formats
+function detectwav(io)
+    seekstart(io)
+    magic = read(io, UInt8, 4)
+    magic == b"RIFF" || return false
+    seek(io, 8)
+    submagic = read(io, UInt8, 4)
+
+    submagic == b"WAVE"
+end
+add_format(format"WAV", detectwav, "wav", [:FLAC])
+add_format(format"FLAC","fLaC",".flac",[:FLAC])
+
+
 ### Complex cases
 
 # AVI is a subtype of RIFF, as is WAV
