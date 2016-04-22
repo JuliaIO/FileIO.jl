@@ -108,7 +108,7 @@ function detectwav(io)
 
     submagic == b"WAVE"
 end
-add_format(format"WAV", detectwav, "wav", [:FLAC])
+add_format(format"WAV", detectwav, ".wav", [:WAV])
 add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
 
