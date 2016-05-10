@@ -39,7 +39,7 @@ An easy way to write `DataFormat{:CSV}` is `format"CSV"`.
 immutable DataFormat{sym} end
 
 macro format_str(s)
-    :(DataFormat{$(Expr(:quote, symbol(s)))})
+    :(DataFormat{$(Expr(:quote, @compat Symbol(s)))})
 end
 
 const unknown_df = DataFormat{:UNKNOWN}
@@ -49,7 +49,7 @@ const unknown_df = DataFormat{:UNKNOWN}
 unknown(::Type{format"UNKNOWN"})    = true
 unknown{sym}(::Type{DataFormat{sym}}) = false
 
-const ext2sym    = Dict{ASCIIString, @compat(Union{Symbol,Vector{Symbol}})}()
+const ext2sym    = Dict{String, @compat(Union{Symbol,Vector{Symbol}})}()
 const magic_list = Array(Pair, 0)    # sorted, see magic_cmp below
 const sym2info   = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
 const magic_func = Array(Pair, 0)    # for formats with complex magic #s
@@ -73,7 +73,7 @@ For example:
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """ ->
-function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::@compat(Union{Tuple,AbstractVector,ByteString}), extension)
+function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::@compat(Union{Tuple,AbstractVector,String}), extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
@@ -155,11 +155,11 @@ Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
 canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
-canonicalize_magic(m::ByteString) = canonicalize_magic(m.data)
+canonicalize_magic(m::String) = canonicalize_magic(m.data)
 
 
 
-function add_extension(ext::ASCIIString, sym)
+function add_extension(ext::String, sym)
     if haskey(ext2sym, ext)
         v = ext2sym[ext]
         if isa(v, Symbol)
@@ -177,7 +177,7 @@ function add_extension(ext::@compat(Union{Array,Tuple}), sym)
     end
 end
 
-del_extension(ext::ASCIIString) = delete!(ext2sym, ext)
+del_extension(ext::String) = delete!(ext2sym, ext)
 function del_extension(ext::@compat(Union{Array,Tuple}))
     for e in ext
         del_extension(e)
@@ -213,7 +213,7 @@ abstract Formatted{F<:DataFormat}   # A specific file or stream
 DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
 file.""" ->
 immutable File{F<:DataFormat} <: Formatted{F}
-    filename::UTF8String
+    filename::String
 end
 File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
 
@@ -236,10 +236,10 @@ indicate PNG format.  If known, the optional `filename` argument can
 be used to improve error messages, etc.""" ->
 immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     io::IOtype
-    filename::Nullable{UTF8String}
+    filename::Nullable{String}
 end
 
-Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{UTF8String}())
+Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{String}())
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,utf8(filename))
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
@@ -290,8 +290,8 @@ Base.read!(s::Stream, array::Array) = read!(stream(s), array)
 # call readbytes(stream(s), ...; all=value) manually
 Base.readbytes!(s::Stream, b) = readbytes!(stream(s), b)
 Base.readbytes!(s::Stream, b, nb) = readbytes!(stream(s), b, nb)
-Base.readbytes(s::Stream) = readbytes(stream(s))
-Base.readbytes(s::Stream, nb) = readbytes(stream(s), nb)
+Base.read(s::Stream) = read(stream(s))
+Base.read(s::Stream, nb) = read(stream(s), nb)
 Base.flush(s::Stream) = flush(stream(s))
 
 Base.isreadonly(s::Stream) = isreadonly(stream(s))
@@ -321,7 +321,7 @@ function skipmagic(io, magic::Tuple)
     len = position(io)
     seekstart(io)
     filter!(x-> length(x) <= len, magic) # throw out magic bytes that are longer than IO
-    tmp = readbytes(io, length(first(magic))) # now, first is both the longest and guaranteed to fit into io, so we can just read the bytes
+    tmp = read(io, length(first(magic))) # now, first is both the longest and guaranteed to fit into io, so we can just read the bytes
     for m in magic
         if magic_equal(m, tmp)
             seek(io, length(m))
@@ -382,7 +382,7 @@ hasfunction(s::Tuple) = false #has magic
 format inferred from the magic bytes.""" ->
 query(io::IO, filename) = query(io, Nullable(utf8(filename)))
 
-function query(io::IO, filename::Nullable{UTF8String}=Nullable{UTF8String}())
+function query(io::IO, filename::Nullable{String}=Nullable{String}())
     magic = Array(UInt8, 0)
     pos = position(io)
     for p in magic_list
@@ -423,8 +423,8 @@ function iter_eq(A, B)
     for _=1:length(A)
         a=A[i]; b=B[j]
         a == b && (i+=1; j+=1; continue)
-        a == '\r' && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
-        b == '\r' && (j+=1; continue)
+        a == UInt32('\r') && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
+        b == UInt32('\r') && (j+=1; continue)
         return false #now both must be unequal, and no \r windows excemption any more
     end
     true

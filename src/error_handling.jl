@@ -5,8 +5,8 @@ be given the chance to recover from the error.  Reports the library name and an 
 LoaderError("ImageMagick", "Foo not available")
 """ ->
 immutable LoaderError <: Exception
-    library::UTF8String
-    msg::UTF8String
+    library::String
+    msg::String
 end
 Base.showerror(io::IO, e::LoaderError) = println(io, e.library, " load error: ",
                                                  msg, "\n  Will try next loader.")
@@ -17,8 +17,8 @@ be given the chance to recover from the error.  Reports the library name and an 
 WriterError("ImageMagick", "Foo not available")
 """ ->
 immutable WriterError <: Exception
-    library::UTF8String
-    msg::UTF8String
+    library::String
+    msg::String
 end
 Base.showerror(io::IO, e::WriterError) = println(
     io, e.library, " writer error: ",
@@ -30,7 +30,7 @@ Base.showerror(io::IO, e::WriterError) = println(
 """ ->
 immutable NotInstalledError <: Exception
     library::Symbol
-    message::UTF8String
+    message::String
 end
 Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not installed.")
 

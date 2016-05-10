@@ -157,7 +157,7 @@ function detect_stlascii(io)
         len = position(io)
         seekstart(io)
         len < 80 && return false
-        header = readbytes(io, 80) # skip header
+        header = read(io, 80) # skip header
         seekstart(io)
         header[1:6] == b"solid " && !detect_stlbinary(io)
     finally
