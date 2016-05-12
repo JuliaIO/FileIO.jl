@@ -2,6 +2,7 @@ VERSION >= v"0.4.0-dev+6641" && __precompile__()
 
 module FileIO
 using Compat
+import Compat.String
 
 if VERSION < v"0.4.0-dev"
     using Docile

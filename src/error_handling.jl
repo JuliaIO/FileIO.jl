@@ -1,12 +1,11 @@
-
 @doc """
 `LoaderError` should be thrown when loader library code fails, and other libraries should
 be given the chance to recover from the error.  Reports the library name and an error message:
 LoaderError("ImageMagick", "Foo not available")
 """ ->
 immutable LoaderError <: Exception
-    library::UTF8String
-    msg::UTF8String
+    library::Compat.UTF8String
+    msg::Compat.UTF8String
 end
 Base.showerror(io::IO, e::LoaderError) = println(io, e.library, " load error: ",
                                                  msg, "\n  Will try next loader.")
@@ -17,8 +16,8 @@ be given the chance to recover from the error.  Reports the library name and an 
 WriterError("ImageMagick", "Foo not available")
 """ ->
 immutable WriterError <: Exception
-    library::UTF8String
-    msg::UTF8String
+    library::Compat.UTF8String
+    msg::Compat.UTF8String
 end
 Base.showerror(io::IO, e::WriterError) = println(
     io, e.library, " writer error: ",
@@ -30,7 +29,7 @@ Base.showerror(io::IO, e::WriterError) = println(
 """ ->
 immutable NotInstalledError <: Exception
     library::Symbol
-    message::UTF8String
+    message::Compat.UTF8String
 end
 Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not installed.")
 
