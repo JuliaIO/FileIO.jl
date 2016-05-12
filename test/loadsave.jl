@@ -116,7 +116,7 @@ context("Save") do
         @fact position(s) --> 1
         @fact isreadonly(s) --> true
         @fact isopen(s) --> true
-        @fact readbytes(s, 2) --> b"UM"
+        @fact read(s, 2) --> b"UM"
     end
     rm(fn)
 
@@ -128,15 +128,16 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
+using Compat
 import FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io
     skipmagic(io)
-    readall(stream(io))
+    readstring(stream(io))
 end
 load(f::File{format"AmbigExt2"}) = open(f) do io
     skipmagic(io)
-    readall(stream(io))
+    readstring(stream(io))
 end
 
 save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
