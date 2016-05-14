@@ -426,8 +426,8 @@ function iter_eq(A, B)
     for _=1:length(A)
         a=A[i]; b=B[j]
         a == b && (i+=1; j+=1; continue)
-        a == '\r' && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
-        b == '\r' && (j+=1; continue)
+        a == @compat(UInt32('\r')) && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
+        b == @compat(UInt32('\r')) && (j+=1; continue)
         return false #now both must be unequal, and no \r windows excemption any more
     end
     true
