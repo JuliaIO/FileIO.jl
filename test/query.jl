@@ -2,7 +2,7 @@ using FileIO
 using FactCheck
 
 if VERSION < v"0.4.0-dev"
-    using Compat
+    using Compat; import Compat.String
     import FileIO.Pair
 end
 

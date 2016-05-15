@@ -1,5 +1,5 @@
-using FileIO, Compat
-import Compat.String
+using FileIO
+using Compat; import Compat.String
 import FileIO: LOAD, SAVE, OSX, OS
 const fs = open(Pkg.dir("FileIO", "docs", "registry.md"), "w")
 

@@ -213,7 +213,7 @@ abstract Formatted{F<:DataFormat}   # A specific file or stream
 DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
 file.""" ->
 immutable File{F<:DataFormat} <: Formatted{F}
-    filename::Compat.UTF8String
+    filename::String
 end
 File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
 
@@ -236,10 +236,10 @@ indicate PNG format.  If known, the optional `filename` argument can
 be used to improve error messages, etc.""" ->
 immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     io::IOtype
-    filename::Nullable{Compat.UTF8String}
+    filename::Nullable{String}
 end
 
-Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{Compat.UTF8String}())
+Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{String}())
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,utf8(filename))
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
@@ -385,7 +385,7 @@ hasfunction(s::Tuple) = false #has magic
 format inferred from the magic bytes.""" ->
 query(io::IO, filename) = query(io, Nullable(utf8(filename)))
 
-function query(io::IO, filename::Nullable{Compat.UTF8String}=Nullable{Compat.UTF8String}())
+function query(io::IO, filename::Nullable{String}=Nullable{String}())
     magic = Array(UInt8, 0)
     pos = position(io)
     for p in magic_list
