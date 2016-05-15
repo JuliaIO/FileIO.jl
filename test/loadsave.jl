@@ -1,4 +1,5 @@
-using FileIO, Compat
+using FileIO
+using Compat; import Compat.String
 using FactCheck
 
 # Stub readers---these might bork any existing readers, so don't
@@ -128,7 +129,7 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
-using Compat
+using Compat; import Compat.String
 import FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io
