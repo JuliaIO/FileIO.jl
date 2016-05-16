@@ -77,6 +77,7 @@ function load{F}(q::Formatted{F}, args...; options...)
     for library in libraries
         try
             Library = checked_import(library)
+            Library.load == FileIO.load && error("Library $library does not have the correct load method")
             return Library.load(q, args...; options...)
         catch e
             handle_current_error(e, library, library == last(libraries))
@@ -92,6 +93,7 @@ function save{F}(q::Formatted{F}, data...; options...)
     for library in libraries
         try
             Library = checked_import(library)
+            Library.save == FileIO.save && error("Library $library does not have a save method")
             return Library.save(q, data...; options...)
         catch e
             handle_current_error(e, library, library == last(libraries))
