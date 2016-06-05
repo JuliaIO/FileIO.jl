@@ -11,10 +11,11 @@ immutable SAVE end
 split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
 applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
 applies_to_os{O <: OS}(os::Type{O})              = false
-@unix_only applies_to_os{U <: Unix}(os::Type{U}) = true
-@windows_only applies_to_os(os::Type{Windows})   = true
-@linux_only applies_to_os(os::Type{OSX})         = false
-@osx_only applies_to_os(os::Type{Linux})         = false
+
+applies_to_os{U <: Unix}(os::Type{U}) = is_unix()
+applies_to_os(os::Type{Windows}) = is_windows()
+applies_to_os(os::Type{OSX}) = is_apple()
+applies_to_os(os::Type{Linux}) = is_linux()
 
 function add_loadsave(format, predicates)
     library = shift!(predicates)
@@ -240,7 +241,7 @@ immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
 end
 
 Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{Compat.UTF8String}())
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,utf8(filename))
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,Compat.String(filename))
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
 
@@ -383,7 +384,7 @@ hasfunction(s::Tuple) = false #has magic
 @doc """
 `query(io, [filename])` returns a `Stream` object with information about the
 format inferred from the magic bytes.""" ->
-query(io::IO, filename) = query(io, Nullable(utf8(filename)))
+query(io::IO, filename) = query(io, Nullable(Compat.String(filename)))
 
 function query(io::IO, filename::Nullable{Compat.UTF8String}=Nullable{Compat.UTF8String}())
     magic = Array(UInt8, 0)

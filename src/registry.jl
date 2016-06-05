@@ -117,12 +117,12 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
-    magic = ascii(read(io, UInt8, 4))
-    magic == "RIFF" || return false
+    magic = read(io, UInt8, 4)
+    magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = ascii(read(io, UInt8, 4))
+    submagic = read(io, UInt8, 4)
 
-    submagic == "AVI "
+    submagic == b"AVI "
 end
 add_format(format"AVI", detectavi, ".avi", [:ImageMagick])
 
