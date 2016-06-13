@@ -188,3 +188,5 @@ function detect_stlbinary(io)
 end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [:MeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [:MeshIO])
+
+add_format(format"ABAQUS_INP", (), [".inp"], [:MeshIO])
