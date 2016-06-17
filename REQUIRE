@@ -1,4 +1,2 @@
-julia 0.3
-Compat 0.7.15
-# The rest are needed only on julia 0.3
-Docile
+julia 0.4
+Compat 0.7.19

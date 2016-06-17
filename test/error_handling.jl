@@ -3,7 +3,9 @@ context("Not installed") do
 
 	add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
 	stdin_copy = STDIN
-	rs, wr = redirect_stdin()
+    stderr_copy = STDERR
+    rs, wr = redirect_stdin()
+	rserr, wrerr = redirect_stderr()
 	ref = @async save("test.not_installed")
 	println(wr, "y")
 	if VERSION < v"0.4.0-dev"
@@ -16,8 +18,11 @@ context("Not installed") do
 	println(wr, "n") # don't install
 	wait(ref)
 	@fact istaskdone(ref) --> true
+
+    close(rs);close(wr);close(rserr);close(wrerr)
 	redirect_stdin(stdin_copy)
-	close(rs);close(wr);
+    redirect_stderr(stderr_copy)
+
 	eval(Base, :(is_interactive = false)) # for interactive error handling
 
 end
