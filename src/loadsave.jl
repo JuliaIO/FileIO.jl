@@ -28,27 +28,29 @@ for (applicable_, add_, dict_) in (
 end
 
 
-@doc "`add_loader(fmt, :Package)` triggers `using Package` before loading format `fmt`" -> add_loader
-@doc "`add_saver(fmt, :Package)` triggers `using Package` before saving format `fmt`" -> add_saver
+"`add_loader(fmt, :Package)` triggers `using Package` before loading format `fmt`"
+add_loader
+"`add_saver(fmt, :Package)` triggers `using Package` before saving format `fmt`"
+add_saver
 
 
-@doc """
+"""
 - `load(filename)` loads the contents of a formatted file, trying to infer
 the format from `filename` and/or magic bytes in the file.
 - `load(strm)` loads from an `IOStream` or similar object. In this case,
 the magic bytes are essential.
 - `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
-""" ->
+"""
 load(s::@compat(Union{AbstractString,IO}), args...; options...) =
     load(query(s), args...; options...)
 
-@doc """
+"""
 - `save(filename, data...)` saves the contents of a formatted file,
 trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
-""" ->
+"""
 save(s::@compat(Union{AbstractString,IO}), data...; options...) =
     save(query(s), data...; options...)
 

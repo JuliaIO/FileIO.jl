@@ -4,16 +4,6 @@ module FileIO
 using Compat
 import Compat.String
 
-if VERSION < v"0.4.0-dev"
-    using Docile
-    immutable Pair{A,B}
-        first::A
-        second::B
-    end
-    Base.first(p::Pair) = p.first
-    Base.last(p::Pair) = p.second
-end
-
 export DataFormat,
        File,
        Formatted,
@@ -44,7 +34,7 @@ include("error_handling.jl")
 include("loadsave.jl")
 include("registry.jl")
 
-@doc """
+"""
 `FileIO` API (brief summary, see individual functions for more detail):
 
 - `format"PNG"`: specifies a particular defined format
@@ -66,6 +56,7 @@ include("registry.jl")
 - `add_format(fmt, magic, extension)`: register a new format
 - `add_loader(fmt, :Package)`: indicate that `Package` supports loading files of type `fmt`
 - `add_saver(fmt, :Package)`: indicate that `Package` supports saving files of type `fmt`
-""" -> FileIO
+"""
+FileIO
 
 end

@@ -30,13 +30,13 @@ function add_loadsave(format, predicates)
     end
 end
 
-@doc """
+"""
 `DataFormat{sym}()` indicates a known binary or text format of kind `sym`,
 where `sym` is always a symbol. For example, a .csv file might have
 `DataFormat{:CSV}()`.
 
 An easy way to write `DataFormat{:CSV}` is `format"CSV"`.
-""" ->
+"""
 immutable DataFormat{sym} end
 
 macro format_str(s)
@@ -45,8 +45,8 @@ end
 
 const unknown_df = DataFormat{:UNKNOWN}
 
-@doc """
-`unknown(f)` returns true if the format of `f` is unknown.""" ->
+"""
+`unknown(f)` returns true if the format of `f` is unknown."""
 unknown(::Type{format"UNKNOWN"})    = true
 unknown{sym}(::Type{DataFormat{sym}}) = false
 
@@ -64,7 +64,7 @@ function add_format(fmt, magic, extension, load_save_libraries...)
     fmt
 end
 
-@doc """
+"""
 `add_format(fmt, magic, extention)` registers a new `DataFormat`.
 For example:
 
@@ -73,7 +73,7 @@ For example:
     add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
-""" ->
+"""
 function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::@compat(Union{Tuple,AbstractVector,String}), extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     m = canonicalize_magic(magic)
@@ -113,9 +113,9 @@ function add_format{sym}(fmt::Type{DataFormat{sym}}, magic, extension)
     fmt
 end
 
-@doc """
+"""
 `del_format(fmt::DataFormat)` deletes `fmt` from the format registry.
-""" ->
+"""
 function del_format{sym}(fmt::Type{DataFormat{sym}})
     magic, extension = sym2info[sym]
     del_magic(magic, sym)
@@ -148,9 +148,9 @@ function del_magic{N}(magic::NTuple{N, UInt8}, sym)
     nothing
 end
 
-@doc """
+"""
 `info(fmt)` returns the magic bytes/extension information for
-`DataFormat` `fmt`.""" ->
+`DataFormat` `fmt`."""
 Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
 
@@ -209,32 +209,32 @@ end
 
 abstract Formatted{F<:DataFormat}   # A specific file or stream
 
-@doc """
+"""
 `File(fmt, filename)` indicates that `filename` is a file of known
 DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
-file.""" ->
+file."""
 immutable File{F<:DataFormat} <: Formatted{F}
     filename::Compat.UTF8String
 end
 File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
 
-@doc """
+"""
 `filename(file)` returns the filename associated with `File` `file`.
-""" ->
+"""
 filename(f::File) = f.filename
 
-@doc """
+"""
 `file_extension(file)` returns the file extension associated with `File` `file`.
-""" ->
+"""
 file_extension(f::File) = splitext(filename(f))[2]
 
 
 
-@doc """
+"""
 `Stream(fmt, io, [filename])` indicates that the stream `io` is
 written in known `Format`.  For example, `Stream{PNG}(io)` would
 indicate PNG format.  If known, the optional `filename` argument can
-be used to improve error messages, etc.""" ->
+be used to improve error messages, etc."""
 immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     io::IOtype
     filename::Nullable{Compat.UTF8String}
@@ -245,17 +245,17 @@ Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,ty
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
 
-@doc "`stream(s)` returns the stream associated with `Stream` `s`" ->
+"`stream(s)` returns the stream associated with `Stream` `s`"
 stream(s::Stream) = s.io
 
-@doc """
+"""
 `filename(stream)` returns a nullable-string of the filename
-associated with `Stream` `stream`.""" ->
+associated with `Stream` `stream`."""
 filename(s::Stream) = s.filename
 
-@doc """
+"""
 `file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
-""" ->
+"""
 function file_extension(f::Stream)
     isnull(filename(f)) && return filename(f)
     splitext(get(filename(f)))[2]
@@ -301,13 +301,13 @@ Base.readbytes(s::Stream, nb) = read(stream(s), nb)
 Base.isreadonly(s::Stream) = isreadonly(stream(s))
 Base.isopen(s::Stream) = isopen(stream(s))
 
-@doc "`magic(fmt)` returns the magic bytes of format `fmt`" ->
+"`magic(fmt)` returns the magic bytes of format `fmt`"
 magic{F<:DataFormat}(fmt::Type{F}) = UInt8[info(fmt)[1]...]
 
-@doc """
+"""
 `skipmagic(s)` sets the position of `Stream` `s` to be just after the magic bytes.
 For a plain IO object, you can use `skipmagic(io, fmt)`.
-""" ->
+"""
 skipmagic{F}(s::Stream{F}) = (skipmagic(stream(s), F); s)
 function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
     magic, _ = sym2info[sym]
@@ -345,9 +345,9 @@ end
 unknown{F}(::File{F}) = unknown(F)
 unknown{F}(::Stream{F}) = unknown(F)
 
-@doc """
+"""
 `query(filename)` returns a `File` object with information about the
-format inferred from the file's extension and/or magic bytes.""" ->
+format inferred from the file's extension and/or magic bytes."""
 function query(filename::AbstractString)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
@@ -381,9 +381,9 @@ hasfunction(v::Vector) = any(hasfunction, v)
 hasfunction(s::Any) = true #has function
 hasfunction(s::Tuple) = false #has magic
 
-@doc """
+"""
 `query(io, [filename])` returns a `Stream` object with information about the
-format inferred from the magic bytes.""" ->
+format inferred from the magic bytes."""
 query(io::IO, filename) = query(io, Nullable(Compat.UTF8String(filename)))
 
 function query(io::IO, filename::Nullable{Compat.UTF8String}=Nullable{Compat.UTF8String}())
