@@ -241,7 +241,7 @@ immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
 end
 
 Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{Compat.UTF8String}())
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,Compat.String(filename))
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,Compat.UTF8String(filename))
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
 
@@ -384,7 +384,7 @@ hasfunction(s::Tuple) = false #has magic
 @doc """
 `query(io, [filename])` returns a `Stream` object with information about the
 format inferred from the magic bytes.""" ->
-query(io::IO, filename) = query(io, Nullable(Compat.String(filename)))
+query(io::IO, filename) = query(io, Nullable(Compat.UTF8String(filename)))
 
 function query(io::IO, filename::Nullable{Compat.UTF8String}=Nullable{Compat.UTF8String}())
     magic = Array(UInt8, 0)

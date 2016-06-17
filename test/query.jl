@@ -1,8 +1,8 @@
 using FileIO
 using FactCheck
+using Compat
 
 if VERSION < v"0.4.0-dev"
-    using Compat
     import FileIO.Pair
 end
 
