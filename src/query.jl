@@ -148,6 +148,11 @@ function del_magic{N}(magic::NTuple{N, UInt8}, sym)
     nothing
 end
 
+function del_magic(magic::Function, sym)
+    deleteat!(magic_func, findfirst(magic_func, Pair(magic,sym)))
+    nothing
+end
+
 """
 `info(fmt)` returns the magic bytes/extension information for
 `DataFormat` `fmt`."""
