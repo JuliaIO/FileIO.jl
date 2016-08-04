@@ -1,6 +1,8 @@
 ### Simple cases
 add_format(format"JLD", "Julia data file (HDF5)", ".jld", [:JLD])
 
+add_format(format"MIDI", "MIDI", ".mid")
+
 # Image formats
 add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
 add_format(format"PGMBinary", b"P5", ".pgm", [:Netpbm])
