@@ -1,5 +1,19 @@
 ### Simple cases
+
+# data formats
 add_format(format"JLD", "Julia data file (HDF5)", ".jld", [:JLD])
+
+# test for RD?2 magic sequence at the beginning of R data input stream
+function detect_rdata(io)
+    seekstart(io)
+    read(io, UInt8) == UInt8('R') &&
+    read(io, UInt8) == UInt8('D') &&
+    (fmt = read(io, UInt8); fmt == UInt8('A') || fmt == UInt8('B') || fmt == UInt8('X')) &&
+    read(io, UInt8) == UInt8('2') &&
+    read(io, UInt8) == 0x0A
+end
+
+add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
 
 # Image formats
 add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
