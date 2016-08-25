@@ -309,6 +309,15 @@ context("AVI Detection") do
     q = query(joinpath(file_dir, "bees.avi"))
     @fact typeof(q) --> File{format"AVI"}
 end
+context("RDA detection") do
+    q = query(joinpath(file_dir, "minimal_ascii.rda"))
+    @fact typeof(q) --> File{format"RData"}
+    open(q) do io
+        @fact position(io) --> 0
+        @fact FileIO.detect_rdata(io) --> true
+        @fact position(io) --> 5
+    end
+end
 context("Format with function for magic bytes") do
     add_format(format"FUNCTION_FOR_MAGIC_BYTES", x -> 0x00, ".wav", [:WAV])
     del_format(format"FUNCTION_FOR_MAGIC_BYTES")
