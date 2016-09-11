@@ -53,12 +53,26 @@ function handle_current_error(e, library, islast::Bool)
 end
 handle_current_error(e::NotInstalledError) = warn(string("lib ", e.library, " not installed, trying next library"))
 
+
 """
 Handles a list of thrown errors after no IO library was found working
 """
-function handle_error(exceptions::Vector)
+function handle_exceptions(exceptions::Vector, action)
+    # first show all errors when there are more then one
+    multiple = length(exceptions) > 1
+    println("Error$(multiple?"s" : "") encountered while $action.")
+    if multiple
+        println("All errors:")
+        for (err, file) in exceptions
+            println("   ", err)
+        end
+    end
+    # then handle all errors.
+    # this way first fatal exception throws and user can still see all errors
+    # TODO, don't throw, if it contains a NotInstalledError?!
+    println("Fatal error:")
     for exception in exceptions
-        continue_ = handle_error(exception...)
+        continue_ = handle_error(exception...) #
         continue_ || break
     end
 end
@@ -66,10 +80,10 @@ end
 handle_error(e, q) = rethrow(e)
 
 function handle_error(e::NotInstalledError, q)
-    println("Library ", e.library, " is not installed but can load format: ", q)
+    println("Library \"", e.library, "\" is not installed but is the recommended library to load format: \"", file_extension(q), "\"")
     !isinteractive() && rethrow(e) # if we're not in interactive mode just throw
     while true
-        println("should we install ", e.library, " for you? (y/n):")
+        println("Should we install \"", e.library, "\" for you? (y/n):")
         input = lowercase(chomp(strip(readline(STDIN))))
         if input == "y"
             info(string("Start installing ", e.library, "..."))
