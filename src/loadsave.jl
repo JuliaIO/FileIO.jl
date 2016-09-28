@@ -41,57 +41,9 @@ add_loader
 add_saver
 
 
-"""
-- `load(filename)` loads the contents of a formatted file, trying to infer
-the format from `filename` and/or magic bytes in the file.
-- `load(strm)` loads from an `IOStream` or similar object. In this case,
-the magic bytes are essential.
-- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
-- `load(f; options...)` passes keyword arguments on to the loader.
-"""
-load
-
-"""
-Some packages may implement a streaming API, where the contents of the file can
-be read in chunks and processed, rather than all at once. Reading from these
-higher-level streams should return a formatted object, like an image or chunk of
-video or audio.
-
-- `loadstreaming(filename)` loads the contents of a formatted file, trying to infer
-the format from `filename` and/or magic bytes in the file. It returns a streaming
-type that can be read from in chunks, rather than loading the whole contents all
-at once
-- `loadstreaming(strm)` loads the stream from an `IOStream` or similar object. In this case,
-the magic bytes are essential.
-- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
-- `load(f; options...)` passes keyword arguments on to the loader.
-"""
-loadstreaming
-
-"""
-- `save(filename, data...)` saves the contents of a formatted file,
-trying to infer the format from `filename`.
-- `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
-- `save(f, data...; options...)` passes keyword arguments on to the saver.
-"""
-save
-
-"""
-Some packages may implement a streaming API, where the contents of the file can
-be written in chunks, rather than all at once. These higher-level streams should
-accept formatted objects, like an image or chunk of video or audio.
-
-- `savestreaming(filename, data...)` saves the contents of a formatted file,
-trying to infer the format from `filename`.
-- `savestreaming(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
-- `savestreaming(f, data...; options...)` passes keyword arguments on to the saver.
-"""
-savestreaming
-
-
 for fn in (:load, :loadstreaming, :save, :savestreaming)
-    @eval $fn(s::Union{AbstractString,IO}, data...; options...) =
-        $fn(query(s), data...; options...)
+    @eval $fn(s::@compat(Union{AbstractString,IO}), args...; options...) =
+        $fn(query(s), args...; options...)
 end
 
 function save(s::Union{AbstractString,IO}; options...)
@@ -139,7 +91,6 @@ for fn in (:loadstreaming, :savestreaming)
     end
 end
 
-
 # Fallbacks
 for fn in (:load, :loadstreaming)
     @eval function $fn{F}(q::Formatted{F}, args...; options...)
@@ -182,6 +133,53 @@ for fn in (:save, :savestreaming)
         handle_exceptions(failures, "saving \"$(filename(q))\"")
     end
 end
+
+"""
+- `load(filename)` loads the contents of a formatted file, trying to infer
+the format from `filename` and/or magic bytes in the file.
+- `load(strm)` loads from an `IOStream` or similar object. In this case,
+the magic bytes are essential.
+- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
+- `load(f; options...)` passes keyword arguments on to the loader.
+"""
+load
+
+"""
+Some packages may implement a streaming API, where the contents of the file can
+be read in chunks and processed, rather than all at once. Reading from these
+higher-level streams should return a formatted object, like an image or chunk of
+video or audio.
+
+- `loadstreaming(filename)` loads the contents of a formatted file, trying to infer
+the format from `filename` and/or magic bytes in the file. It returns a streaming
+type that can be read from in chunks, rather than loading the whole contents all
+at once
+- `loadstreaming(strm)` loads the stream from an `IOStream` or similar object. In this case,
+the magic bytes are essential.
+- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
+- `load(f; options...)` passes keyword arguments on to the loader.
+"""
+loadstreaming
+
+"""
+- `save(filename, data...)` saves the contents of a formatted file,
+trying to infer the format from `filename`.
+- `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
+- `save(f, data...; options...)` passes keyword arguments on to the saver.
+"""
+save
+
+"""
+Some packages may implement a streaming API, where the contents of the file can
+be written in chunks, rather than all at once. These higher-level streams should
+accept formatted objects, like an image or chunk of video or audio.
+
+- `savestreaming(filename, data...)` saves the contents of a formatted file,
+trying to infer the format from `filename`.
+- `savestreaming(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
+- `savestreaming(f, data...; options...)` passes keyword arguments on to the saver.
+"""
+savestreaming
 
 function has_method_from(mt, Library)
     for m in mt
