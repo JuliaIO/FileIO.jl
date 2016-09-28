@@ -130,10 +130,12 @@ for fn in (:loadstreaming, :savestreaming)
     @eval function $fn(f::Function, args...; kwargs...)
         str = $fn(args...; kwargs...)
         try
-            f(str)
+            ret = f(str)
         finally
             close(str)
         end
+
+        ret
     end
 end
 
