@@ -49,8 +49,24 @@ the magic bytes are essential.
 - `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
 """
-load(s::Union{AbstractString,IO}, args...; options...) =
-    load(query(s), args...; options...)
+load
+
+"""
+Some packages may implement a streaming API, where the contents of the file can
+be read in chunks and processed, rather than all at once. Reading from these
+higher-level streams should return a formatted object, like an image or chunk of
+video or audio.
+
+- `loadstreaming(filename)` loads the contents of a formatted file, trying to infer
+the format from `filename` and/or magic bytes in the file. It returns a streaming
+type that can be read from in chunks, rather than loading the whole contents all
+at once
+- `loadstreaming(strm)` loads the stream from an `IOStream` or similar object. In this case,
+the magic bytes are essential.
+- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
+- `load(f; options...)` passes keyword arguments on to the loader.
+"""
+loadstreaming
 
 """
 - `save(filename, data...)` saves the contents of a formatted file,
@@ -58,8 +74,25 @@ trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """
-save(s::Union{AbstractString,IO}, data...; options...) =
-    save(query(s), data...; options...)
+save
+
+"""
+Some packages may implement a streaming API, where the contents of the file can
+be written in chunks, rather than all at once. These higher-level streams should
+accept formatted objects, like an image or chunk of video or audio.
+
+- `savestreaming(filename, data...)` saves the contents of a formatted file,
+trying to infer the format from `filename`.
+- `savestreaming(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
+- `savestreaming(f, data...; options...)` passes keyword arguments on to the saver.
+"""
+savestreaming
+
+
+for fn in (:load, :loadstreaming, :save, :savestreaming)
+    @eval $fn(s::Union{AbstractString,IO}, data...; options...) =
+        $fn(query(s), data...; options...)
+end
 
 function save(s::Union{AbstractString,IO}; options...)
     data -> save(s, data; options...)
@@ -73,51 +106,79 @@ function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; option
                        $data...; $options...)))
 end
 
+function savestreaming{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
+    libraries = applicable_savers(df)
+    checked_import(libraries[1])
+    eval(Main, :($savestreaming($Stream($(DataFormat{sym}), $s),
+                                $data...; $options...)))
+
 function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
     libraries = applicable_savers(df)
     checked_import(libraries[1])
     eval(Main, :($save($Stream($(DataFormat{sym}), $s),
                        $data...; $options...)))
+
+function savestreaming{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+    libraries = applicable_savers(df)
+    checked_import(libraries[1])
+    eval(Main, :($savestreaming($File($(DataFormat{sym}), $f),
+                                $data...; $options...)))
+end
+
+# do-syntax for streaming IO
+for fn in (:loadstreaming, :savestreaming)
+    @eval function $fn(f::Function, args...; kwargs...)
+        str = $fn(args...; kwargs...)
+        try
+            f(str)
+        finally
+            close(str)
+        end
+    end
 end
 
 
 # Fallbacks
-function load{F}(q::Formatted{F}, args...; options...)
-    if unknown(q)
-        isfile(filename(q)) || open(filename(q))  # force systemerror
-        throw(UnknownFormat(q))
-    end
-    libraries = applicable_loaders(q)
-    failures  = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            if !has_method_from(methods(Library.load), Library)
-                throw(LoaderError(string(library), "load not defined"))
-            end
-            return eval(Main, :($(Library.load)($q, $args...; $options...)))
-        catch e
-            push!(failures, (e, q))
+for fn in (:load, :loadstreaming)
+    @eval function $fn{F}(q::Formatted{F}, args...; options...)
+        if unknown(q)
+            isfile(filename(q)) || open(filename(q))  # force systemerror
+            throw(UnknownFormat(q))
         end
+        libraries = applicable_loaders(q)
+        failures  = Any[]
+        for library in libraries
+            try
+                Library = checked_import(library)
+                if !has_method_from(methods(Library.$fn), Library)
+                    throw(LoaderError(string(library), "$fn not defined"))
+                end
+                return eval(Main, :($(Library.$fn)($q, $args...; $options...)))
+            catch e
+                push!(failures, (e, q))
+            end
+        end
+        handle_exceptions(failures, "loading \"$(filename(q))\"")
     end
-    handle_exceptions(failures, "loading \"$(filename(q))\"")
 end
-function save{F}(q::Formatted{F}, data...; options...)
-    unknown(q) && throw(UnknownFormat(q))
-    libraries = applicable_savers(q)
-    failures  = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            if !has_method_from(methods(Library.save), Library)
-                throw(WriterError(string(library), "save not defined"))
+for fn in (:save, :savestreaming)
+    @eval function $fn{F}(q::Formatted{F}, data...; options...)
+        unknown(q) && throw(UnknownFormat(q))
+        libraries = applicable_savers(q)
+        failures  = Any[]
+        for library in libraries
+            try
+                Library = checked_import(library)
+                if !has_method_from(methods(Library.$fn), Library)
+                    throw(WriterError(string(library), "$fn not defined"))
+                end
+                return eval(Main, :($(Library.$fn)($q, $data...; $options...)))
+            catch e
+                push!(failures, (e, q))
             end
-            return eval(Main, :($(Library.save)($q, $data...; $options...)))
-        catch e
-            push!(failures, (e, q))
         end
+        handle_exceptions(failures, "saving \"$(filename(q))\"")
     end
-    handle_exceptions(failures, "saving \"$(filename(q))\"")
 end
 
 function has_method_from(mt, Library)

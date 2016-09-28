@@ -37,6 +37,40 @@ s = query(io)   # io is a stream
 will return a `File` or `Stream` object that also encodes the detected
 file format.
 
+Sometimes you want to read or write files that are larger than your available
+memory, or might be an unknown or infinite length (e.g. reading an audio or
+video stream from a socket). In these cases it might not make sense to process
+the whole file at once, but instead process it a chunk at a time. For these situations FileIO provides the `loadstreaming` and `savestreaming` functions, which return an object that you can `read` or `write`, rather than the file data itself.
+
+This would look something like:
+
+```jl
+using FileIO
+audio = loadstreaming("bigfile.wav")
+try
+    while !eof(audio)
+        chunk = read(audio, 4096) # read 4096 frames
+        # process the chunk
+    end
+finally
+    close(stream)
+end
+```
+
+or use `do` syntax to auto-close the stream:
+
+```jl
+using FileIO
+do loadstreaming("bigfile.wav") audio
+    while !eof(audio)
+        chunk = read(audio, 4096) # read 4096 frames
+        # process the chunk
+    end
+end
+```
+
+Note that in these cases you may want to use `read!` with a pre-allocated buffer for maximum efficiency.
+
 ## Adding new formats
 
 You register a new format by adding `add_format(fmt, magic,
@@ -138,6 +172,46 @@ they open.  (If you use the `do` syntax, this happens for you
 automatically even if the code inside the `do` scope throws an error.)
 Conversely, `load(::Stream)` and `save(::Stream)` should not close the
 input stream.
+
+`loadstreaming` and `savestreaming` use the same query mechanism, but return a decoded stream that users can `read` or `write`. You should also implement a `close` method on your reader or writer type. Just like with `load` and `save`, if the user provided a filename, your `close` method should be responsible for closing any streams you opened in order to read or write the file. If you are given a `Stream`, your `close` method should only do the clean up for your reader or writer type, not close the stream.
+
+```julia
+struct WAVReader
+    io::IO
+    ownstream::Bool
+end
+
+function read(reader::WAVReader, frames::Int)
+    # read and decode audio samples from reader.io
+end
+
+function close(reader::WAVReader)
+    # do whatever cleanup the reader needs
+    if reader.ownstream
+        close(reader.io)
+    end
+end
+loadstreaming(f::File{format"WAV"}) = WAVReader(open(f), ownstream=true)
+loadstreaming(s::Stream{format"WAV"}) = WAVReader(s, ownstream=false)
+# FileIO has fallback functions that make these work using `do` syntax as well.
+```
+
+If you choose to implement `loadstreaming` and `savestreaming` in your package,
+you can easily add `save` and `load` methods in the form of:
+
+```julia
+function save(q::Formatted{format"WAV"}, data, args...; kwargs...)
+    savestreaming(args...; kwargs...) do stream
+        write(stream, data)
+    end
+end
+
+function load(q::Formatted{format"WAV"}, args...; kwargs...)
+    savestreaming(args...; kwargs...) do stream
+        readall(stream)
+    end
+end
+```
 
 ## Help
 
