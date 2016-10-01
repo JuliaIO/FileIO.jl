@@ -279,7 +279,10 @@ function file!{F}(strm::Stream{F})
 end
 
 # Implement standard I/O operations for File and Stream
-@inline Base.open(file::File, args...) = Stream(file, open(filename(file), args...))
+@inline function Base.open{F<:DataFormat}(file::File{F}, args...)
+    fn = filename(file)
+    Stream(F, open(fn, args...), abspath(fn))
+end
 Base.close(s::Stream) = close(stream(s))
 
 Base.position(s::Stream) = position(stream(s))
@@ -369,7 +372,7 @@ function query(filename::AbstractString)
     end
     !isfile(filename) && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
-    file!(query(open(filename), filename))
+    file!(query(open(filename), abspath(filename)))
 end
 
 lensym(s::Symbol) = 1

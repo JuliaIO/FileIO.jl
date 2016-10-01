@@ -92,6 +92,21 @@ context("Save") do
     fn = string(tempname(), ".dmy")
     save(fn, a)
 
+    # Test for absolute paths
+    cd(dirname(fn)) do
+        fnrel = basename(fn)
+        f = query(fnrel)
+        @fact isabspath(filename(f)) --> true
+        @fact endswith(filename(f), fn) --> true # TravisOSX prepends "/private"
+        f = File(format"DUMMY", fnrel)
+        @fact isabspath(filename(f)) --> false
+        open(f) do s
+            @fact isabspath(get(filename(s))) --> true
+            @fact endswith(get(filename(s)), fn) --> true
+        end
+    end
+
+    # Test IO
     b = load(query(fn))
     @fact a --> b
 
