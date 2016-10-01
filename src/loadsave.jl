@@ -79,6 +79,9 @@ function load{F}(q::Formatted{F}, args...; options...)
     for library in libraries
         try
             Library = checked_import(library)
+            if !isdefined(Library, :load) || Library.load == FileIO.load
+                throw(LoaderError(string(library), "load not defined"))
+            end
             return Library.load(q, args...; options...)
         catch e
             handle_current_error(e, library, library == last(libraries))
@@ -94,6 +97,9 @@ function save{F}(q::Formatted{F}, data...; options...)
     for library in libraries
         try
             Library = checked_import(library)
+            if !isdefined(Library, :save) || Library.save == FileIO.save
+                throw(WriterError(string(library), "save not defined"))
+            end
             return Library.save(q, data...; options...)
         catch e
             handle_current_error(e, library, library == last(libraries))
