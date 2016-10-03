@@ -8,7 +8,7 @@ immutable LoaderError <: Exception
     msg::Compat.UTF8String
 end
 Base.showerror(io::IO, e::LoaderError) = println(io, e.library, " load error: ",
-                                                 msg, "\n  Will try next loader.")
+                                                 e.msg, "\n  Will try next loader.")
 
 """
 `WriterError` should be thrown when writer library code fails, and other libraries should
@@ -21,7 +21,7 @@ immutable WriterError <: Exception
 end
 Base.showerror(io::IO, e::WriterError) = println(
     io, e.library, " writer error: ",
-    msg, "\n  Will try next writer."
+    e.msg, "\n  Will try next writer."
 )
 
 """
