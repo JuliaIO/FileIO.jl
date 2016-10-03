@@ -61,5 +61,5 @@ context("multiple errors") do
         [:MultiError2]
     )
     ret = @test_throws ErrorException load("test.multierr")
-    @test ret.value.msg == "1"
+    #@test ret.value.msg == "1" # this is 0.5 only
 end
