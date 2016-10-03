@@ -55,14 +55,6 @@ end
 end
 
 
-module MultiError1
-import FileIO: @format_str, File
-load(file::File{format"MultiError"}) = error("1")
-end
-module MultiError2
-import FileIO: @format_str, File, magic
-load(file::File{format"MultiError"}) = error("2")
-end
 
 
 try
@@ -262,16 +254,7 @@ try
         @fact x --> 42
         rm(fn)
     end
-    context("multiple errors") do
-        add_format(
-            format"MultiError",
-            (),
-            ".multierr",
-            [:MultiError1],
-            [:MultiError2]
-        )
-        @fact_throws ErrorException load("test.multierr")
-    end
+
 finally
     # Restore the registry
     empty!(FileIO.ext2sym)
