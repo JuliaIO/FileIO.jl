@@ -367,6 +367,7 @@ format inferred from the file's extension and/or magic bytes.
 """
 function query(filename::AbstractString)
     _, ext = splitext(filename)
+    filename = abspath(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
         no_magic = !hasmagic(sym)
@@ -381,7 +382,8 @@ function query(filename::AbstractString)
     end
     !isfile(filename) && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
-    file!(query(open(filename), abspath(filename)))
+    str = query(open(filename), filename)
+    file!(str)
 end
 
 lensym(s::Symbol) = 1
