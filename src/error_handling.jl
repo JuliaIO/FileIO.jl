@@ -72,7 +72,7 @@ function handle_exceptions(exceptions::Vector, action)
     # TODO, don't throw, if it contains a NotInstalledError?!
     println("Fatal error:")
     for exception in exceptions
-        continue_ = handle_error(exception...) #
+        continue_ = handle_error(exception...)
         continue_ || break
     end
 end
@@ -80,7 +80,7 @@ end
 handle_error(e, q) = rethrow(e)
 
 function handle_error(e::NotInstalledError, q)
-    println("Library \"", e.library, "\" is not installed but is the recommended library to load format: \"", file_extension(q), "\"")
+    println("Library \"", e.library, "\" is not installed but is recommended as a library to load format: \"", file_extension(q), "\"")
     !isinteractive() && rethrow(e) # if we're not in interactive mode just throw
     while true
         println("Should we install \"", e.library, "\" for you? (y/n):")
