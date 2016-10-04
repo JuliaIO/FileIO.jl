@@ -54,6 +54,9 @@ end
 
 end
 
+
+
+
 try
     empty!(FileIO.ext2sym)
     empty!(FileIO.magic_list)
@@ -235,8 +238,6 @@ try
             [:LoadTest1, FileIO.LOAD, OSKey],
             [:LoadTest2]
         )
-        stderr_copy = STDERR
-        rd,wr = redirect_stderr()
         @fact lensave0 + 1 --> length(FileIO.sym2saver)
         @fact lenload0 + 1 --> length(FileIO.sym2loader)
         @fact length(FileIO.sym2loader[:MultiLib]) --> 2
@@ -252,9 +253,8 @@ try
         @fact isdefined(:LoadTest1) --> true # first module should load first but fail
         @fact x --> 42
         rm(fn)
-        close(rd);close(wr)
-        redirect_stderr(stderr_copy)
     end
+
 finally
     # Restore the registry
     empty!(FileIO.ext2sym)

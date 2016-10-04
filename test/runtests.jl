@@ -1,5 +1,6 @@
 using FileIO
 using FactCheck
+using Base.Test
 facts("FileIO") do
 	include("query.jl")
 	include("loadsave.jl")

@@ -74,8 +74,8 @@ function load{F}(q::Formatted{F}, args...; options...)
         isfile(filename(q)) || open(filename(q))  # force systemerror
         throw(UnknownFormat(q))
     end
-    libraries   = applicable_loaders(q)
-    failures    = Any[]
+    libraries = applicable_loaders(q)
+    failures  = Any[]
     for library in libraries
         try
             Library = checked_import(library)
@@ -84,16 +84,15 @@ function load{F}(q::Formatted{F}, args...; options...)
             end
             return Library.load(q, args...; options...)
         catch e
-            handle_current_error(e, library, library == last(libraries))
             push!(failures, (e, q))
         end
     end
-    handle_error(failures)
+    handle_exceptions(failures, "loading \"$(filename(q))\"")
 end
 function save{F}(q::Formatted{F}, data...; options...)
     unknown(q) && throw(UnknownFormat(q))
-    libraries   = applicable_savers(q)
-    failures    = Any[]
+    libraries = applicable_savers(q)
+    failures  = Any[]
     for library in libraries
         try
             Library = checked_import(library)
@@ -102,9 +101,8 @@ function save{F}(q::Formatted{F}, data...; options...)
             end
             return Library.save(q, data...; options...)
         catch e
-            handle_current_error(e, library, library == last(libraries))
             push!(failures, (e, q))
         end
     end
-    handle_error(failures)
+    handle_exceptions(failures, "saving \"$(filename(q))\"")
 end
