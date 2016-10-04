@@ -46,7 +46,8 @@ end
 const unknown_df = DataFormat{:UNKNOWN}
 
 """
-`unknown(f)` returns true if the format of `f` is unknown."""
+`unknown(f)` returns true if the format of `f` is unknown.
+"""
 unknown(::Type{format"UNKNOWN"})    = true
 unknown{sym}(::Type{DataFormat{sym}}) = false
 
@@ -155,7 +156,8 @@ end
 
 """
 `info(fmt)` returns the magic bytes/extension information for
-`DataFormat` `fmt`."""
+`DataFormat` `fmt`.
+"""
 Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
 
@@ -217,7 +219,8 @@ abstract Formatted{F<:DataFormat}   # A specific file or stream
 """
 `File(fmt, filename)` indicates that `filename` is a file of known
 DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
-file."""
+file.
+"""
 immutable File{F<:DataFormat} <: Formatted{F}
     filename::Compat.UTF8String
 end
@@ -239,7 +242,8 @@ file_extension(f::File) = splitext(filename(f))[2]
 `Stream(fmt, io, [filename])` indicates that the stream `io` is
 written in known `Format`.  For example, `Stream{PNG}(io)` would
 indicate PNG format.  If known, the optional `filename` argument can
-be used to improve error messages, etc."""
+be used to improve error messages, etc.
+"""
 immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     io::IOtype
     filename::Nullable{Compat.UTF8String}
@@ -255,7 +259,8 @@ stream(s::Stream) = s.io
 
 """
 `filename(stream)` returns a nullable-string of the filename
-associated with `Stream` `stream`."""
+associated with `Stream` `stream`.
+"""
 filename(s::Stream) = s.filename
 
 """
