@@ -315,7 +315,7 @@ context("RDA detection") do
     open(q) do io
         @fact position(io) --> 0
         @fact FileIO.detect_rdata(io) --> true
-        @fact position(io) --> 5
+        @fact position(io) in (5,6) --> true
     end
 end
 context("Format with function for magic bytes") do
