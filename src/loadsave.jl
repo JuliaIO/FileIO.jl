@@ -109,8 +109,14 @@ end
 
 function has_method_from(mt, Library)
     for m in mt
-        if m.module == Library
-            return true
+        if !isdefined(m, :module)
+            if m.module == Library
+                return true
+            end
+        else
+            if m.func.code.module == Library
+                return true
+            end
         end
     end
     false
