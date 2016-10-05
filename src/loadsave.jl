@@ -107,9 +107,15 @@ function save{F}(q::Formatted{F}, data...; options...)
     handle_exceptions(failures, "saving \"$(filename(q))\"")
 end
 
+if :module in fieldnames(Method)
+    getmodule(m::Method) = m.module
+else
+    getmodule(m::Method) = m.func.code.module
+end
+
 function has_method_from(mt, Library)
     for m in mt
-        if m.module == Library
+        if getmodule(m) == Library
             return true
         end
     end
