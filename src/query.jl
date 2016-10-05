@@ -65,6 +65,7 @@ function add_format(fmt, magic, extension, load_save_libraries...)
     fmt
 end
 
+
 """
 `add_format(fmt, magic, extention)` registers a new `DataFormat`.
 For example:
@@ -154,6 +155,7 @@ function del_magic(magic::Function, sym)
     nothing
 end
 
+
 """
 `info(fmt)` returns the magic bytes/extension information for
 `DataFormat` `fmt`.
@@ -215,6 +217,7 @@ end
 
 
 abstract Formatted{F<:DataFormat}   # A specific file or stream
+
 
 """
 `File(fmt, filename)` indicates that `filename` is a file of known
@@ -360,9 +363,11 @@ unknown{F}(::Stream{F}) = unknown(F)
 
 """
 `query(filename)` returns a `File` object with information about the
-format inferred from the file's extension and/or magic bytes."""
+format inferred from the file's extension and/or magic bytes.
+"""
 function query(filename::AbstractString)
     _, ext = splitext(filename)
+    filename = abspath(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
         no_magic = !hasmagic(sym)
@@ -377,7 +382,8 @@ function query(filename::AbstractString)
     end
     !isfile(filename) && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
-    file!(query(open(filename), abspath(filename)))
+    str = query(open(filename), filename)
+    file!(str)
 end
 
 lensym(s::Symbol) = 1
@@ -396,7 +402,8 @@ hasfunction(s::Tuple) = false #has magic
 
 """
 `query(io, [filename])` returns a `Stream` object with information about the
-format inferred from the magic bytes."""
+format inferred from the magic bytes.
+"""
 query(io::IO, filename) = query(io, Nullable(Compat.UTF8String(filename)))
 
 function query(io::IO, filename::Nullable{Compat.UTF8String}=Nullable{Compat.UTF8String}())
