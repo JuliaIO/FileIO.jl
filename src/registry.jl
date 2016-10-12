@@ -8,9 +8,8 @@ function detect_rdata(io)
     seekstart(io)
     read(io, UInt8) == UInt8('R') &&
     read(io, UInt8) == UInt8('D') &&
-    (fmt = read(io, UInt8); fmt == UInt8('A') || fmt == UInt8('B') || fmt == UInt8('X')) &&
-    read(io, UInt8) == UInt8('2') &&
-    read(io, UInt8) == 0x0A
+    read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
+    read(io, UInt8) == UInt8('2')
 end
 
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
