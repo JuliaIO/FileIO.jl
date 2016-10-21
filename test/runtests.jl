@@ -5,7 +5,6 @@ else
     using BaseTestNext
     const Test = BaseTestNext
 end
-using Base.Test
 @testset "FileIO" begin
 	include("query.jl")
 	include("loadsave.jl")
