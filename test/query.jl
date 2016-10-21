@@ -1,29 +1,34 @@
 using FileIO
-using FactCheck
+if VERSION >= v"0.5.0-dev+7720"
+    using Base.Test
+else
+    using BaseTestNext
+    const Test = BaseTestNext
+end
 using Compat
 
 if VERSION < v"0.4.0-dev"
     import FileIO.Pair
 end
 
-context("OS") do
+@testset "OS" begin
     if is_linux()
-        @fact FileIO.applies_to_os(FileIO.Linux)   --> true
-        @fact FileIO.applies_to_os(FileIO.OSX)     --> false
-        @fact FileIO.applies_to_os(FileIO.Unix)    --> true
-        @fact FileIO.applies_to_os(FileIO.Windows) --> false
+        @test FileIO.applies_to_os(FileIO.Linux)
+        @test !(FileIO.applies_to_os(FileIO.OSX))
+        @test FileIO.applies_to_os(FileIO.Unix)
+        @test !(FileIO.applies_to_os(FileIO.Windows))
     end
     if is_apple()
-        @fact FileIO.applies_to_os(FileIO.Linux)   --> false
-        @fact FileIO.applies_to_os(FileIO.OSX)     --> true
-        @fact FileIO.applies_to_os(FileIO.Unix)    --> true
-        @fact FileIO.applies_to_os(FileIO.Windows) --> false
+        @test !(FileIO.applies_to_os(FileIO.Linux))
+        @test FileIO.applies_to_os(FileIO.OSX)
+        @test FileIO.applies_to_os(FileIO.Unix)
+        @test !(FileIO.applies_to_os(FileIO.Windows))
     end
     if is_windows()
-        @fact FileIO.applies_to_os(FileIO.Linux)   --> false
-        @fact FileIO.applies_to_os(FileIO.OSX)     --> false
-        @fact FileIO.applies_to_os(FileIO.Unix)    --> false
-        @fact FileIO.applies_to_os(FileIO.Windows) --> true
+        @test !(FileIO.applies_to_os(FileIO.Linux))
+        @test !(FileIO.applies_to_os(FileIO.OSX))
+        @test !(FileIO.applies_to_os(FileIO.Unix))
+        @test FileIO.applies_to_os(FileIO.Windows)
     end
 end
 
@@ -54,7 +59,10 @@ end
 
 end
 
-
+# this does not like to live in the try block
+add_format(format"JUNK", "JUNK", [".jnk",".junk",".JNK"])
+@test_throws Exception add_format(format"JUNK2","JUNK",".jnk2") # magic bytes already registered
+del_format(format"JUNK")  # This triggers del_extension for multiple extensions
 
 
 try
@@ -62,68 +70,68 @@ try
     empty!(FileIO.magic_list)
     empty!(FileIO.sym2info)
 
-    context("DataFormat") do
-        @fact DataFormat{:CSV} --> format"CSV"
-        @fact unknown(format"CSV") --> false
-        @fact unknown(format"UNKNOWN") --> true
+    @testset "DataFormat" begin
+        @test DataFormat{:CSV} == format"CSV"
+        @test !(unknown(format"CSV"))
+        @test unknown(format"UNKNOWN")
 
         add_format(format"CSV", UInt8[], ".csv")
-        @fact info(format"CSV") --> ((), ".csv")
+        @test info(format"CSV") == ((),".csv")
         add_format(format"FOO", (), ".foo")  # issue #17
-        @fact_throws info(format"OOPS")
-        @fact FileIO.ext2sym[".csv"] --> :CSV
+        @test_throws Exception info(format"OOPS")
+        @test FileIO.ext2sym[".csv"] == :CSV
         del_format(format"FOO")
-        @fact FileIO.magic_list --> [Pair((), :CSV)]
+        @test FileIO.magic_list == [Pair((),:CSV)]
         del_format(format"CSV")
-        @fact isempty(FileIO.ext2sym) --> true
-        @fact isempty(FileIO.magic_list) --> true
-        @fact isempty(FileIO.sym2info) --> true
-        @fact_throws info(format"CSV")
+        @test isempty(FileIO.ext2sym)
+        @test isempty(FileIO.magic_list)
+        @test isempty(FileIO.sym2info)
+        @test_throws Exception info(format"CSV")
 
         add_format(format"JUNK", "JUNK", [".jnk",".junk",".JNK"])
-        @fact info(format"JUNK") --> (tuple(b"JUNK"...), [".jnk",".junk",".JNK"])
-        @fact FileIO.ext2sym[".jnk"]  --> :JUNK
-        @fact FileIO.ext2sym[".junk"] --> :JUNK
-        @fact FileIO.ext2sym[".JNK"]  --> :JUNK
-        @fact FileIO.magic_list --> [Pair((0x4a,0x55,0x4e,0x4b),:JUNK)]
-        @fact_throws add_format(format"JUNK2", "JUNK", ".jnk2")  # magic bytes already registered
+
+        @test info(format"JUNK") == (tuple(b"JUNK"...),[".jnk",".junk",".JNK"])
+        @test FileIO.ext2sym[".jnk"] == :JUNK
+        @test FileIO.ext2sym[".junk"] == :JUNK
+        @test FileIO.ext2sym[".JNK"] == :JUNK
+        @test FileIO.magic_list == [Pair((0x4a,0x55,0x4e,0x4b),:JUNK)]
 
     end
 
-    context("streams") do
+    @testset "streams" begin
         io = IOBuffer()
         s = Stream(format"JUNK", io)
-        @fact typeof(s) --> Stream{DataFormat{:JUNK}, IOBuffer}
-        @fact isnull(filename(s)) --> true
-        @fact_throws FileIO.file!(s)
+        @test typeof(s) == Stream{DataFormat{:JUNK},IOBuffer}
+        @test isnull(filename(s))
+        @test_throws Exception FileIO.file!(s)
         s = Stream(format"JUNK", io, "junk.jnk")
-        @fact get(filename(s)) --> "junk.jnk"
+        @test get(filename(s)) == "junk.jnk"
         s = Stream(format"JUNK", io, Nullable("junk2.jnk"))
-        @fact get(filename(s)) --> "junk2.jnk"
+        @test get(filename(s)) == "junk2.jnk"
     end
 
-    context("query") do
+    @testset "query" begin
         # Streams
         io = IOBuffer()
         write(io, "Weird format")
         seek(io, 0)
         q = query(io)
-        @fact unknown(q) --> true
+        @test unknown(q)
 
         # Short "file"
         truncate(io, 0)
         write(io, "S")
         seek(io, 0)
         q = query(io)
-        @fact unknown(q) --> true
+        @test unknown(q)
 
         truncate(io, 0)
         write(io, "JUNK and some more stuff")
         seek(io, 0)
         q = query(io)
-        @fact typeof(q) --> Stream{format"JUNK",typeof(io)}
-        @fact unknown(q) --> false
-        @fact isnull(file_extension(q)) --> true
+        @test typeof(q) == Stream{format"JUNK",typeof(io)}
+        @test !(unknown(q))
+        @test isnull(file_extension(q))
 
         # File with correct extension
         str = takebuf_string(io)
@@ -132,8 +140,8 @@ try
             write(file, str)
         end
         q = query(fn)
-        @fact typeof(q) --> File{format"JUNK"}
-        @fact file_extension(q) --> ".jnk"
+        @test typeof(q) == File{format"JUNK"}
+        @test file_extension(q) == ".jnk"
 
         rm(fn)
 
@@ -143,8 +151,8 @@ try
             write(file, str)
         end
         q = query(fn)
-        @fact typeof(q) --> File{format"JUNK"}
-        @fact file_extension(q) --> ".csv"
+        @test typeof(q) == File{format"JUNK"}
+        @test file_extension(q) == ".csv"
         rm(fn)
 
         # Format with no magic bytes
@@ -154,19 +162,19 @@ try
             write(file, "Here's some data")
         end
         q = query(fn)
-        @fact typeof(q) --> File{format"BAD"}
-        @fact file_extension(q) --> ".bad"
+        @test typeof(q) == File{format"BAD"}
+        @test file_extension(q) == ".bad"
         rm(fn)
 
         q = query( "some_non_existant_file.bad")
-        @fact typeof(q) --> File{format"BAD"}
+        @test typeof(q) == File{format"BAD"}
 
         # Unknown extension
         fn = string("tempname", ".wrd")
         open(fn, "w") do file
             write(file, "More data")
         end
-        @fact unknown(query(fn)) --> true
+        @test unknown(query(fn))
         rm(fn)
 
         add_format(format"DOUBLE_1", "test1", ".double")
@@ -177,13 +185,13 @@ try
             write(file, "test1")
         end
         q = query(fn)
-        @fact typeof(q) --> File{format"DOUBLE_1"}
+        @test typeof(q) == File{format"DOUBLE_1"}
         rm(fn)
 
 
         add_format(format"MAGIC", "this so magic", ".mmm")
         q = query( "some_non_existant_file.mmm")
-        @fact typeof(q) --> File{format"MAGIC"}
+        @test typeof(q) == File{format"MAGIC"}
 
         add_format(format"DOUBLE_MAGIC", (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00]), ".dd2")
 
@@ -193,10 +201,10 @@ try
             write(file, randstring(19))
         end
         q = query(fn)
-        @fact typeof(q) --> File{format"DOUBLE_MAGIC"}
+        @test typeof(q) == File{format"DOUBLE_MAGIC"}
         io = open(q)
         skipmagic(io)
-        @fact position(io) --> 4
+        @test position(io) == 4
         close(io)
         rm(fn)
 
@@ -205,29 +213,30 @@ try
             write(file, randstring(19))
         end
         q = query(fn)
-        @fact typeof(q) --> File{format"DOUBLE_MAGIC"}
+        @test typeof(q) == File{format"DOUBLE_MAGIC"}
         io = open(q)
-        @fact file_extension(q) --> ".dd2"
+        @test file_extension(q) == ".dd2"
         skipmagic(io)
-        @fact position(io) --> 3
+        @test position(io) == 3
         close(io)
         open(fn, "w") do file
             write(file, randstring(19)) # corrupt magic bytes
         end
         open(fn, "r") do file
-            @fact_throws skipmagic(file)
+            @test_throws Exception skipmagic(file)
         end
         rm(fn)
         lene0 = length(FileIO.ext2sym)
         lenm0 = length(FileIO.magic_list)
         del_format(format"DOUBLE_MAGIC")
-        @fact lene0 - 1 --> length(FileIO.ext2sym)
-        @fact lenm0 - 2 --> length(FileIO.magic_list)
+        @test lene0 - 1 == length(FileIO.ext2sym)
+        @test lenm0 - 2 == length(FileIO.magic_list)
     end
 
     del_format(format"JUNK")  # This triggers del_extension for multiple extensions
 
-    context("multiple libs") do
+
+    @testset "multiple libs" begin
         lensave0 = length(FileIO.sym2saver)
         lenload0 = length(FileIO.sym2loader)
         OSKey = is_apple() ? FileIO.OSX : is_windows() ? FileIO.Windows : is_linux() ? FileIO.Linux : error("os not supported")
@@ -238,20 +247,20 @@ try
             [:LoadTest1, FileIO.LOAD, OSKey],
             [:LoadTest2]
         )
-        @fact lensave0 + 1 --> length(FileIO.sym2saver)
-        @fact lenload0 + 1 --> length(FileIO.sym2loader)
-        @fact length(FileIO.sym2loader[:MultiLib]) --> 2
-        @fact length(FileIO.sym2saver[:MultiLib]) --> 1
+        @test lensave0 + 1 == length(FileIO.sym2saver)
+        @test lenload0 + 1 == length(FileIO.sym2loader)
+        @test length(FileIO.sym2loader[:MultiLib]) == 2
+        @test length(FileIO.sym2saver[:MultiLib]) == 1
         fn = string(tempname(), ".mlb")
         save(fn)
         x = load(fn)
         open(query(fn), "r") do io
             skipmagic(io)
             a = read(io, Int)
-            @fact a --> 42 #make sure that LoadTest2 is used for saving, even though its at position 2
+            @test a == 42 #make sure that LoadTest2 is used for saving, even though its at position 2
         end
-        @fact isdefined(:LoadTest1) --> true # first module should load first but fail
-        @fact x --> 42
+        @test isdefined(:LoadTest1) # first module should load first but fail
+        @test x == 42
         rm(fn)
     end
 
@@ -267,58 +276,58 @@ finally
 end
 
 file_dir = joinpath(dirname(@__FILE__), "files")
-context("STL detection") do
+@testset "STL detection" begin
     q = query(joinpath(file_dir, "ascii.stl"))
-    @fact typeof(q) --> File{format"STL_ASCII"}
+    @test typeof(q) == File{format"STL_ASCII"}
     q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
-    @fact typeof(q) --> File{format"STL_BINARY"}
+    @test typeof(q) == File{format"STL_BINARY"}
     open(q) do io
-        @fact position(io) --> 0
+        @test position(io) == 0
         skipmagic(io)
-        @fact position(io) --> 0 # no skipping for functions
+        @test position(io) == 0 # no skipping for functions
     end
 end
-context("PLY detection") do
+@testset "PLY detection" begin
     q = query(joinpath(file_dir, "ascii.ply"))
-    @fact typeof(q) --> File{format"PLY_ASCII"}
+    @test typeof(q) == File{format"PLY_ASCII"}
     q = query(joinpath(file_dir, "binary.ply"))
-    @fact typeof(q) --> File{format"PLY_BINARY"}
+    @test typeof(q) == File{format"PLY_BINARY"}
 
 end
-context("Multiple Magic bytes") do
+@testset "Multiple Magic bytes" begin
     q = query(joinpath(file_dir, "magic1.tiff"))
-    @fact typeof(q) --> File{format"TIFF"}
+    @test typeof(q) == File{format"TIFF"}
     q = query(joinpath(file_dir, "magic2.tiff"))
-    @fact typeof(q) --> File{format"TIFF"}
+    @test typeof(q) == File{format"TIFF"}
     open(q) do io
-        @fact position(io) --> 0
+        @test position(io) == 0
         skipmagic(io)
-        @fact position(io) --> 4
+        @test position(io) == 4
     end
 end
-context("AVI Detection") do
+@testset "AVI Detection" begin
     open(joinpath(file_dir, "bees.avi")) do s
-        @fact FileIO.detectavi(s) --> true
+        @test FileIO.detectavi(s)
     end
     open(joinpath(file_dir, "sin.wav")) do s
-        @fact FileIO.detectavi(s) --> false
+        @test !(FileIO.detectavi(s))
     end
     open(joinpath(file_dir, "magic1.tiff")) do s
-        @fact FileIO.detectavi(s) --> false
+        @test !(FileIO.detectavi(s))
     end
     q = query(joinpath(file_dir, "bees.avi"))
-    @fact typeof(q) --> File{format"AVI"}
+    @test typeof(q) == File{format"AVI"}
 end
-context("RDA detection") do
+@testset "RDA detection" begin
     q = query(joinpath(file_dir, "minimal_ascii.rda"))
-    @fact typeof(q) --> File{format"RData"}
+    @test typeof(q) == File{format"RData"}
     open(q) do io
-        @fact position(io) --> 0
-        @fact FileIO.detect_rdata(io) --> true
-        @fact position(io) --> 5
+        @test position(io) == 0
+        @test FileIO.detect_rdata(io)
+        @test position(io) == 5
     end
 end
-context("Format with function for magic bytes") do
+@testset "Format with function for magic bytes" begin
     add_format(format"FUNCTION_FOR_MAGIC_BYTES", x -> 0x00, ".wav", [:WAV])
     del_format(format"FUNCTION_FOR_MAGIC_BYTES")
 end

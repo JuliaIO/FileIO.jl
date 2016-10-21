@@ -1,5 +1,10 @@
 using FileIO, Compat
-using FactCheck
+if VERSION >= v"0.5.0-dev+7720"
+    using Base.Test
+else
+    using BaseTestNext
+    const Test = BaseTestNext
+end
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
@@ -18,28 +23,28 @@ try
     empty!(FileIO.sym2loader)
     empty!(FileIO.sym2saver)
     file_dir = joinpath(dirname(@__FILE__), "files")
-    context("Load") do
+    @testset "Load" begin
 
         add_loader(format"PBMText", :TestLoadSave)
         add_loader(format"PBMBinary", :TestLoadSave)
         add_loader(format"HDF5", :TestLoadSave)
         add_loader(format"JLD", :TestLoadSave)
 
-        @fact load(joinpath(file_dir, "file1.pbm")) --> "PBMText"
-        @fact load(joinpath(file_dir, "file2.pbm")) --> "PBMBinary"
+        @test load(joinpath(file_dir,"file1.pbm")) == "PBMText"
+        @test load(joinpath(file_dir,"file2.pbm")) == "PBMBinary"
         # Regular HDF5 file with magic bytes starting at position 0
-        @fact load(joinpath(file_dir, "file1.h5")) --> "HDF5"
+        @test load(joinpath(file_dir,"file1.h5")) == "HDF5"
         # This one is actually a JLD file saved with an .h5 extension,
         # and the JLD magic bytes edited to prevent it from being recognized
         # as JLD.
         # JLD files are also HDF5 files, so this should be recognized as
         # HDF5. However, what makes this more interesting is that the
         # magic bytes start at position 512.
-        @fact load(joinpath(file_dir, "file2.h5")) --> "HDF5"
+        @test load(joinpath(file_dir,"file2.h5")) == "HDF5"
         # JLD file saved with .jld extension
-        @fact load(joinpath(file_dir, "file.jld")) --> "JLD"
+        @test load(joinpath(file_dir,"file.jld")) == "JLD"
 
-        @fact_throws load("missing.fmt")
+        @test_throws Exception load("missing.fmt")
     end
 finally
     merge!(FileIO.sym2loader, sym2loader)
@@ -87,7 +92,7 @@ end
 add_loader(format"DUMMY", :Dummy)
 add_saver(format"DUMMY", :Dummy)
 
-context("Save") do
+@testset "Save" begin
     a = [0x01,0x02,0x03]
     fn = string(tempname(), ".dmy")
     save(fn, a)
@@ -96,46 +101,46 @@ context("Save") do
     cd(dirname(fn)) do
         fnrel = basename(fn)
         f = query(fnrel)
-        @fact isabspath(filename(f)) --> true
-        @fact endswith(filename(f), fn) --> true # TravisOSX prepends "/private"
+        @test isabspath(filename(f))
+        @test endswith(filename(f),fn) # TravisOSX prepends "/private"
         f = File(format"DUMMY", fnrel)
-        @fact isabspath(filename(f)) --> false
+        @test !(isabspath(filename(f)))
         open(f) do s
-            @fact isabspath(get(filename(s))) --> true
-            @fact endswith(get(filename(s)), fn) --> true
+            @test isabspath(get(filename(s)))
+            @test endswith(get(filename(s)),fn)
         end
     end
 
     # Test IO
     b = load(query(fn))
-    @fact a --> b
+    @test a == b
 
     b = open(query(fn)) do s
         skipmagic(s)
         load(s)
     end
-    @fact a --> b
+    @test a == b
 
     # low-level I/O test
     open(query(fn)) do s
-        @fact position(s) --> 0
+        @test position(s) == 0
         skipmagic(s)
-        @fact position(s) --> length(magic(format"DUMMY"))
+        @test position(s) == length(magic(format"DUMMY"))
         seek(s, 1)
-        @fact position(s) --> 1
+        @test position(s) == 1
         seekstart(s)
-        @fact position(s) --> 0
+        @test position(s) == 0
         seekend(s)
-        @fact eof(s) --> true
+        @test eof(s)
         skip(s, -position(s)+1)
-        @fact position(s) --> 1
-        @fact isreadonly(s) --> true
-        @fact isopen(s) --> true
-        @fact read(s, 2) --> b"UM"
+        @test position(s) == 1
+        @test isreadonly(s)
+        @test isopen(s)
+        @test read(s,2) == b"UM"
     end
     rm(fn)
 
-    @fact_throws save("missing.fmt", 5)
+    @test_throws Exception save("missing.fmt",5)
 end
 
 del_format(format"DUMMY")
@@ -167,7 +172,7 @@ save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
 end
 end
 
-context("Ambiguous extension") do
+@testset "Ambiguous extension" begin
     add_format(format"AmbigExt1", "ambigext1", ".aext", [:AmbigExt])
     add_format(format"AmbigExt2", "ambigext2", ".aext", [:AmbigExt])
     A = "this is a test"
@@ -179,18 +184,18 @@ context("Ambiguous extension") do
     save(format"AmbigExt2", fn, A)
 
     B = load(fn)
-    @fact B --> A
-    @fact typeof(query(fn)) --> File{format"AmbigExt2"}
+    @test B == A
+    @test typeof(query(fn)) == File{format"AmbigExt2"}
     rm(fn)
 
     save(fn, A)
     B = load(fn)
-    @fact B --> A
-    @fact typeof(query(fn)) --> File{format"AmbigExt1"}
+    @test B == A
+    @test typeof(query(fn)) == File{format"AmbigExt1"}
 
     rm(fn)
 end
 
-context("Absent file") do
-    @fact_throws SystemError load("nonexistent.oops")
+@testset "Absent file" begin
+    @test_throws SystemError load("nonexistent.oops")
 end

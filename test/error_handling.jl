@@ -1,5 +1,5 @@
 println("these tests will print warnings: ")
-context("Not installed") do
+@testset "Not installed" begin
     eval(Base, :(is_interactive = true)) # for interactive error handling
 
     add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
@@ -10,15 +10,15 @@ context("Not installed") do
     ref = @async save("test.not_installed")
     println(wr, "y")
     if VERSION < v"0.4.0-dev"
-        @fact_throws ErrorException wait(ref) #("unknown package NotInstalled")
+        @test_throws ErrorException wait(ref) #("unknown package NotInstalled")
     else
-        @fact_throws CompositeException wait(ref) #("unknown package NotInstalled")
+        @test_throws CompositeException wait(ref) #("unknown package NotInstalled")
     end
     ref = @async save("test.not_installed")
     println(wr, "invalid") #test invalid input
     println(wr, "n") # don't install
     wait(ref)
-    @fact istaskdone(ref) --> true
+    @test istaskdone(ref)
 
     close(rs);close(wr);close(rserr);close(wrerr)
     redirect_stdin(stdin_copy)
@@ -35,11 +35,11 @@ using FileIO
 end
 add_format(format"BROKEN", (), ".brok", [:BrokenIO])
 
-context("Absent implementation") do
+@testset "Absent implementation" begin
     stderr_copy = STDERR
     rserr, wrerr = redirect_stderr()
-    @fact_throws FileIO.LoaderError load(Stream(format"BROKEN", STDIN))
-    @fact_throws FileIO.WriterError save(Stream(format"BROKEN", STDOUT))
+    @test_throws FileIO.LoaderError load(Stream(format"BROKEN",STDIN))
+    @test_throws FileIO.WriterError save(Stream(format"BROKEN",STDOUT))
     redirect_stderr(stderr_copy)
 end
 
@@ -51,7 +51,7 @@ module MultiError2
 import FileIO: @format_str, File, magic
 load(file::File{format"MultiError"}) = error("2")
 end
-context("multiple errors") do
+@testset "multiple errors" begin
     println("this test will print warnings: ")
     add_format(
         format"MultiError",
