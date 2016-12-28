@@ -163,7 +163,7 @@ Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
 
 canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
-canonicalize_magic(m::String) = canonicalize_magic(m.data)
+canonicalize_magic(m::String) = canonicalize_magic(Vector{UInt8}(m))
 
 
 
