@@ -6,6 +6,7 @@ else
     const Test = BaseTestNext
 end
 using Compat
+import Compat.String
 
 if VERSION < v"0.4.0-dev"
     import FileIO.Pair
@@ -134,7 +135,7 @@ try
         @test isnull(file_extension(q))
 
         # File with correct extension
-        str = takebuf_string(io)
+        str = String(take!(io))
         fn = string(tempname(), ".jnk")
         open(fn, "w") do file
             write(file, str)

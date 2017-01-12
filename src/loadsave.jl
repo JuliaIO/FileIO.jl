@@ -58,13 +58,15 @@ save(s::@compat(Union{AbstractString,IO}), data...; options...) =
 function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    save(File(DataFormat{sym}, f), data...; options...)
+    eval(Main, :($save($File($(DataFormat{sym}), $f),
+                       $data...; $options...)))
 end
 
 function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    save(Stream(DataFormat{sym}, s), data...; options...)
+    eval(Main, :($save($Stream($(DataFormat{sym}), $s),
+                       $data...; $options...)))
 end
 
 
@@ -82,7 +84,7 @@ function load{F}(q::Formatted{F}, args...; options...)
             if !has_method_from(methods(Library.load), Library)
                 throw(LoaderError(string(library), "load not defined"))
             end
-            return Library.load(q, args...; options...)
+            return eval(Main, :($(Library.load)($q, $args...; $options...)))
         catch e
             push!(failures, (e, q))
         end
@@ -99,7 +101,7 @@ function save{F}(q::Formatted{F}, data...; options...)
             if !has_method_from(methods(Library.save), Library)
                 throw(WriterError(string(library), "save not defined"))
             end
-            return Library.save(q, data...; options...)
+            return eval(Main, :($(Library.save)($q, $data...; $options...)))
         catch e
             push!(failures, (e, q))
         end
