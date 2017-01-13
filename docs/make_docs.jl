@@ -37,7 +37,7 @@ function loadsave2string(load_save_libraries)
             print(io, "loads with ", library2string(library), " on: ", os2string(os), " ")
         end
     end
-    takebuf_string(io)
+    String(take!(io))
 end
 function add_format{Sym}(::Type{DataFormat{Sym}}, magic, extension, io_libs...)
     println(fs, "| $(Sym) | $(extension2string(extension)) | $(loadsave2string(io_libs)) | $(magic2string(magic)) |")
