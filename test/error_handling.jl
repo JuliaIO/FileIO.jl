@@ -41,6 +41,7 @@ add_format(format"BROKEN", (), ".brok", [:BrokenIO])
     @test_throws FileIO.LoaderError load(Stream(format"BROKEN",STDIN))
     @test_throws FileIO.WriterError save(Stream(format"BROKEN",STDOUT))
     redirect_stderr(stderr_copy)
+    close(rserr);close(wrerr)
 end
 
 module MultiError1
