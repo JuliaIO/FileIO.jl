@@ -148,7 +148,7 @@ function detecthdf5(io)
     seekend(io)
     len = position(io)
     seekstart(io)
-    magic = Array(UInt8, length(h5magic))
+    magic = Vector{UInt8}(length(h5magic))
     pos = position(io)
     while pos+length(h5magic) <= len
         read!(io, magic)
