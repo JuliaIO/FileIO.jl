@@ -72,7 +72,7 @@ end
 function FileIO.load(s::Stream{format"DUMMY"})
     # We're already past the magic bytes
     n = read(s, Int64)
-    out = Array(UInt8, n)
+    out = Vector{UInt8}(n)
     read!(s, out)
     close(s)
     out
