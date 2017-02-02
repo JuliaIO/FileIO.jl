@@ -34,15 +34,15 @@ add_format(format"DCX", UInt8[0xb1,0x68,0xde,0x3a],                     ".dcx", 
 add_format(format"DOT", UInt8[0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1], ".dot", [:ImageMagick])
 add_format(format"EPS", UInt8[0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f], ".eps", [:ImageMagick])
 add_format(format"HDR", UInt8[0x23,0x3f,0x52,0x41,0x44,0x49,0x41,0x4e], ".hdr", [:ImageMagick])
-add_format(format"ICO", UInt8[0x00,0x00,0x01,0x00],                     ".ico", [:ImageMagick])
+add_format(format"ICO", UInt8[0x00,0x00,0x01,0x00],                     ".ico", [:DevIL], [:ImageMagick])
 add_format(format"INFO", UInt8[0x7a,0x62,0x65,0x78],                    ".info",[:ImageMagick])
-add_format(format"JP2", UInt8[0x00,0x00,0x00,0x0c,0x6a,0x50,0x20,0x20], ".jp2", [:ImageMagick])
-add_format(format"PCX", UInt8[0x0a,0x05,0x01,0x01],                     ".pcx", [:ImageMagick])
+add_format(format"JP2", UInt8[0x00,0x00,0x00,0x0c,0x6a,0x50,0x20,0x20], ".jp2", [:DevIL], [:ImageMagick])
+add_format(format"PCX", UInt8[0x0a,0x05,0x01,0x01],                     ".pcx", [:DevIL], [:ImageMagick])
 add_format(format"PDB", UInt8[0x73,0x7a,0x65,0x7a],                     ".pdb", [:ImageMagick])
 add_format(format"PDF", UInt8[0x25,0x50,0x44,0x46],                     ".pdf", [:ImageMagick])
 add_format(format"PGM", UInt8[0x50,0x35,0x0a],                          ".pgm", [:ImageMagick])
-add_format(format"PSD", UInt8[0x38,0x42,0x50,0x53],                     ".psd", [:ImageMagick])
-add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03],           ".rgb", [:ImageMagick])
+add_format(format"PSD", UInt8[0x38,0x42,0x50,0x53],                     ".psd", [:DevIL], [:ImageMagick])
+add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03],           ".rgb", [:DevIL], [:ImageMagick])
 add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a],                     ".wmf", [:ImageMagick])
 add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43],                     ".wpg", [:ImageMagick])
 add_format(format"Imagine", "IMAGINE",                                  ".imagine", [:ImagineFormat])
@@ -52,6 +52,7 @@ add_format(
     (),
     ".tga",
     [:QuartzImageIO, OSX],
+    [:DevIL],
     [:ImageMagick]
 )
 add_format(
@@ -59,6 +60,7 @@ add_format(
     UInt8[0x47,0x49,0x46,0x38],
     ".gif",
     [:QuartzImageIO, OSX],
+    [:DevIL],
     [:ImageMagick]
 )
 add_format(
@@ -66,6 +68,7 @@ add_format(
     UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
     ".png",
     [:QuartzImageIO, OSX],
+    [:DevIL],
     [:ImageMagick]
 )
 add_format(
@@ -73,6 +76,7 @@ add_format(
     (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00]),
     [".tiff", ".tif"],
     [:QuartzImageIO, OSX],
+    [:DevIL],
     [:ImageMagick]
 )
 add_format(
@@ -80,6 +84,7 @@ add_format(
     UInt8[0xff,0xd8,0xff],
     [".jpeg", ".jpg", ".JPG"],
     [:QuartzImageIO, OSX],
+    [:DevIL],
     [:ImageMagick]
 ) # 0xe1
 add_format(
@@ -87,6 +92,7 @@ add_format(
     UInt8[0x42,0x4d],
     ".bmp",
     [:QuartzImageIO, OSX],
+    [:DevIL],
     [:ImageMagick]
 )
 
