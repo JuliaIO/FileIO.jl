@@ -1,7 +1,5 @@
 environment:
   matrix:
-  - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
-  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
   - JULIAVERSION: "julialang/bin/winnt/x86/0.5/julia-0.5-latest-win32.exe"
   - JULIAVERSION: "julialang/bin/winnt/x64/0.5/julia-0.5-latest-win64.exe"
   - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
@@ -13,7 +11,6 @@ branches:
     - /release-.*/
 install:
 # Download most recent Julia Windows binary
-
   - ps: (new-object net.webclient).DownloadFile(
         $("http://s3.amazonaws.com/"+$env:JULIAVERSION),
         "C:\projects\julia-binary.exe")
@@ -23,7 +20,7 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
 #  - git fetch --unshallow
-  - C:\projects\julia\bin\julia-debug -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"FileIO\")"
+  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"FileIO\")"
 
 test_script:
-  - C:\projects\julia\bin\julia-debug -e "Pkg.test(\"FileIO\")"
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"FileIO\")"
