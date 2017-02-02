@@ -307,9 +307,6 @@ Base.readbytes!(s::Stream, b, nb) = readbytes!(stream(s), b, nb)
 Base.read(s::Stream) = read(stream(s))
 Base.read(s::Stream, nb) = read(stream(s), nb)
 Base.flush(s::Stream) = flush(stream(s))
-# 0.4 compat
-Base.readbytes(s::Stream) = read(stream(s))
-Base.readbytes(s::Stream, nb) = read(stream(s), nb)
 
 Base.isreadonly(s::Stream) = isreadonly(stream(s))
 Base.isopen(s::Stream) = isopen(stream(s))
