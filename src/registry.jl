@@ -110,7 +110,8 @@ add_format(format"PLY_BINARY", "ply\nformat binary_little_endian 1.0", ".ply", [
 add_format(format"2DM", "MESH2D", ".2dm", [:MeshIO])
 add_format(format"OFF", "OFF", ".off", [:MeshIO])
 
-
+# GSLIB/SGeMS format (http://gslib.com)
+add_format(format"GSLIB", (), [".gslib",".sgems"])
 
 ### Audio formats
 function detectwav(io)
