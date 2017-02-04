@@ -1,16 +1,15 @@
-VERSION >= v"0.4.0-dev+6641" && __precompile__()
+__precompile__()
 
 module FileIO
+
 using Compat
-import Compat.String
+using Compat.String
 
 export DataFormat,
        File,
        Formatted,
        Stream,
-
        @format_str,
-
        add_format,
        del_format,
        add_loader,
