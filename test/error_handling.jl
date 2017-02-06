@@ -9,11 +9,7 @@ println("these tests will print warnings: ")
     rserr, wrerr = redirect_stderr()
     ref = @async save("test.not_installed")
     println(wr, "y")
-    if VERSION < v"0.4.0-dev"
-        @test_throws ErrorException wait(ref) #("unknown package NotInstalled")
-    else
-        @test_throws CompositeException wait(ref) #("unknown package NotInstalled")
-    end
+    @test_throws CompositeException wait(ref) #("unknown package NotInstalled")
     ref = @async save("test.not_installed")
     println(wr, "invalid") #test invalid input
     println(wr, "n") # don't install

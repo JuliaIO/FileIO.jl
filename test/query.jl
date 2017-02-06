@@ -8,10 +8,6 @@ end
 using Compat
 import Compat.String
 
-if VERSION < v"0.4.0-dev"
-    import FileIO.Pair
-end
-
 @testset "OS" begin
     if is_linux()
         @test FileIO.applies_to_os(FileIO.Linux)

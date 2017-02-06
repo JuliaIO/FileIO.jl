@@ -3,13 +3,12 @@ os:
   - linux
   - osx
 julia:
-  - 0.4
   - 0.5
   - nightly
 notifications:
   email: false
-script:
-    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd()); Pkg.build("FileIO"); Pkg.test("FileIO"; coverage=true)'
+#script: # default script is equivalent to the following
+#    - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#    - julia -e 'Pkg.clone(pwd()); Pkg.build("FileIO"); Pkg.test("FileIO"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("FileIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
