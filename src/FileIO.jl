@@ -1,16 +1,15 @@
 __precompile__()
 
 module FileIO
+
 using Compat
-import Compat.String
+using Compat.String
 
 export DataFormat,
        File,
        Formatted,
        Stream,
-
        @format_str,
-
        add_format,
        del_format,
        add_loader,
