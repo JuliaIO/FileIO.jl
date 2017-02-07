@@ -111,7 +111,7 @@ add_format(format"2DM", "MESH2D", ".2dm", [:MeshIO])
 add_format(format"OFF", "OFF", ".off", [:MeshIO])
 
 # GSLIB/SGeMS format (http://gslib.com)
-add_format(format"GSLIB", (), [".gslib",".sgems"])
+add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 
 ### Audio formats
 function detectwav(io)
