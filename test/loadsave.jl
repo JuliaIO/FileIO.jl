@@ -1,10 +1,6 @@
-using FileIO, Compat
-if VERSION >= v"0.5.0-dev+7720"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using FileIO
+using Base.Test
+using Compat
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
