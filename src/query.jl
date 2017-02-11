@@ -1,6 +1,6 @@
 ### Format registry infrastructure
-abstract OS
-abstract Unix <: OS
+@compat abstract type OS end
+@compat abstract type Unix <: OS end
 immutable Windows <: OS end
 immutable OSX <: Unix end
 immutable Linux <: Unix end
@@ -214,7 +214,7 @@ function magic_cmp(t::Tuple, p::Pair)
 end
 
 
-abstract Formatted{F<:DataFormat}   # A specific file or stream
+@compat abstract type Formatted{F<:DataFormat} end  # A specific file or stream
 
 """
 `File(fmt, filename)` indicates that `filename` is a file of known
