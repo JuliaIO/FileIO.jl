@@ -1,7 +1,7 @@
 using FileIO
 using Base.Test
 using Compat
-import Compat.String
+using Compat.String
 
 @testset "OS" begin
     if is_linux()
