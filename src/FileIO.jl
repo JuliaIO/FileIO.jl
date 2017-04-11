@@ -3,7 +3,6 @@ __precompile__()
 module FileIO
 
 using Compat
-using Compat.String
 
 export DataFormat,
        File,
