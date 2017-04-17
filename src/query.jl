@@ -40,7 +40,7 @@ An easy way to write `DataFormat{:CSV}` is `format"CSV"`.
 immutable DataFormat{sym} end
 
 macro format_str(s)
-    :(DataFormat{$(Expr(:quote, @compat Symbol(s)))})
+    :(DataFormat{$(Expr(:quote, Symbol(s)))})
 end
 
 const unknown_df = DataFormat{:UNKNOWN}
@@ -51,7 +51,7 @@ const unknown_df = DataFormat{:UNKNOWN}
 unknown(::Type{format"UNKNOWN"})    = true
 unknown{sym}(::Type{DataFormat{sym}}) = false
 
-const ext2sym    = Dict{String, @compat(Union{Symbol,Vector{Symbol}})}()
+const ext2sym    = Dict{String, Union{Symbol,Vector{Symbol}}}()
 const magic_list = Vector{Pair}(0)    # sorted, see magic_cmp below
 const sym2info   = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
 const magic_func = Vector{Pair}(0)    # for formats with complex magic #s
@@ -75,7 +75,7 @@ For example:
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """
-function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::@compat(Union{Tuple,AbstractVector,String}), extension)
+function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,String}, extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
@@ -179,14 +179,14 @@ function add_extension(ext::String, sym)
     end
     ext2sym[ext] = sym
 end
-function add_extension(ext::@compat(Union{Array,Tuple}), sym)
+function add_extension(ext::Union{Array,Tuple}, sym)
     for e in ext
         add_extension(e, sym)
     end
 end
 
 del_extension(ext::String) = delete!(ext2sym, ext)
-function del_extension(ext::@compat(Union{Array,Tuple}))
+function del_extension(ext::Union{Array,Tuple})
     for e in ext
         del_extension(e)
     end
@@ -222,7 +222,7 @@ DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
 file.
 """
 immutable File{F<:DataFormat} <: Formatted{F}
-    filename::Compat.UTF8String
+    filename::String
 end
 File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
 
@@ -246,11 +246,11 @@ be used to improve error messages, etc.
 """
 immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     io::IOtype
-    filename::Nullable{Compat.UTF8String}
+    filename::Nullable{String}
 end
 
-Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{Compat.UTF8String}())
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,Compat.UTF8String(filename))
+Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{String}())
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,String(filename))
 Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
 Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
 
@@ -394,9 +394,9 @@ hasfunction(s::Tuple) = false #has magic
 """
 `query(io, [filename])` returns a `Stream` object with information about the
 format inferred from the magic bytes."""
-query(io::IO, filename) = query(io, Nullable(Compat.UTF8String(filename)))
+query(io::IO, filename) = query(io, Nullable(String(filename)))
 
-function query(io::IO, filename::Nullable{Compat.UTF8String}=Nullable{Compat.UTF8String}())
+function query(io::IO, filename::Nullable{String}=Nullable{String}())
     magic = Vector{UInt8}(0)
     pos = position(io)
     for p in magic_list
@@ -437,8 +437,8 @@ function iter_eq(A, B)
     for _=1:length(A)
         a=A[i]; b=B[j]
         a == b && (i+=1; j+=1; continue)
-        a == @compat(UInt32('\r')) && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
-        b == @compat(UInt32('\r')) && (j+=1; continue)
+        a == UInt32('\r') && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
+        b == UInt32('\r') && (j+=1; continue)
         return false #now both must be unequal, and no \r windows excemption any more
     end
     true
