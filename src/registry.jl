@@ -109,6 +109,12 @@ add_format(format"PLY_ASCII", "ply\nformat ascii 1.0", ".ply", [:MeshIO])
 add_format(format"PLY_BINARY", "ply\nformat binary_little_endian 1.0", ".ply", [:MeshIO])
 add_format(format"2DM", "MESH2D", ".2dm", [:MeshIO])
 add_format(format"OFF", "OFF", ".off", [:MeshIO])
+add_format(
+    format"IFS",
+    UInt8[0x04, 0x00, 0x00, 0x00, 0x49, 0x46, 0x53, 0x00, 0x00, 0x00, 0x80, 0x3f],
+    ".ifs",
+    [:MeshIO]
+)
 
 # GSLIB/SGeMS format (http://gslib.com)
 add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
