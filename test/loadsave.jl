@@ -10,6 +10,7 @@ load(file::File{format"PBMText"})   = "PBMText"
 load(file::File{format"PBMBinary"}) = "PBMBinary"
 load(file::File{format"HDF5"})      = "HDF5"
 load(file::File{format"JLD"})       = "JLD"
+load(file::File{format"GZIP"})       = "GZIP"
 end
 
 sym2loader = copy(FileIO.sym2loader)
@@ -25,9 +26,11 @@ try
         add_loader(format"PBMBinary", :TestLoadSave)
         add_loader(format"HDF5", :TestLoadSave)
         add_loader(format"JLD", :TestLoadSave)
+        add_loader(format"GZIP", :TestLoadSave)
 
         @test load(joinpath(file_dir,"file1.pbm")) == "PBMText"
         @test load(joinpath(file_dir,"file2.pbm")) == "PBMBinary"
+
         # Regular HDF5 file with magic bytes starting at position 0
         @test load(joinpath(file_dir,"file1.h5")) == "HDF5"
         # This one is actually a JLD file saved with an .h5 extension,
@@ -39,7 +42,8 @@ try
         @test load(joinpath(file_dir,"file2.h5")) == "HDF5"
         # JLD file saved with .jld extension
         @test load(joinpath(file_dir,"file.jld")) == "JLD"
-
+        # GZIP file saved with .gz extension
+        @test load(joinpath(file_dir,"file.csv.gz")) == "GZIP"
         @test_throws Exception load("missing.fmt")
     end
 finally

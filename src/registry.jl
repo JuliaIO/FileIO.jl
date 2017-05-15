@@ -2,6 +2,7 @@
 
 # data formats
 add_format(format"JLD", "Julia data file (HDF5)", ".jld", [:JLD])
+add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz])
 
 # test for RD?2 magic sequence at the beginning of R data input stream
 function detect_rdata(io)
