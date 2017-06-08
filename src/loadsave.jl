@@ -54,6 +54,10 @@ trying to infer the format from `filename`.
 save(s::Union{AbstractString,IO}, data...; options...) =
     save(query(s), data...; options...)
 
+function save(s::@compat(Union{AbstractString,IO}); options...)
+    data -> save(s, data; options...)
+end
+
 # Forced format
 function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
     libraries = applicable_savers(df)
