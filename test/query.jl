@@ -34,7 +34,7 @@ module LoadTest1
 import FileIO: @format_str, File
 load(file::File{format"MultiLib"}) = error()
 
-save(file::File{format"MultiLib"}) = open(file, "w") do s
+save(file::File{format"MultiLib"}, data) = open(file, "w") do s
     write(s, magic(format"MultiLib"))  # Write the magic bytes
     write(s, 0)
 end
@@ -44,7 +44,7 @@ module LoadTest2
 import FileIO: @format_str, File, magic
 load(file::File{format"MultiLib"}) = 42
 
-save(file::File{format"MultiLib"}) = open(file, "w") do s
+save(file::File{format"MultiLib"}, data) = open(file, "w") do s
     write(s, magic(format"MultiLib"))  # Write the magic bytes
     write(s, 42)
 end
@@ -244,7 +244,7 @@ try
         @test length(FileIO.sym2loader[:MultiLib]) == 2
         @test length(FileIO.sym2saver[:MultiLib]) == 1
         fn = string(tempname(), ".mlb")
-        save(fn)
+        save(fn, nothing)
         x = load(fn)
         open(query(fn), "r") do io
             skipmagic(io)

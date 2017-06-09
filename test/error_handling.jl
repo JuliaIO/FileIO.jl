@@ -7,10 +7,10 @@ println("these tests will print warnings: ")
     stderr_copy = STDERR
     rs, wr = redirect_stdin()
     rserr, wrerr = redirect_stderr()
-    ref = @async save("test.not_installed")
+    ref = @async save("test.not_installed", nothing)
     println(wr, "y")
     @test_throws CompositeException wait(ref) #("unknown package NotInstalled")
-    ref = @async save("test.not_installed")
+    ref = @async save("test.not_installed", nothing)
     println(wr, "invalid") #test invalid input
     println(wr, "n") # don't install
     wait(ref)
@@ -35,7 +35,7 @@ add_format(format"BROKEN", (), ".brok", [:BrokenIO])
     stderr_copy = STDERR
     rserr, wrerr = redirect_stderr()
     @test_throws FileIO.LoaderError load(Stream(format"BROKEN",STDIN))
-    @test_throws FileIO.WriterError save(Stream(format"BROKEN",STDOUT))
+    @test_throws FileIO.WriterError save(Stream(format"BROKEN",STDOUT), nothing)
     redirect_stderr(stderr_copy)
     close(rserr);close(wrerr)
 end
