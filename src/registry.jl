@@ -17,11 +17,14 @@ end
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
 
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
-add_format(format"Feather", (), [".feather"], [:FeatherFiles])
+add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
 add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles, LOAD])
 add_format(format"Stata", (), [".dta"], [:StatFiles, LOAD])
-add_format(format"SPSS", (), [".sav", ".por"], [:StatFiles, LOAD])
-add_format(format"SAS", (), [".sas7bdat"], [:StatFiles, LOAD])
+add_format(format"SPSS", "\$FL2", [".sav"], [:StatFiles, LOAD])
+add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xc2, 0xea, 0x81, 0x60,0xb3, 0x14, 0x11,
+    0xcf, 0xbd, 0x92, 0x08, 0x00, 0x09, 0xc7, 0x31, 0x8c, 0x18, 0x1f,
+    0x10, 0x11], [".sas7bdat"], [:StatFiles, LOAD])
 
 # Image formats
 add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
