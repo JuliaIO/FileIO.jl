@@ -29,6 +29,7 @@ import Base.showerror
 include("query.jl")
 include("error_handling.jl")
 include("loadsave.jl")
+include("mimesave.jl")
 include("registry.jl")
 
 """
