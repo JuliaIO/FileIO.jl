@@ -1,7 +1,7 @@
 function FileIO.save(file::File{format"PNG"}, data)
     if mimewritable("image/png", data)
         open(file.filename, "w") do s
-            show(s, "image/png", data)
+            show(IOContext(s, :full_fidelity=>true), "image/png", data)
         end
     else
         throw(ArgumentError("Argument does not support conversion to png."))
@@ -11,7 +11,7 @@ end
 function FileIO.save(file::File{format"SVG"}, data)
     if mimewritable("image/svg+xml", data)
         open(file.filename, "w") do s
-            show(s, "image/svg+xml", data)
+            show(IOContext(s, :full_fidelity=>true), "image/svg+xml", data)
         end
     else
         throw(ArgumentError("Argument does not support conversion to svg."))
@@ -21,7 +21,7 @@ end
 function FileIO.save(file::File{format"PDF"}, data)
     if mimewritable("application/pdf", data)
         open(file.filename, "w") do s
-            show(s, "application/pdf", data)
+            show(IOContext(s, :full_fidelity=>true), "application/pdf", data)
         end
     else
         throw(ArgumentError("Argument does not support conversion to pdf."))
@@ -31,7 +31,7 @@ end
 function FileIO.save(file::File{format"EPS"}, data)
     if mimewritable("application/eps", data)
         open(file.filename, "w") do s
-            show(s, "application/eps", data)
+            show(IOContext(s, :full_fidelity=>true), "application/eps", data)
         end
     else
         throw(ArgumentError("Argument does not support conversion to eps."))
