@@ -126,7 +126,8 @@ add_saver(format"DUMMY", :Dummy)
             @test isabspath(get(filename(s)))
             @test endswith(get(filename(s)),fn2)
         end
-    end    
+    end
+    rm(fn2)
 
     # Test IO
     b = load(query(fn))
