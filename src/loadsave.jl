@@ -2,7 +2,7 @@ const sym2loader = Dict{Symbol,Vector{Symbol}}()
 const sym2saver  = Dict{Symbol,Vector{Symbol}}()
 
 function is_installed(pkg::Symbol)
-    isdefined(pkg) && isa(getfield(Main, pkg), Module) && return true # is a module defined in Main scope
+    isdefined(Main, pkg) && isa(getfield(Main, pkg), Module) && return true # is a module defined in Main scope
     path = Base.find_in_path(string(pkg)) # hacky way to determine if a Package is installed
     path == nothing && return false
     return isfile(path)

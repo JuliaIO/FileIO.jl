@@ -251,7 +251,7 @@ try
             a = read(io, Int)
             @test a == 42 #make sure that LoadTest2 is used for saving, even though its at position 2
         end
-        @test isdefined(:LoadTest1) # first module should load first but fail
+        @test isdefined(Main, :LoadTest1) # first module should load first but fail
         @test x == 42
         rm(fn)
     end
