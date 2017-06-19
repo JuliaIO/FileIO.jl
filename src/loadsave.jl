@@ -9,8 +9,9 @@ function is_installed(pkg::Symbol)
 end
 
 function checked_import(pkg::Symbol)
-    !is_installed(pkg)      && throw(NotInstalledError(pkg, ""))
-    !isdefined(Main, pkg)   && eval(Main, Expr(:import, pkg))
+    isdefined(Main, pkg) && return getfield(Main, pkg)
+    !is_installed(pkg) && throw(NotInstalledError(pkg, ""))
+    !isdefined(Main, pkg) && eval(Main, Expr(:import, pkg))
     return getfield(Main, pkg)
 end
 
