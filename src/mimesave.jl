@@ -1,4 +1,8 @@
-function FileIO.save(file::File{format"PNG"}, data)
+module MimeWriter
+
+using ..FileIO: File, @format_str
+
+function save(file::File{format"PNG"}, data)
     if mimewritable("image/png", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "image/png", data)
@@ -8,7 +12,7 @@ function FileIO.save(file::File{format"PNG"}, data)
     end
 end
 
-function FileIO.save(file::File{format"SVG"}, data)
+function save(file::File{format"SVG"}, data)
     if mimewritable("image/svg+xml", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "image/svg+xml", data)
@@ -18,7 +22,7 @@ function FileIO.save(file::File{format"SVG"}, data)
     end
 end
 
-function FileIO.save(file::File{format"PDF"}, data)
+function save(file::File{format"PDF"}, data)
     if mimewritable("application/pdf", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "application/pdf", data)
@@ -28,7 +32,7 @@ function FileIO.save(file::File{format"PDF"}, data)
     end
 end
 
-function FileIO.save(file::File{format"EPS"}, data)
+function save(file::File{format"EPS"}, data)
     if mimewritable("application/eps", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "application/eps", data)
@@ -36,4 +40,6 @@ function FileIO.save(file::File{format"EPS"}, data)
     else
         throw(ArgumentError("Argument does not support conversion to eps."))
     end
+end
+
 end
