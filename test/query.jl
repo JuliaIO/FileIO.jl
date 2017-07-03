@@ -316,7 +316,8 @@ end
     open(q) do io
         @test position(io) == 0
         @test FileIO.detect_rdata(io)
-        @test position(io) == 5
+        # 6 for /r/n  and 5 for /n
+        @test (position(io) in (5, 6))
     end
 end
 @testset "Format with function for magic bytes" begin
