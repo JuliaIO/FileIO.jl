@@ -21,7 +21,12 @@ for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
         (:applicable_savers,  :add_saver,  :sym2saver))
     @eval begin
-        $applicable_{sym}(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}}) = get($dict_, sym, [:FileIO]) # if no loader is declared, fallback to FileIO
+        function $applicable_{sym}(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}})
+            if haskey($dict_, sym)
+                return $dict_[sym]
+            end
+            error("No $($applicable_) found for $(sym)")
+        end
         function $add_{sym}(::Type{DataFormat{sym}}, pkg::Symbol)
             list = get($dict_, sym, Symbol[])
             $dict_[sym] = push!(list, pkg)
