@@ -316,7 +316,8 @@ end
     open(q) do io
         @test position(io) == 0
         @test FileIO.detect_rdata(io)
-        @test position(io) == 5
+        # This will only be the case for /r/n line endings, which the sample file has
+        @test position(io) == 6
     end
 end
 @testset "Format with function for magic bytes" begin
