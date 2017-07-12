@@ -60,7 +60,7 @@ Handles a list of thrown errors after no IO library was found working
 function handle_exceptions(exceptions::Vector, action)
     # first show all errors when there are more then one
     multiple = length(exceptions) > 1
-    println(STDERR, "Error$(multiple?"s" : "") encountered while $action.")
+    println(STDERR, "Error$(multiple ? "s" : "") encountered while $action.")
     if multiple
         println("All errors:")
         for (err, file) in exceptions

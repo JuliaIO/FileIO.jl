@@ -141,10 +141,10 @@ add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 ### Audio formats
 function detectwav(io)
     seekstart(io)
-    magic = read(io, UInt8, 4)
+    magic = read!(io, Vector{UInt8}(4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read(io, UInt8, 4)
+    submagic = read!(io, Vector{UInt8}(4))
 
     submagic == b"WAVE"
 end
@@ -157,10 +157,10 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
-    magic = read(io, UInt8, 4)
+    magic = read!(io, Vector{UInt8}(4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read(io, UInt8, 4)
+    submagic = read!(io, Vector{UInt8}(4))
 
     submagic == b"AVI "
 end
