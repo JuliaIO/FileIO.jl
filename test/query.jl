@@ -1,22 +1,21 @@
 using FileIO
 using Base.Test
 using Compat
-using Compat.String
 
 @testset "OS" begin
-    if is_linux()
+    if Compat.Sys.islinux()
         @test FileIO.applies_to_os(FileIO.Linux)
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if is_apple()
+    if Compat.Sys.isapple()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test FileIO.applies_to_os(FileIO.OSX)
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if is_windows()
+    if Compat.Sys.iswindows()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test !(FileIO.applies_to_os(FileIO.Unix))
@@ -231,7 +230,7 @@ try
     @testset "multiple libs" begin
         lensave0 = length(FileIO.sym2saver)
         lenload0 = length(FileIO.sym2loader)
-        OSKey = is_apple() ? FileIO.OSX : is_windows() ? FileIO.Windows : is_linux() ? FileIO.Linux : error("os not supported")
+        OSKey = Compat.Sys.isapple() ? FileIO.OSX : Compat.Sys.iswindows() ? FileIO.Windows : Compat.Sys.islinux() ? FileIO.Linux : error("os not supported")
         add_format(
             format"MultiLib",
             UInt8[0x42,0x4d],
