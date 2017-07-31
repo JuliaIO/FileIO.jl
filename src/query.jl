@@ -12,10 +12,10 @@ split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
 applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
 applies_to_os{O <: OS}(os::Type{O})              = false
 
-applies_to_os{U <: Unix}(os::Type{U}) = is_unix()
-applies_to_os(os::Type{Windows}) = is_windows()
-applies_to_os(os::Type{OSX}) = is_apple()
-applies_to_os(os::Type{Linux}) = is_linux()
+applies_to_os{U <: Unix}(os::Type{U}) = Compat.Sys.isunix()
+applies_to_os(os::Type{Windows}) = Compat.Sys.iswindows()
+applies_to_os(os::Type{OSX}) = Compat.Sys.isapple()
+applies_to_os(os::Type{Linux}) = Compat.Sys.islinux()
 
 function add_loadsave(format, predicates)
     library = shift!(predicates)
