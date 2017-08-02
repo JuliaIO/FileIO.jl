@@ -1,22 +1,21 @@
 using FileIO
 using Base.Test
 using Compat
-import Compat.String
 
 @testset "OS" begin
-    if is_linux()
+    if Compat.Sys.islinux()
         @test FileIO.applies_to_os(FileIO.Linux)
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if is_apple()
+    if Compat.Sys.isapple()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test FileIO.applies_to_os(FileIO.OSX)
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if is_windows()
+    if Compat.Sys.iswindows()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test !(FileIO.applies_to_os(FileIO.Unix))
@@ -34,7 +33,7 @@ module LoadTest1
 import FileIO: @format_str, File
 load(file::File{format"MultiLib"}) = error()
 
-save(file::File{format"MultiLib"}) = open(file, "w") do s
+save(file::File{format"MultiLib"}, data) = open(file, "w") do s
     write(s, magic(format"MultiLib"))  # Write the magic bytes
     write(s, 0)
 end
@@ -44,7 +43,7 @@ module LoadTest2
 import FileIO: @format_str, File, magic
 load(file::File{format"MultiLib"}) = 42
 
-save(file::File{format"MultiLib"}) = open(file, "w") do s
+save(file::File{format"MultiLib"}, data) = open(file, "w") do s
     write(s, magic(format"MultiLib"))  # Write the magic bytes
     write(s, 42)
 end
@@ -231,7 +230,7 @@ try
     @testset "multiple libs" begin
         lensave0 = length(FileIO.sym2saver)
         lenload0 = length(FileIO.sym2loader)
-        OSKey = is_apple() ? FileIO.OSX : is_windows() ? FileIO.Windows : is_linux() ? FileIO.Linux : error("os not supported")
+        OSKey = Compat.Sys.isapple() ? FileIO.OSX : Compat.Sys.iswindows() ? FileIO.Windows : Compat.Sys.islinux() ? FileIO.Linux : error("os not supported")
         add_format(
             format"MultiLib",
             UInt8[0x42,0x4d],
@@ -244,14 +243,14 @@ try
         @test length(FileIO.sym2loader[:MultiLib]) == 2
         @test length(FileIO.sym2saver[:MultiLib]) == 1
         fn = string(tempname(), ".mlb")
-        save(fn)
+        save(fn, nothing)
         x = load(fn)
         open(query(fn), "r") do io
             skipmagic(io)
             a = read(io, Int)
             @test a == 42 #make sure that LoadTest2 is used for saving, even though its at position 2
         end
-        @test isdefined(:LoadTest1) # first module should load first but fail
+        @test isdefined(Main, :LoadTest1) # first module should load first but fail
         @test x == 42
         rm(fn)
     end
@@ -316,7 +315,8 @@ end
     open(q) do io
         @test position(io) == 0
         @test FileIO.detect_rdata(io)
-        @test position(io) == 5
+        # 6 for /r/n  and 5 for /n
+        @test (position(io) in (5, 6))
     end
 end
 @testset "Format with function for magic bytes" begin

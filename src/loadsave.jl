@@ -2,16 +2,18 @@ const sym2loader = Dict{Symbol,Vector{Symbol}}()
 const sym2saver  = Dict{Symbol,Vector{Symbol}}()
 
 function is_installed(pkg::Symbol)
-    isdefined(pkg) && isa(@compat(getfield(Main, pkg)), Module) && return true # is a module defined in Main scope
+    isdefined(Main, pkg) && isa(getfield(Main, pkg), Module) && return true # is a module defined in Main scope
     path = Base.find_in_path(string(pkg)) # hacky way to determine if a Package is installed
     path == nothing && return false
     return isfile(path)
 end
 
 function checked_import(pkg::Symbol)
-    !is_installed(pkg)      && throw(NotInstalledError(pkg, ""))
-    !isdefined(Main, pkg)   && eval(Main, Expr(:import, pkg))
-    return @compat(getfield(Main, pkg))
+    isdefined(Main, pkg) && return getfield(Main, pkg)
+    isdefined(FileIO, pkg) && return getfield(FileIO, pkg)
+    !is_installed(pkg) && throw(NotInstalledError(pkg, ""))
+    !isdefined(Main, pkg) && eval(Main, Expr(:import, pkg))
+    return getfield(Main, pkg)
 end
 
 
@@ -19,7 +21,12 @@ for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
         (:applicable_savers,  :add_saver,  :sym2saver))
     @eval begin
-        $applicable_{sym}(::@compat(Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}})) = get($dict_, sym, [:FileIO]) # if no loader is declared, fallback to FileIO
+        function $applicable_{sym}(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}})
+            if haskey($dict_, sym)
+                return $dict_[sym]
+            end
+            error("No $($applicable_) found for $(sym)")
+        end
         function $add_{sym}(::Type{DataFormat{sym}}, pkg::Symbol)
             list = get($dict_, sym, Symbol[])
             $dict_[sym] = push!(list, pkg)
@@ -42,7 +49,7 @@ the magic bytes are essential.
 - `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
 """
-load(s::@compat(Union{AbstractString,IO}), args...; options...) =
+load(s::Union{AbstractString,IO}, args...; options...) =
     load(query(s), args...; options...)
 
 """
@@ -51,8 +58,12 @@ trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """
-save(s::@compat(Union{AbstractString,IO}), data...; options...) =
+save(s::Union{AbstractString,IO}, data...; options...) =
     save(query(s), data...; options...)
+
+function save(s::Union{AbstractString,IO}; options...)
+    data -> save(s, data; options...)
+end
 
 # Forced format
 function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)

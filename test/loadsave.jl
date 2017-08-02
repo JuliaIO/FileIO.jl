@@ -1,6 +1,5 @@
 using FileIO
 using Base.Test
-using Compat
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
@@ -10,6 +9,7 @@ load(file::File{format"PBMText"})   = "PBMText"
 load(file::File{format"PBMBinary"}) = "PBMBinary"
 load(file::File{format"HDF5"})      = "HDF5"
 load(file::File{format"JLD"})       = "JLD"
+load(file::File{format"GZIP"})       = "GZIP"
 end
 
 sym2loader = copy(FileIO.sym2loader)
@@ -25,9 +25,11 @@ try
         add_loader(format"PBMBinary", :TestLoadSave)
         add_loader(format"HDF5", :TestLoadSave)
         add_loader(format"JLD", :TestLoadSave)
+        add_loader(format"GZIP", :TestLoadSave)
 
         @test load(joinpath(file_dir,"file1.pbm")) == "PBMText"
         @test load(joinpath(file_dir,"file2.pbm")) == "PBMBinary"
+
         # Regular HDF5 file with magic bytes starting at position 0
         @test load(joinpath(file_dir,"file1.h5")) == "HDF5"
         # This one is actually a JLD file saved with an .h5 extension,
@@ -39,7 +41,8 @@ try
         @test load(joinpath(file_dir,"file2.h5")) == "HDF5"
         # JLD file saved with .jld extension
         @test load(joinpath(file_dir,"file.jld")) == "JLD"
-
+        # GZIP file saved with .gz extension
+        @test load(joinpath(file_dir,"file.csv.gz")) == "GZIP"
         @test_throws Exception load("missing.fmt")
     end
 finally
@@ -56,7 +59,7 @@ add_format(format"DUMMY", b"DUMMY", ".dmy")
 
 module Dummy
 
-using FileIO, Compat
+using FileIO
 
 function FileIO.load(file::File{format"DUMMY"})
     open(file) do s
@@ -107,6 +110,24 @@ add_saver(format"DUMMY", :Dummy)
         end
     end
 
+    fn2 = string(tempname(), ".dmy")
+    a |> save(fn2)
+
+    # Test for absolute paths
+    cd(dirname(fn2)) do
+        fnrel = basename(fn2)
+        f = query(fnrel)
+        @test isabspath(filename(f))
+        @test endswith(filename(f),fn2) # TravisOSX prepends "/private"
+        f = File(format"DUMMY", fnrel)
+        @test !(isabspath(filename(f)))
+        open(f) do s
+            @test isabspath(get(filename(s)))
+            @test endswith(get(filename(s)),fn2)
+        end
+    end
+    rm(fn2)
+
     # Test IO
     b = load(query(fn))
     @test a == b
@@ -144,7 +165,6 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
-using Compat
 import FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io

@@ -3,7 +3,6 @@ __precompile__()
 module FileIO
 
 using Compat
-using Compat.String
 
 export DataFormat,
        File,
@@ -13,7 +12,6 @@ export DataFormat,
        add_format,
        del_format,
        add_loader,
-       add_mime,
        add_saver,
        filename,
        file_extension,
@@ -31,6 +29,7 @@ import Base.showerror
 include("query.jl")
 include("error_handling.jl")
 include("loadsave.jl")
+include("mimesave.jl")
 include("registry.jl")
 
 """

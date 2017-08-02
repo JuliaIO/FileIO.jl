@@ -1,7 +1,10 @@
 ### Simple cases
 
 # data formats
-add_format(format"JLD", "Julia data file (HDF5)", ".jld", [:JLD])
+add_format(format"JLD", (Vector{UInt8}("Julia data file (HDF5), version 0.0"),
+                         Vector{UInt8}("Julia data file (HDF5), version 0.1")), ".jld", [:JLD])
+add_format(format"JLD2", "Julia data file (HDF5), version 0.2", ".jld2", [:JLD2])
+add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz])
 
 # test for RD?2 magic sequence at the beginning of R data input stream
 function detect_rdata(io)
@@ -14,6 +17,16 @@ function detect_rdata(io)
 end
 
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
+
+add_format(format"CSV", (), [".csv"], [:CSVFiles])
+add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
+add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles, LOAD])
+add_format(format"Stata", (), [".dta"], [:StatFiles, LOAD])
+add_format(format"SPSS", "\$FL2", [".sav"], [:StatFiles, LOAD])
+add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0xc2, 0xea, 0x81, 0x60,0xb3, 0x14, 0x11,
+    0xcf, 0xbd, 0x92, 0x08, 0x00, 0x09, 0xc7, 0x31, 0x8c, 0x18, 0x1f,
+    0x10, 0x11], [".sas7bdat"], [:StatFiles, LOAD])
 
 # Image formats
 add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
@@ -32,14 +45,13 @@ add_format(format"CRW", UInt8[0x49,0x49,0x1a,0x00,0x00,0x00,0x48,0x45], ".crw", 
 add_format(format"CUR", UInt8[0x00,0x00,0x02,0x00],                     ".cur", [:ImageMagick])
 add_format(format"DCX", UInt8[0xb1,0x68,0xde,0x3a],                     ".dcx", [:ImageMagick])
 add_format(format"DOT", UInt8[0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1], ".dot", [:ImageMagick])
-add_format(format"EPS", UInt8[0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f], ".eps", [:ImageMagick])
+add_format(format"EPS", UInt8[0x25,0x21,0x50,0x53,0x2d,0x41,0x64,0x6f], ".eps", [:ImageMagick], [:MimeWriter, SAVE])
 add_format(format"HDR", UInt8[0x23,0x3f,0x52,0x41,0x44,0x49,0x41,0x4e], ".hdr", [:ImageMagick])
 add_format(format"ICO", UInt8[0x00,0x00,0x01,0x00],                     ".ico", [:ImageMagick])
 add_format(format"INFO", UInt8[0x7a,0x62,0x65,0x78],                    ".info",[:ImageMagick])
 add_format(format"JP2", UInt8[0x00,0x00,0x00,0x0c,0x6a,0x50,0x20,0x20], ".jp2", [:ImageMagick])
-add_format(format"PCX", UInt8[0x0a,0x05,0x01,0x01],                     ".pcx", [:ImageMagick])
 add_format(format"PDB", UInt8[0x73,0x7a,0x65,0x7a],                     ".pdb", [:ImageMagick])
-add_format(format"PDF", UInt8[0x25,0x50,0x44,0x46],                     ".pdf", [:ImageMagick])
+add_format(format"PDF", UInt8[0x25,0x50,0x44,0x46],                     ".pdf", [:ImageMagick], [:MimeWriter, SAVE])
 add_format(format"PGM", UInt8[0x50,0x35,0x0a],                          ".pgm", [:ImageMagick])
 add_format(format"PSD", UInt8[0x38,0x42,0x50,0x53],                     ".psd", [:ImageMagick])
 add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03],           ".rgb", [:ImageMagick])
@@ -66,7 +78,8 @@ add_format(
     UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
     ".png",
     [:QuartzImageIO, OSX],
-    [:ImageMagick]
+    [:ImageMagick],
+    [:MimeWriter, SAVE]
 )
 add_format(
     format"TIFF",
@@ -88,6 +101,18 @@ add_format(
     ".bmp",
     [:QuartzImageIO, OSX],
     [:ImageMagick]
+)
+add_format(
+    format"PCX",
+    (UInt8[0x0a,0x02], UInt8[0x0a,0x05]),
+    ".pcx",
+    [:ImageMagick]
+)
+add_format(
+    format"SVG",
+    (),
+    ".svg",
+    [:MimeWriter, SAVE]
 )
 
 #=
@@ -116,10 +141,10 @@ add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 ### Audio formats
 function detectwav(io)
     seekstart(io)
-    magic = read(io, UInt8, 4)
+    magic = read!(io, Vector{UInt8}(4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read(io, UInt8, 4)
+    submagic = read!(io, Vector{UInt8}(4))
 
     submagic == b"WAVE"
 end
@@ -132,10 +157,10 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
-    magic = read(io, UInt8, 4)
+    magic = read!(io, Vector{UInt8}(4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read(io, UInt8, 4)
+    submagic = read!(io, Vector{UInt8}(4))
 
     submagic == b"AVI "
 end
@@ -206,7 +231,10 @@ add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [:MeshIO])
 
 add_format(format"ABAQUS_INP", (), [".inp"], [:MeshIO])
 
+
 add_format(format"FITS",
            # See https://www.loc.gov/preservation/digital/formats/fdd/fdd000317.shtml#sign
            [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54],
            [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS"], [:FITSIO])
+
+add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [:RawArray])

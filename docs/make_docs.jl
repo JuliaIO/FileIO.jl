@@ -1,5 +1,4 @@
-using FileIO, Compat
-import Compat.String
+using FileIO
 import FileIO: LOAD, SAVE, OSX, OS
 const fs = open(Pkg.dir("FileIO", "docs", "registry.md"), "w")
 
@@ -44,7 +43,7 @@ function add_format{Sym}(::Type{DataFormat{Sym}}, magic, extension, io_libs...)
 end
 
 
-function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::@compat(Union{Tuple,AbstractVector,String}), extension)
+function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,String}, extension)
     println(sym)
 end
 
