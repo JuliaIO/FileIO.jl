@@ -82,14 +82,6 @@ add_format(
     [:MimeWriter, SAVE]
 )
 add_format(
-    format"TIFF",
-    (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00]),
-    [".tiff", ".tif"],
-    [:OMETIFF],
-    [:QuartzImageIO, OSX],
-    [:ImageMagick]
-)
-add_format(
     format"JPEG",
     UInt8[0xff,0xd8,0xff],
     [".jpeg", ".jpg", ".JPG"],
@@ -154,6 +146,21 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
 
 ### Complex cases
+
+# Handle OME-TIFFs, which are identical to normal TIFFs with the primary difference being the filename and embedded XML metadata
+tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
+function detecttiff(io)
+    seekstart(io)
+    magic = read(io, UInt8, 4)
+    # do any of the first 4 bytes match any of the 4 possible combinations of tiff magics
+    return any(map(x->all(magic .== x), tiff_magic))
+end
+# OME-TIFF
+detect_ometiff(io) = detecttiff(io) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF])
+# normal TIFF
+detect_noometiff(io) = detecttiff(io) && !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [:QuartzImageIO, OSX], [:ImageMagick])
 
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
