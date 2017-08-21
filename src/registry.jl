@@ -162,6 +162,10 @@ add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF])
 detect_noometiff(io) = detecttiff(io) && !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [:QuartzImageIO, OSX], [:ImageMagick])
 
+# custom skipmagic functions for function-based tiff magic detection
+skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
+skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
+
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
