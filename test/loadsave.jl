@@ -169,11 +169,11 @@ import FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io
     skipmagic(io)
-    readstring(stream(io))
+    read(stream(io), String)
 end
 load(f::File{format"AmbigExt2"}) = open(f) do io
     skipmagic(io)
-    readstring(stream(io))
+    read(stream(io), String)
 end
 
 save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
