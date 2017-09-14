@@ -89,7 +89,8 @@ function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,Abstract
 end
 
 # for multiple magic bytes
-function add_format{sym, T <: Vector{UInt8}, N}(fmt::Type{DataFormat{sym}}, magics::NTuple{N, T}, extension)
+function add_format{sym, T <: Vector{UInt8}}(fmt::Type{DataFormat{sym}},
+                                             magics::Tuple{T,Vararg{T}}, extension)
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     magics = map(canonicalize_magic, magics)
     for magic in magics

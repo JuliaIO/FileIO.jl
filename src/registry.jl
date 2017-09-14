@@ -151,7 +151,7 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
 function detecttiff(io)
     seekstart(io)
-    magic = read(io, UInt8, 4)
+    magic = read!(io, Vector{UInt8}(4))
     # do any of the first 4 bytes match any of the 4 possible combinations of tiff magics
     return any(map(x->all(magic .== x), tiff_magic))
 end
@@ -218,8 +218,8 @@ function detect_stlascii(io)
 end
 
 function detect_stlbinary(io)
-    const size_header = 80+sizeof(UInt32)
-    const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
+    size_header = 80+sizeof(UInt32)
+    size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
 
     position(io) != 0 && (seekstart(io); return false)
     seekend(io)
