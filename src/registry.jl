@@ -19,6 +19,7 @@ end
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
 
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
+add_format(format"TSV", (), [".tsv"], [:CSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
 add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles, LOAD])
 add_format(format"Stata", (), [".dta"], [:StatFiles, LOAD])
