@@ -1,6 +1,5 @@
 using FileIO
 using Base.Test
-using Compat
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
@@ -60,7 +59,7 @@ add_format(format"DUMMY", b"DUMMY", ".dmy")
 
 module Dummy
 
-using FileIO, Compat
+using FileIO
 
 function FileIO.load(file::File{format"DUMMY"})
     open(file) do s
@@ -166,16 +165,15 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
-using Compat
 import FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io
     skipmagic(io)
-    readstring(stream(io))
+    read(stream(io), String)
 end
 load(f::File{format"AmbigExt2"}) = open(f) do io
     skipmagic(io)
-    readstring(stream(io))
+    read(stream(io), String)
 end
 
 save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io

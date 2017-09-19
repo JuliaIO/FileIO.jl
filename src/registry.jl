@@ -19,6 +19,7 @@ end
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
 
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
+add_format(format"TSV", (), [".tsv"], [:CSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
 add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles, LOAD])
 add_format(format"Stata", (), [".dta"], [:StatFiles, LOAD])
@@ -27,6 +28,8 @@ add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0xc2, 0xea, 0x81, 0x60,0xb3, 0x14, 0x11,
     0xcf, 0xbd, 0x92, 0x08, 0x00, 0x09, 0xc7, 0x31, 0x8c, 0x18, 0x1f,
     0x10, 0x11], [".sas7bdat"], [:StatFiles, LOAD])
+
+add_format(format"bedGraph", UInt8[0x74, 0x79, 0x70, 0x65, 0x3D, 0x62, 0x65, 0x64, 0x47, 0x72, 0x61, 0x70, 0x68], [".bedgraph"], [:BedgraphFiles])
 
 # Image formats
 add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
@@ -80,13 +83,6 @@ add_format(
     [:QuartzImageIO, OSX],
     [:ImageMagick],
     [:MimeWriter, SAVE]
-)
-add_format(
-    format"TIFF",
-    (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00]),
-    [".tiff", ".tif"],
-    [:QuartzImageIO, OSX],
-    [:ImageMagick]
 )
 add_format(
     format"JPEG",
@@ -154,6 +150,25 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
 ### Complex cases
 
+# Handle OME-TIFFs, which are identical to normal TIFFs with the primary difference being the filename and embedded XML metadata
+const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
+function detecttiff(io)
+    seekstart(io)
+    magic = read!(io, Vector{UInt8}(4))
+    # do any of the first 4 bytes match any of the 4 possible combinations of tiff magics
+    return any(map(x->all(magic .== x), tiff_magic))
+end
+# OME-TIFF
+detect_ometiff(io) = detecttiff(io) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF])
+# normal TIFF
+detect_noometiff(io) = detecttiff(io) && !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [:QuartzImageIO, OSX], [:ImageMagick])
+
+# custom skipmagic functions for function-based tiff magic detection
+skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
+skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
+
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
@@ -206,8 +221,8 @@ function detect_stlascii(io)
 end
 
 function detect_stlbinary(io)
-    const size_header = 80+sizeof(UInt32)
-    const size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
+    size_header = 80+sizeof(UInt32)
+    size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
 
     position(io) != 0 && (seekstart(io); return false)
     seekend(io)
@@ -230,3 +245,13 @@ add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [:MeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [:MeshIO])
 
 add_format(format"ABAQUS_INP", (), [".inp"], [:MeshIO])
+
+
+add_format(format"FITS",
+           # See https://www.loc.gov/preservation/digital/formats/fdd/fdd000317.shtml#sign
+           [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54],
+           [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS"], [:FITSIO])
+
+add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [:RawArray])
+
+add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
