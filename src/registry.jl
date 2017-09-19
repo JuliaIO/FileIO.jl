@@ -251,3 +251,5 @@ add_format(format"FITS",
            [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS"], [:FITSIO])
 
 add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [:RawArray])
+
+add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
