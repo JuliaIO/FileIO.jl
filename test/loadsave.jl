@@ -215,3 +215,46 @@ end
 @testset "Absent file" begin
     @test_throws SystemError load("nonexistent.oops")
 end
+
+# Stack overflows (issue #141)
+module IOrecursion1
+using FileIO
+# One shouldn't extend FileIO.load, but what happens if someone does anyway?
+FileIO.load(file::File{format"IOrecursion1"}) = 1
+end
+
+module IOrecursion2
+using FileIO
+# One shouldn't extend FileIO.load, but what happens if someone does anyway?
+FileIO.load(file::Stream{format"IOrecursion2"}) = 2
+end
+
+module IOrecursion3
+using FileIO
+# One shouldn't extend FileIO.load, but what happens if someone does anyway?
+FileIO.load(file::File{format"IOrecursion3"}) = 3
+FileIO.load(file::Stream{format"IOrecursion3"}) = 3
+end
+
+sym2loader = copy(FileIO.sym2loader)
+sym2saver = copy(FileIO.sym2saver)
+try
+    empty!(FileIO.sym2loader)
+    empty!(FileIO.sym2saver)
+    add_loader(format"IOrecursion1", :IOrecursion1)
+    add_loader(format"IOrecursion2", :IOrecursion2)
+    add_loader(format"IOrecursion3", :IOrecursion3)
+
+    @testset "Stackoverflow" begin
+        io = IOBuffer()
+        @test load(File(format"IOrecursion1", @__FILE__)) == 1
+        @test_throws FileIO.LoaderError load(Stream(format"IOrecursion1", io))
+        @test_throws FileIO.LoaderError load(File(format"IOrecursion2", @__FILE__))
+        @test load(Stream(format"IOrecursion2", io)) == 2
+        @test load(File(format"IOrecursion3", @__FILE__)) == 3
+        @test load(Stream(format"IOrecursion3", io)) == 3
+    end
+finally
+    merge!(FileIO.sym2loader, sym2loader)
+    merge!(FileIO.sym2saver, sym2saver)
+end

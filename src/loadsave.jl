@@ -95,6 +95,9 @@ function load{F}(q::Formatted{F}, args...; options...)
             if !has_method_from(methods(Library.load), Library)
                 throw(LoaderError(string(library), "load not defined"))
             end
+            if Library.load == FileIO.load
+                throw(LoaderError(string(library), "module should not extend FileIO.load"))
+            end
             return eval(Main, :($(Library.load)($q, $args...; $options...)))
         catch e
             push!(failures, (e, q))
@@ -111,6 +114,9 @@ function save{F}(q::Formatted{F}, data...; options...)
             Library = checked_import(library)
             if !has_method_from(methods(Library.save), Library)
                 throw(WriterError(string(library), "save not defined"))
+            end
+            if Library.save == FileIO.save
+                throw(WriterError(string(library), "module should not extend FileIO.save"))
             end
             return eval(Main, :($(Library.save)($q, $data...; $options...)))
         catch e
