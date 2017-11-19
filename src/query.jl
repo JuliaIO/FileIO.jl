@@ -1,12 +1,12 @@
 ### Format registry infrastructure
 @compat abstract type OS end
 @compat abstract type Unix <: OS end
-immutable Windows <: OS end
-immutable OSX <: Unix end
-immutable Linux <: Unix end
+struct Windows <: OS end
+struct OSX <: Unix end
+struct Linux <: Unix end
 
-immutable LOAD end
-immutable SAVE end
+struct LOAD end
+struct SAVE end
 
 split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
 applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
@@ -37,7 +37,7 @@ where `sym` is always a symbol. For example, a .csv file might have
 
 An easy way to write `DataFormat{:CSV}` is `format"CSV"`.
 """
-immutable DataFormat{sym} end
+struct DataFormat{sym} end
 
 macro format_str(s)
     :(DataFormat{$(Expr(:quote, Symbol(s)))})
@@ -222,7 +222,7 @@ end
 DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
 file.
 """
-immutable File{F<:DataFormat} <: Formatted{F}
+struct File{F<:DataFormat} <: Formatted{F}
     filename::String
 end
 File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
@@ -245,7 +245,7 @@ written in known `Format`.  For example, `Stream{PNG}(io)` would
 indicate PNG format.  If known, the optional `filename` argument can
 be used to improve error messages, etc.
 """
-immutable Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
+struct Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     io::IOtype
     filename::Nullable{String}
 end

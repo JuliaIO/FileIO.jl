@@ -3,7 +3,7 @@
 be given the chance to recover from the error.  Reports the library name and an error message:
 LoaderError("ImageMagick", "Foo not available")
 """
-immutable LoaderError <: Exception
+struct LoaderError <: Exception
     library::String
     msg::String
 end
@@ -15,7 +15,7 @@ Base.showerror(io::IO, e::LoaderError) = println(io, e.library, " load error: ",
 be given the chance to recover from the error.  Reports the library name and an error message:
 WriterError("ImageMagick", "Foo not available")
 """
-immutable WriterError <: Exception
+struct WriterError <: Exception
     library::String
     msg::String
 end
@@ -27,7 +27,7 @@ Base.showerror(io::IO, e::WriterError) = println(
 """
 `NotInstalledError` should be thrown when a library is currently not installed.
 """
-immutable NotInstalledError <: Exception
+struct NotInstalledError <: Exception
     library::Symbol
     message::String
 end
@@ -36,7 +36,7 @@ Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not i
 """
 `UnknownFormat` gets thrown when FileIO can't recognize the format of a file.
 """
-immutable UnknownFormat{T <: Formatted} <: Exception
+struct UnknownFormat{T <: Formatted} <: Exception
     format::T
 end
 Base.showerror(io::IO, e::UnknownFormat) = println(io, e.format, " couldn't be recognized by FileIO.")
