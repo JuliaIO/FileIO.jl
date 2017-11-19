@@ -159,7 +159,7 @@ function detect_bedgraph(io)
     while !eof(io) && !ismatch(r"^(\S+)\s+(\d+)\s+(\d+)\s+(\S+)\n", line) # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
         line = readline(io,chomp=false)
 
-        if contains(line, bedgraph_magic) # if contains(line, "type=bedGraph")
+        if contains(line, String(bedgraph_magic)) # Note: String(bedgraph_magic) = "type=bedGraph"
             return true
         end
     end
