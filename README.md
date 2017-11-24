@@ -40,7 +40,10 @@ file format.
 Sometimes you want to read or write files that are larger than your available
 memory, or might be an unknown or infinite length (e.g. reading an audio or
 video stream from a socket). In these cases it might not make sense to process
-the whole file at once, but instead process it a chunk at a time. For these situations FileIO provides the `loadstreaming` and `savestreaming` functions, which return an object that you can `read` or `write`, rather than the file data itself.
+the whole file at once, but instead process it a chunk at a time. For these
+situations FileIO provides the `loadstreaming` and `savestreaming` functions,
+which return an object that you can `read` or `write`, rather than the file data
+itself.
 
 This would look something like:
 
@@ -69,7 +72,8 @@ do loadstreaming("bigfile.wav") audio
 end
 ```
 
-Note that in these cases you may want to use `read!` with a pre-allocated buffer for maximum efficiency.
+Note that in these cases you may want to use `read!` with a pre-allocated buffer
+for maximum efficiency.
 
 ## Adding new formats
 
@@ -173,7 +177,13 @@ automatically even if the code inside the `do` scope throws an error.)
 Conversely, `load(::Stream)` and `save(::Stream)` should not close the
 input stream.
 
-`loadstreaming` and `savestreaming` use the same query mechanism, but return a decoded stream that users can `read` or `write`. You should also implement a `close` method on your reader or writer type. Just like with `load` and `save`, if the user provided a filename, your `close` method should be responsible for closing any streams you opened in order to read or write the file. If you are given a `Stream`, your `close` method should only do the clean up for your reader or writer type, not close the stream.
+`loadstreaming` and `savestreaming` use the same query mechanism, but return a
+decoded stream that users can `read` or `write`. You should also implement a
+`close` method on your reader or writer type. Just like with `load` and `save`,
+if the user provided a filename, your `close` method should be responsible for
+closing any streams you opened in order to read or write the file. If you are
+given a `Stream`, your `close` method should only do the clean up for your
+reader or writer type, not close the stream.
 
 ```julia
 struct WAVReader

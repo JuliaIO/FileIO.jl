@@ -40,100 +40,6 @@ add_loader
 "`add_saver(fmt, :Package)` triggers `using Package` before saving format `fmt`"
 add_saver
 
-
-for fn in (:load, :loadstreaming, :save, :savestreaming)
-    @eval $fn(s::@compat(Union{AbstractString,IO}), args...; options...) =
-        $fn(query(s), args...; options...)
-end
-
-function save(s::Union{AbstractString,IO}; options...)
-    data -> save(s, data; options...)
-end
-
-# Forced format
-function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
-    libraries = applicable_savers(df)
-    checked_import(libraries[1])
-    eval(Main, :($save($File($(DataFormat{sym}), $f),
-                       $data...; $options...)))
-end
-
-function savestreaming{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
-    libraries = applicable_savers(df)
-    checked_import(libraries[1])
-    eval(Main, :($savestreaming($Stream($(DataFormat{sym}), $s),
-                                $data...; $options...)))
-
-function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
-    libraries = applicable_savers(df)
-    checked_import(libraries[1])
-    eval(Main, :($save($Stream($(DataFormat{sym}), $s),
-                       $data...; $options...)))
-
-function savestreaming{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
-    libraries = applicable_savers(df)
-    checked_import(libraries[1])
-    eval(Main, :($savestreaming($File($(DataFormat{sym}), $f),
-                                $data...; $options...)))
-end
-
-# do-syntax for streaming IO
-for fn in (:loadstreaming, :savestreaming)
-    @eval function $fn(f::Function, args...; kwargs...)
-        str = $fn(args...; kwargs...)
-        try
-            ret = f(str)
-        finally
-            close(str)
-        end
-
-        ret
-    end
-end
-
-# Fallbacks
-for fn in (:load, :loadstreaming)
-    @eval function $fn{F}(q::Formatted{F}, args...; options...)
-        if unknown(q)
-            isfile(filename(q)) || open(filename(q))  # force systemerror
-            throw(UnknownFormat(q))
-        end
-        libraries = applicable_loaders(q)
-        failures  = Any[]
-        for library in libraries
-            try
-                Library = checked_import(library)
-                if !has_method_from(methods(Library.$fn), Library)
-                    throw(LoaderError(string(library), "$fn not defined"))
-                end
-                return eval(Main, :($(Library.$fn)($q, $args...; $options...)))
-            catch e
-                push!(failures, (e, q))
-            end
-        end
-        handle_exceptions(failures, "loading \"$(filename(q))\"")
-    end
-end
-for fn in (:save, :savestreaming)
-    @eval function $fn{F}(q::Formatted{F}, data...; options...)
-        unknown(q) && throw(UnknownFormat(q))
-        libraries = applicable_savers(q)
-        failures  = Any[]
-        for library in libraries
-            try
-                Library = checked_import(library)
-                if !has_method_from(methods(Library.$fn), Library)
-                    throw(WriterError(string(library), "$fn not defined"))
-                end
-                return eval(Main, :($(Library.$fn)($q, $data...; $options...)))
-            catch e
-                push!(failures, (e, q))
-            end
-        end
-        handle_exceptions(failures, "saving \"$(filename(q))\"")
-    end
-end
-
 """
 - `load(filename)` loads the contents of a formatted file, trying to infer
 the format from `filename` and/or magic bytes in the file.
@@ -180,6 +86,137 @@ trying to infer the format from `filename`.
 - `savestreaming(f, data...; options...)` passes keyword arguments on to the saver.
 """
 savestreaming
+
+for fn in (:load, :loadstreaming, :save, :savestreaming)
+    @eval $fn(s::@compat(Union{AbstractString,IO}), args...; options...) =
+        $fn(query(s), args...; options...)
+end
+
+function save(s::Union{AbstractString,IO}; options...)
+    data -> save(s, data; options...)
+end
+
+# Forced format
+function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+    libraries = applicable_savers(df)
+    checked_import(libraries[1])
+    eval(Main, :($save($File($(DataFormat{sym}), $f),
+                       $data...; $options...)))
+end
+
+function savestreaming{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
+    libraries = applicable_savers(df)
+    checked_import(libraries[1])
+    eval(Main, :($savestreaming($Stream($(DataFormat{sym}), $s),
+                                $data...; $options...)))
+end
+
+function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
+    libraries = applicable_savers(df)
+    checked_import(libraries[1])
+    eval(Main, :($save($Stream($(DataFormat{sym}), $s),
+                       $data...; $options...)))
+end
+
+function savestreaming{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+    libraries = applicable_savers(df)
+    checked_import(libraries[1])
+    eval(Main, :($savestreaming($File($(DataFormat{sym}), $f),
+                                $data...; $options...)))
+end
+
+# do-syntax for streaming IO
+for fn in (:loadstreaming, :savestreaming)
+    @eval function $fn(f::Function, args...; kwargs...)
+        str = $fn(args...; kwargs...)
+        try
+            f(str)
+        finally
+            close(str)
+        end
+    end
+end
+
+# Fallbacks
+
+# TODO: this definitely should be refactored to reduce duplication
+function load{F}(q::Formatted{F}, args...; options...)
+    if unknown(q)
+        isfile(filename(q)) || open(filename(q))  # force systemerror
+        throw(UnknownFormat(q))
+    end
+    libraries = applicable_loaders(q)
+    failures  = Any[]
+    for library in libraries
+        try
+            Library = checked_import(library)
+            if !has_method_from(methods(Library.load), Library)
+                throw(LoaderError(string(library), "load not defined"))
+            end
+            return eval(Main, :($(Library.load)($q, $args...; $options...)))
+        catch e
+            push!(failures, (e, q))
+        end
+    end
+    handle_exceptions(failures, "loading \"$(filename(q))\"")
+end
+
+function loadstreaming{F}(q::Formatted{F}, args...; options...)
+    if unknown(q)
+        isfile(filename(q)) || open(filename(q))  # force systemerror
+        throw(UnknownFormat(q))
+    end
+    libraries = applicable_loaders(q)
+    failures  = Any[]
+    for library in libraries
+        try
+            Library = checked_import(library)
+            if !has_method_from(methods(Library.loadstreaming), Library)
+                throw(LoaderError(string(library), "loadstreaming not defined"))
+            end
+            return eval(Main, :($(Library.loadstreaming)($q, $args...; $options...)))
+        catch e
+            push!(failures, (e, q))
+        end
+    end
+    handle_exceptions(failures, "opening \"$(filename(q))\" for streamed loading")
+end
+
+function save{F}(q::Formatted{F}, data...; options...)
+    unknown(q) && throw(UnknownFormat(q))
+    libraries = applicable_savers(q)
+    failures  = Any[]
+    for library in libraries
+        try
+            Library = checked_import(library)
+            if !has_method_from(methods(Library.save), Library)
+                throw(WriterError(string(library), "save not defined"))
+            end
+            return eval(Main, :($(Library.save)($q, $data...; $options...)))
+        catch e
+            push!(failures, (e, q))
+        end
+    end
+    handle_exceptions(failures, "saving \"$(filename(q))\"")
+end
+
+function savestreaming{F}(q::Formatted{F}, data...; options...)
+    unknown(q) && throw(UnknownFormat(q))
+    libraries = applicable_savers(q)
+    failures  = Any[]
+    for library in libraries
+        try
+            Library = checked_import(library)
+            if !has_method_from(methods(Library.savestreaming), Library)
+                throw(WriterError(string(library), "savestreaming not defined"))
+            end
+            return eval(Main, :($(Library.savestreaming)($q, $data...; $options...)))
+        catch e
+            push!(failures, (e, q))
+        end
+    end
+    handle_exceptions(failures, "opening \"$(filename(q))\" for streamed saving")
+end
 
 function has_method_from(mt, Library)
     for m in mt
