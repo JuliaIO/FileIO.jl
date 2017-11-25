@@ -230,6 +230,14 @@ add_saver(format"DUMMY", :Dummy)
     @test load(fn) == a
     rm(fn)
 
+    # force format
+    fn = string(tempname(), ".dmy")
+    savestreaming(format"DUMMY", fn) do writer
+        write(writer, a)
+    end
+    @test load(fn) == a
+    rm(fn)
+
     # streaming I/O with streams
     save(fn, a)
     open(fn) do io
