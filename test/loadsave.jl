@@ -85,7 +85,7 @@ Base.close(stream::DummyReader) = stream.ownstream && close(stream.stream)
 mutable struct DummyWriter{IOtype}
     stream::IOtype
     ownstream::Bool
-    headerpos::Int
+    headerpos::Int64
     byteswritten::Int
 end
 
