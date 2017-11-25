@@ -142,83 +142,47 @@ end
 
 # Handlers for formatted files/streams
 
-# TODO: this definitely should be refactored to reduce duplication
-function load{F}(q::Formatted{F}, args...; options...)
-    if unknown(q)
-        isfile(filename(q)) || open(filename(q))  # force systemerror
-        throw(UnknownFormat(q))
-    end
-    libraries = applicable_loaders(q)
-    failures  = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            if !has_method_from(methods(Library.load), Library)
-                throw(LoaderError(string(library), "load not defined"))
-            end
-            return eval(Main, :($(Library.load)($q, $args...; $options...)))
-        catch e
-            push!(failures, (e, q))
+for fn in (:load, :loadstreaming)
+    @eval function $fn{F}(q::Formatted{F}, args...; options...)
+        if unknown(q)
+            isfile(filename(q)) || open(filename(q))  # force systemerror
+            throw(UnknownFormat(q))
         end
+        libraries = applicable_loaders(q)
+        failures  = Any[]
+        for library in libraries
+            try
+                Library = checked_import(library)
+                if !has_method_from(methods(Library.$fn), Library)
+                    throw(LoaderError(string(library), "$($fn) not defined"))
+                end
+                return eval(Main, :($(Library.$fn)($q, $args...; $options...)))
+            catch e
+                push!(failures, (e, q))
+            end
+        end
+        handle_exceptions(failures, "loading \"$(filename(q))\"")
     end
-    handle_exceptions(failures, "loading \"$(filename(q))\"")
 end
 
-function loadstreaming{F}(q::Formatted{F}, args...; options...)
-    if unknown(q)
-        isfile(filename(q)) || open(filename(q))  # force systemerror
-        throw(UnknownFormat(q))
-    end
-    libraries = applicable_loaders(q)
-    failures  = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            if !has_method_from(methods(Library.loadstreaming), Library)
-                throw(LoaderError(string(library), "loadstreaming not defined"))
+for fn in (:save, :savestreaming)
+    @eval function $fn{F}(q::Formatted{F}, data...; options...)
+        unknown(q) && throw(UnknownFormat(q))
+        libraries = applicable_savers(q)
+        failures  = Any[]
+        for library in libraries
+            try
+                Library = checked_import(library)
+                if !has_method_from(methods(Library.$fn), Library)
+                    throw(WriterError(string(library), "$($fn) not defined"))
+                end
+                return eval(Main, :($(Library.$fn)($q, $data...; $options...)))
+            catch e
+                push!(failures, (e, q))
             end
-            return eval(Main, :($(Library.loadstreaming)($q, $args...; $options...)))
-        catch e
-            push!(failures, (e, q))
         end
+        handle_exceptions(failures, "saving \"$(filename(q))\"")
     end
-    handle_exceptions(failures, "opening \"$(filename(q))\" for streamed loading")
-end
-
-function save{F}(q::Formatted{F}, data...; options...)
-    unknown(q) && throw(UnknownFormat(q))
-    libraries = applicable_savers(q)
-    failures  = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            if !has_method_from(methods(Library.save), Library)
-                throw(WriterError(string(library), "save not defined"))
-            end
-            return eval(Main, :($(Library.save)($q, $data...; $options...)))
-        catch e
-            push!(failures, (e, q))
-        end
-    end
-    handle_exceptions(failures, "saving \"$(filename(q))\"")
-end
-
-function savestreaming{F}(q::Formatted{F}, data...; options...)
-    unknown(q) && throw(UnknownFormat(q))
-    libraries = applicable_savers(q)
-    failures  = Any[]
-    for library in libraries
-        try
-            Library = checked_import(library)
-            if !has_method_from(methods(Library.savestreaming), Library)
-                throw(WriterError(string(library), "savestreaming not defined"))
-            end
-            return eval(Main, :($(Library.savestreaming)($q, $data...; $options...)))
-        catch e
-            push!(failures, (e, q))
-        end
-    end
-    handle_exceptions(failures, "opening \"$(filename(q))\" for streamed saving")
 end
 
 # returns true if the given method table includes a method defined by the given
