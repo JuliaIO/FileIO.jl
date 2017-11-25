@@ -56,7 +56,7 @@ try
         # process the chunk
     end
 finally
-    close(stream)
+    close(audio)
 end
 ```
 
@@ -64,7 +64,7 @@ or use `do` syntax to auto-close the stream:
 
 ```jl
 using FileIO
-do loadstreaming("bigfile.wav") audio
+loadstreaming("bigfile.wav") do audio
     while !eof(audio)
         chunk = read(audio, 4096) # read 4096 frames
         # process the chunk
@@ -185,7 +185,7 @@ closing any streams you opened in order to read or write the file. If you are
 given a `Stream`, your `close` method should only do the clean up for your
 reader or writer type, not close the stream.
 
-```julia
+```jl
 struct WAVReader
     io::IO
     ownstream::Bool
@@ -197,28 +197,26 @@ end
 
 function close(reader::WAVReader)
     # do whatever cleanup the reader needs
-    if reader.ownstream
-        close(reader.io)
-    end
+    reader.ownstream && close(reader.io)
 end
-loadstreaming(f::File{format"WAV"}) = WAVReader(open(f), ownstream=true)
-loadstreaming(s::Stream{format"WAV"}) = WAVReader(s, ownstream=false)
+loadstreaming(f::File{format"WAV"}) = WAVReader(open(f), true)
+loadstreaming(s::Stream{format"WAV"}) = WAVReader(s, false)
 # FileIO has fallback functions that make these work using `do` syntax as well.
 ```
 
 If you choose to implement `loadstreaming` and `savestreaming` in your package,
 you can easily add `save` and `load` methods in the form of:
 
-```julia
+```jl
 function save(q::Formatted{format"WAV"}, data, args...; kwargs...)
-    savestreaming(args...; kwargs...) do stream
+    savestreaming(q, args...; kwargs...) do stream
         write(stream, data)
     end
 end
 
 function load(q::Formatted{format"WAV"}, args...; kwargs...)
-    savestreaming(args...; kwargs...) do stream
-        readall(stream)
+    savestreaming(q, args...; kwargs...) do stream
+        read(stream)
     end
 end
 ```
