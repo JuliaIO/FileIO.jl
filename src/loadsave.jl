@@ -87,16 +87,19 @@ trying to infer the format from `filename`.
 """
 savestreaming
 
+# if a bare filename or IO stream are given, query for the format and dispatch
+# to the formatted handlers below
 for fn in (:load, :loadstreaming, :save, :savestreaming)
-    @eval $fn(s::@compat(Union{AbstractString,IO}), args...; options...) =
+    @eval $fn(s::Union{AbstractString,IO}, args...; options...) =
         $fn(query(s), args...; options...)
 end
 
+# return a save function, so you can do `thing_to_save |> save("filename.ext")`
 function save(s::Union{AbstractString,IO}; options...)
     data -> save(s, data; options...)
 end
 
-# Forced format
+# Allow format to be overridden with first argument
 function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
     libraries = applicable_savers(df)
     checked_import(libraries[1])
@@ -137,7 +140,7 @@ for fn in (:loadstreaming, :savestreaming)
     end
 end
 
-# Fallbacks
+# Handlers for formatted files/streams
 
 # TODO: this definitely should be refactored to reduce duplication
 function load{F}(q::Formatted{F}, args...; options...)
@@ -218,6 +221,8 @@ function savestreaming{F}(q::Formatted{F}, data...; options...)
     handle_exceptions(failures, "opening \"$(filename(q))\" for streamed saving")
 end
 
+# returns true if the given method table includes a method defined by the given
+# module, false otherwise
 function has_method_from(mt, Library)
     for m in mt
         if getmodule(m) == Library
