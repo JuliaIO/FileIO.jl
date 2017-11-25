@@ -72,7 +72,7 @@ function DummyReader(stream, ownstream)
     DummyReader(stream, ownstream, read(stream, Int64))
 end
 
-function Base.read(stream::DummyReader, n)
+function Base.read(stream::DummyReader, n=stream.bytesleft)
     toread = min(n, stream.bytesleft)
     buf = read(stream.stream, toread)
     stream.bytesleft -= length(buf)
@@ -217,6 +217,38 @@ add_saver(format"DUMMY", :Dummy)
     end
     rm(fn)
 
+    # streaming I/O with filenames
+    fn = string(tempname(), ".dmy")
+    save(fn, a)
+    loadstreaming(fn) do reader
+        @test read(reader) == a
+    end
+    rm(fn)
+    savestreaming(fn) do writer
+        write(writer, a)
+    end
+    @test load(fn) == a
+    rm(fn)
+
+    # streaming I/O with streams
+    save(fn, a)
+    open(fn) do io
+        loadstreaming(io) do reader
+            @test read(reader) == a
+        end
+        @test isopen(io)
+    end
+    rm(fn)
+    open(fn, "w") do io
+        savestreaming(format"DUMMY", io) do writer
+            write(writer, a)
+        end
+        @test isopen(io)
+    end
+    @test load(fn) == a
+    rm(fn)
+
+
     @test_throws Exception save("missing.fmt",5)
 end
 
@@ -270,6 +302,8 @@ end
     @test typeof(query(fn)) == File{format"AmbigExt1"}
 
     rm(fn)
+    del_format(format"AmbigExt1")
+    del_format(format"AmbigExt2")
 end
 
 @testset "Absent file" begin
