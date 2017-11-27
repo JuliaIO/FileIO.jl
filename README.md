@@ -100,6 +100,7 @@ In your package, write code like the following:
 ```jl
 using FileIO
 
+# See important note about scope below
 function load(f::File{format"PNG"})
     open(f) do s
         skipmagic(s)  # skip over the magic bytes
@@ -126,7 +127,13 @@ function save(f::File{format"PNG"}, data)
 end
 ```
 
-Note that `load(::File)` and `save(::File)` should close any streams
+Note that these are `load` and `save`, **not** `FileIO.load` and `FileIO.save`.
+Because a given format might have multiple packages that are capable of reading it,
+FileIO will dispatch to these using module-scoping, e.g., `SomePkg.load(args...)`.
+Consequently, **packages should define "private" `load` and `save` methods, and 
+not extend (import) FileIO's**. 
+
+`load(::File)` and `save(::File)` should close any streams
 they open.  (If you use the `do` syntax, this happens for you
 automatically even if the code inside the `do` scope throws an error.)
 Conversely, `load(::Stream)` and `save(::Stream)` should not close the
