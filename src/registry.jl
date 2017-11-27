@@ -29,8 +29,6 @@ add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0xcf, 0xbd, 0x92, 0x08, 0x00, 0x09, 0xc7, 0x31, 0x8c, 0x18, 0x1f,
     0x10, 0x11], [".sas7bdat"], [:StatFiles, LOAD])
 
-add_format(format"bedGraph", UInt8[0x74, 0x79, 0x70, 0x65, 0x3D, 0x62, 0x65, 0x64, 0x47, 0x72, 0x61, 0x70, 0x68], [".bedgraph"], [:BedgraphFiles])
-
 # Image formats
 add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
 add_format(format"PGMBinary", b"P5", ".pgm", [:Netpbm])
@@ -149,6 +147,26 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
 
 ### Complex cases
+
+# bedGraph: the complication is that the magic bytes may start at any location within an indeterminate header.
+const bedgraph_magic = UInt8[0x74, 0x79, 0x70, 0x65, 0x3D, 0x62, 0x65, 0x64, 0x47, 0x72, 0x61, 0x70, 0x68]
+function detect_bedgraph(io)
+    position(io) == 0 || return false
+
+    line = ""
+
+    # Check lines for magic bytes.
+    while !eof(io) && !ismatch(r"^\s*([A-Za-z]+\S*)\s+(\d+)\s+(\d+)\s+(\S*\d)\s*$", line) # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
+        line = readline(io, chomp=false)
+
+        if contains(line, String(bedgraph_magic)) # Note: String(bedgraph_magic) = "type=bedGraph"
+            return true
+        end
+    end
+
+    return false
+end
+add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles])
 
 # Handle OME-TIFFs, which are identical to normal TIFFs with the primary difference being the filename and embedded XML metadata
 const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])

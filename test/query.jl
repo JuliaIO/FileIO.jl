@@ -267,6 +267,19 @@ finally
 end
 
 file_dir = joinpath(dirname(@__FILE__), "files")
+@testset "bedGraph" begin
+    q = query(joinpath(file_dir, "file.bedgraph"))
+    @test typeof(q) == File{format"bedGraph"}
+    open(q) do io
+        @test position(io) == 0
+        skipmagic(io)
+        @test position(io) == 0 # no skipping for functions
+        # @test FileIO.detect_bedgraph(io) # MethodError: no method matching readline(::FileIO.Stream{FileIO.DataFormat{:bedGraph},IOStream}; chomp=false)
+    end
+    open(joinpath(file_dir, "file.bedgraph")) do io
+        @test (FileIO.detect_bedgraph(io))
+    end
+end
 @testset "STL detection" begin
     q = query(joinpath(file_dir, "ascii.stl"))
     @test typeof(q) == File{format"STL_ASCII"}
