@@ -332,6 +332,16 @@ end
         @test (position(io) in (5, 6))
     end
 end
+@testset "RDS detection" begin
+    q = query(joinpath(file_dir, "minimal_ascii.rds"))
+    @test typeof(q) == File{format"RDataSingle"}
+    open(q) do io
+        @test position(io) == 0
+        @test FileIO.detect_rdata_single(io)
+        # need to seek to beginning of file where data structure starts
+        @test position(io)  == 0
+    end
+end
 @testset "Format with function for magic bytes" begin
     add_format(format"FUNCTION_FOR_MAGIC_BYTES", x -> 0x00, ".wav", [:WAV])
     del_format(format"FUNCTION_FOR_MAGIC_BYTES")

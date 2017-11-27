@@ -18,6 +18,16 @@ end
 
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
 
+function detect_rdata_single(io)
+    seekstart(io)
+    res = read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
+        (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
+    seekstart(io)
+    return res
+end
+
+add_format(format"RDataSingle", detect_rdata_single, [".rds"], [:RData, LOAD])
+
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
 add_format(format"TSV", (), [".tsv"], [:CSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
