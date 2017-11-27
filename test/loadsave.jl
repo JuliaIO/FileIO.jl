@@ -61,14 +61,14 @@ module Dummy
 
 using FileIO
 
-function FileIO.load(file::File{format"DUMMY"})
+function load(file::File{format"DUMMY"})
     open(file) do s
         skipmagic(s)
         load(s)
     end
 end
 
-function FileIO.load(s::Stream{format"DUMMY"})
+function load(s::Stream{format"DUMMY"})
     # We're already past the magic bytes
     n = read(s, Int64)
     out = Vector{UInt8}(n)
@@ -77,7 +77,7 @@ function FileIO.load(s::Stream{format"DUMMY"})
     out
 end
 
-function FileIO.save(file::File{format"DUMMY"}, data)
+function save(file::File{format"DUMMY"}, data)
     open(file, "w") do s
         write(s, magic(format"DUMMY"))  # Write the magic bytes
         write(s, convert(Int64, length(data)))
