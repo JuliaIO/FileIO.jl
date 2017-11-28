@@ -126,7 +126,7 @@ function del_format{sym}(fmt::Type{DataFormat{sym}})
     nothing
 end
 
-# Deletes mutliple magic bytes
+# Deletes multiple magic bytes
 del_magic(magic::Tuple, sym) = for m in magic
     del_magic(m, sym)
 end
@@ -358,7 +358,8 @@ unknown{F}(::Stream{F}) = unknown(F)
 
 """
 `query(filename)` returns a `File` object with information about the
-format inferred from the file's extension and/or magic bytes."""
+format inferred from the file's extension and/or magic bytes.
+"""
 function query(filename::AbstractString)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
@@ -394,7 +395,8 @@ hasfunction(s::Tuple) = false #has magic
 
 """
 `query(io, [filename])` returns a `Stream` object with information about the
-format inferred from the magic bytes."""
+format inferred from the magic bytes.
+"""
 query(io::IO, filename) = query(io, Nullable(String(filename)))
 
 function query(io::IO, filename::Nullable{String}=Nullable{String}())
