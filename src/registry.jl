@@ -186,12 +186,12 @@ function detecttiff(io)
     # do any of the first 4 bytes match any of the 4 possible combinations of tiff magics
     return any(map(x->all(magic .== x), tiff_magic))
 end
-# OME-TIFF
-detect_ometiff(io) = detecttiff(io) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
-add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF])
 # normal TIFF
 detect_noometiff(io) = detecttiff(io) && !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [:QuartzImageIO, OSX], [:ImageMagick])
+# OME-TIFF
+detect_ometiff(io) = detecttiff(io) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF])
 
 # custom skipmagic functions for function-based tiff magic detection
 skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
