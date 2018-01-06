@@ -283,3 +283,6 @@ add_format(format"FITS",
 add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [:RawArray])
 
 add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
+
+add_format(format"LAS", "LASF", ".las", [:LasIO])
+add_format(format"LAZ", (), ".laz", [:LasIO])
