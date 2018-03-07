@@ -1,6 +1,6 @@
 ### Format registry infrastructure
-@compat abstract type OS end
-@compat abstract type Unix <: OS end
+abstract type OS end
+abstract type Unix <: OS end
 struct Windows <: OS end
 struct OSX <: Unix end
 struct Linux <: Unix end
@@ -10,15 +10,15 @@ struct SAVE end
 
 split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
 applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
-applies_to_os{O <: OS}(os::Type{O})              = false
+applies_to_os(os::Type{O}) where {O <: OS}              = false
 
-applies_to_os{U <: Unix}(os::Type{U}) = Compat.Sys.isunix()
+applies_to_os(os::Type{U}) where {U <: Unix} = Compat.Sys.isunix()
 applies_to_os(os::Type{Windows}) = Compat.Sys.iswindows()
 applies_to_os(os::Type{OSX}) = Compat.Sys.isapple()
 applies_to_os(os::Type{Linux}) = Compat.Sys.islinux()
 
 function add_loadsave(format, predicates)
-    library = shift!(predicates)
+    library = popfirst!(predicates)
     os, loadsave = split_predicates(predicates)
     if applies_to_os(os)
         if isempty(loadsave) || (LOAD in loadsave)
@@ -49,12 +49,12 @@ const unknown_df = DataFormat{:UNKNOWN}
 `unknown(f)` returns true if the format of `f` is unknown.
 """
 unknown(::Type{format"UNKNOWN"})    = true
-unknown{sym}(::Type{DataFormat{sym}}) = false
+unknown(::Type{DataFormat{sym}}) where {sym} = false
 
 const ext2sym    = Dict{String, Union{Symbol,Vector{Symbol}}}()
-const magic_list = Vector{Pair}(0)    # sorted, see magic_cmp below
+const magic_list = Vector{Pair}(uninitialized, 0)    # sorted, see magic_cmp below
 const sym2info   = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
-const magic_func = Vector{Pair}(0)    # for formats with complex magic #s
+const magic_func = Vector{Pair}(uninitialized, 0)    # for formats with complex magic #s
 
 
 function add_format(fmt, magic, extension, load_save_libraries...)
@@ -75,7 +75,7 @@ For example:
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """
-function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,String}, extension)
+function add_format(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,String}, extension) where sym
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     m = canonicalize_magic(magic)
     rng = searchsorted(magic_list, m, lt=magic_cmp)
@@ -89,8 +89,8 @@ function add_format{sym}(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,Abstract
 end
 
 # for multiple magic bytes
-function add_format{sym, T <: Vector{UInt8}}(fmt::Type{DataFormat{sym}},
-                                             magics::Tuple{T,Vararg{T}}, extension)
+function add_format(fmt::Type{DataFormat{sym}},
+                    magics::Tuple{T,Vararg{T}}, extension) where {sym, T <: Vector{UInt8}}
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     magics = map(canonicalize_magic, magics)
     for magic in magics
@@ -107,7 +107,7 @@ end
 
 # For when "magic" is supplied as a function (see the HDF5 example in
 # registry.jl)
-function add_format{sym}(fmt::Type{DataFormat{sym}}, magic, extension)
+function add_format(fmt::Type{DataFormat{sym}}, magic, extension) where sym
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
     push!(magic_func, Pair(magic,sym))  # magic=>sym in 0.4
     sym2info[sym] = (magic, extension)
@@ -118,7 +118,7 @@ end
 """
 `del_format(fmt::DataFormat)` deletes `fmt` from the format registry.
 """
-function del_format{sym}(fmt::Type{DataFormat{sym}})
+function del_format(fmt::Type{DataFormat{sym}}) where sym
     magic, extension = sym2info[sym]
     del_magic(magic, sym)
     delete!(sym2info, sym)
@@ -131,7 +131,7 @@ del_magic(magic::Tuple, sym) = for m in magic
     del_magic(m, sym)
 end
 # Deletes single magic bytes
-function del_magic{N}(magic::NTuple{N, UInt8}, sym)
+function del_magic(magic::NTuple{N, UInt8}, sym) where N
     rng = searchsorted(magic_list, magic, lt=magic_cmp)
     if length(magic) == 0
         fullrng = rng
@@ -151,7 +151,7 @@ function del_magic{N}(magic::NTuple{N, UInt8}, sym)
 end
 
 function del_magic(magic::Function, sym)
-    deleteat!(magic_func, findfirst(magic_func, Pair(magic,sym)))
+    deleteat!(magic_func, coalesce(findfirst(equalto(Pair(magic, sym)), magic_func), 0))
     nothing
 end
 
@@ -159,13 +159,12 @@ end
 `info(fmt)` returns the magic bytes/extension information for
 `DataFormat` `fmt`.
 """
-Base.info{sym}(::Type{DataFormat{sym}}) = sym2info[sym]
+Base.info(::Type{DataFormat{sym}}) where {sym} = sym2info[sym]
 
 
-canonicalize_magic{N}(m::NTuple{N,UInt8}) = m
+canonicalize_magic(m::NTuple{N,UInt8}) where {N} = m
 canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
-canonicalize_magic(m::String) = canonicalize_magic(Vector{UInt8}(m))
-
+canonicalize_magic(m::String) = canonicalize_magic(Vector{UInt8}(codeunits(m)))
 
 
 function add_extension(ext::String, sym)
@@ -215,7 +214,7 @@ function magic_cmp(t::Tuple, p::Pair)
 end
 
 
-@compat abstract type Formatted{F<:DataFormat} end  # A specific file or stream
+abstract type Formatted{F<:DataFormat} end  # A specific file or stream
 
 """
 `File(fmt, filename)` indicates that `filename` is a file of known
@@ -225,7 +224,7 @@ file.
 struct File{F<:DataFormat} <: Formatted{F}
     filename::String
 end
-File{sym}(fmt::Type{DataFormat{sym}}, filename) = File{fmt}(filename)
+File(fmt::Type{DataFormat{sym}}, filename) where {sym} = File{fmt}(filename)
 
 """
 `filename(file)` returns the filename associated with `File` `file`.
@@ -250,10 +249,10 @@ struct Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
     filename::Nullable{String}
 end
 
-Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{String}())
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,String(filename))
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
-Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
+Stream(::Type{F}, io::IO) where {F<:DataFormat} = Stream{F,typeof(io)}(io, Nullable{String}())
+Stream(::Type{F}, io::IO, filename::AbstractString) where {F<:DataFormat} = Stream{F,typeof(io)}(io,String(filename))
+Stream(::Type{F}, io::IO, filename) where {F<:DataFormat} = Stream{F,typeof(io)}(io,filename)
+Stream(file::File{F}, io::IO) where {F} = Stream{F,typeof(io)}(io,filename(file))
 
 "`stream(s)` returns the stream associated with `Stream` `s`"
 stream(s::Stream) = s.io
@@ -275,7 +274,7 @@ end
 # Note this closes the stream. It's useful when you've opened
 # the file to check the magic bytes, but don't want to leave
 # a dangling stream.
-function file!{F}(strm::Stream{F})
+function file!(strm::Stream{F}) where F
     f = filename(strm)
     if isnull(f)
         error("filename unknown")
@@ -285,7 +284,7 @@ function file!{F}(strm::Stream{F})
 end
 
 # Implement standard I/O operations for File and Stream
-@inline function Base.open{F<:DataFormat}(file::File{F}, args...)
+@inline function Base.open(file::File{F}, args...) where F<:DataFormat
     fn = filename(file)
     Stream(F, open(fn, args...), abspath(fn))
 end
@@ -313,20 +312,20 @@ Base.isreadonly(s::Stream) = isreadonly(stream(s))
 Base.isopen(s::Stream) = isopen(stream(s))
 
 "`magic(fmt)` returns the magic bytes of format `fmt`"
-magic{F<:DataFormat}(fmt::Type{F}) = UInt8[info(fmt)[1]...]
+magic(fmt::Type{F}) where {F<:DataFormat} = UInt8[info(fmt)[1]...]
 
 """
 `skipmagic(s)` sets the position of `Stream` `s` to be just after the magic bytes.
 For a plain IO object, you can use `skipmagic(io, fmt)`.
 """
-skipmagic{F}(s::Stream{F}) = (skipmagic(stream(s), F); s)
-function skipmagic{sym}(io, fmt::Type{DataFormat{sym}})
+skipmagic(s::Stream{F}) where {F} = (skipmagic(stream(s), F); s)
+function skipmagic(io, fmt::Type{DataFormat{sym}}) where sym
     magic, _ = sym2info[sym]
     skipmagic(io, magic)
     nothing
 end
 skipmagic(io, magic::Function) = nothing
-skipmagic{N}(io, magic::NTuple{N,UInt8}) = seek(io, length(magic))
+skipmagic(io, magic::NTuple{N,UInt8}) where {N} = seek(io, length(magic))
 function skipmagic(io, magic::Tuple)
     lengths = map(length, magic)
     all(x->lengths[1] == x, lengths) && return seek(io, lengths[1]) # it doesn't matter what magic bytes get skipped as they all have the same length
@@ -353,8 +352,8 @@ function magic_equal(magic, buffer)
 end
 
 
-unknown{F}(::File{F}) = unknown(F)
-unknown{F}(::Stream{F}) = unknown(F)
+unknown(::File{F}) where {F} = unknown(F)
+unknown(::Stream{F}) where {F} = unknown(F)
 
 """
 `query(filename)` returns a `File` object with information about the
@@ -400,7 +399,7 @@ format inferred from the magic bytes.
 query(io::IO, filename) = query(io, Nullable(String(filename)))
 
 function query(io::IO, filename::Nullable{String}=Nullable{String}())
-    magic = Vector{UInt8}(0)
+    magic = Vector{UInt8}(uninitialized, 0)
     pos = position(io)
     for p in magic_list
         m = first(p)

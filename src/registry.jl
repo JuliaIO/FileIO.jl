@@ -146,10 +146,10 @@ add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 ### Audio formats
 function detectwav(io)
     seekstart(io)
-    magic = read!(io, Vector{UInt8}(4))
+    magic = read!(io, Vector{UInt8}(uninitialized, 4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read!(io, Vector{UInt8}(4))
+    submagic = read!(io, Vector{UInt8}(uninitialized, 4))
 
     submagic == b"WAVE"
 end
@@ -167,8 +167,8 @@ function detect_bedgraph(io)
     line = ""
 
     # Check lines for magic bytes.
-    while !eof(io) && !ismatch(r"^\s*([A-Za-z]+\S*)\s+(\d+)\s+(\d+)\s+(\S*\d)\s*$", line) # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
-        line = readline(io, chomp=false)
+    while !eof(io) && !contains(line, r"^\s*([A-Za-z]+\S*)\s+(\d+)\s+(\d+)\s+(\S*\d)\s*$") # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
+        line = readline(io, keep=true)
 
         if contains(line, String(bedgraph_magic)) # Note: String(bedgraph_magic) = "type=bedGraph"
             return true
@@ -183,7 +183,7 @@ add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles])
 const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
 function detecttiff(io)
     seekstart(io)
-    magic = read!(io, Vector{UInt8}(4))
+    magic = read!(io, Vector{UInt8}(uninitialized, 4))
     # do any of the first 4 bytes match any of the 4 possible combinations of tiff magics
     return any(map(x->all(magic .== x), tiff_magic))
 end
@@ -201,10 +201,10 @@ skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
-    magic = read!(io, Vector{UInt8}(4))
+    magic = read!(io, Vector{UInt8}(uninitialized, 4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read!(io, Vector{UInt8}(4))
+    submagic = read!(io, Vector{UInt8}(uninitialized, 4))
 
     submagic == b"AVI "
 end
@@ -218,7 +218,7 @@ function detecthdf5(io)
     seekend(io)
     len = position(io)
     seekstart(io)
-    magic = Vector{UInt8}(length(h5magic))
+    magic = Vector{UInt8}(uninitialized, length(h5magic))
     pos = position(io)
     while pos+length(h5magic) <= len
         read!(io, magic)

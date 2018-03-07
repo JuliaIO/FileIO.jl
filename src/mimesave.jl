@@ -3,7 +3,7 @@ module MimeWriter
 using ..FileIO: File, @format_str
 
 function save(file::File{format"PNG"}, data)
-    if mimewritable("image/png", data)
+    if showable("image/png", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "image/png", data)
         end
@@ -13,7 +13,7 @@ function save(file::File{format"PNG"}, data)
 end
 
 function save(file::File{format"SVG"}, data)
-    if mimewritable("image/svg+xml", data)
+    if showable("image/svg+xml", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "image/svg+xml", data)
         end
@@ -23,7 +23,7 @@ function save(file::File{format"SVG"}, data)
 end
 
 function save(file::File{format"PDF"}, data)
-    if mimewritable("application/pdf", data)
+    if showable("application/pdf", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "application/pdf", data)
         end
@@ -33,7 +33,7 @@ function save(file::File{format"PDF"}, data)
 end
 
 function save(file::File{format"EPS"}, data)
-    if mimewritable("application/eps", data)
+    if showable("application/eps", data)
         open(file.filename, "w") do s
             show(IOContext(s, :full_fidelity=>true), "application/eps", data)
         end

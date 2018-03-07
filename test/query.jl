@@ -1,6 +1,9 @@
 using FileIO
-using Base.Test
+using Test
 using Compat
+using Nullables
+using Random
+using Pkg
 
 @testset "OS" begin
     if Compat.Sys.islinux()
@@ -266,7 +269,7 @@ finally
     merge!(FileIO.sym2info, sym2info)
 end
 
-file_dir = joinpath(dirname(@__FILE__), "files")
+global file_dir = joinpath(dirname(@__FILE__), "files")
 @testset "bedGraph" begin
     q = query(joinpath(file_dir, "file.bedgraph"))
     @test typeof(q) == File{format"bedGraph"}
