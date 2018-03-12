@@ -52,9 +52,9 @@ unknown(::Type{format"UNKNOWN"})    = true
 unknown(::Type{DataFormat{sym}}) where {sym} = false
 
 const ext2sym    = Dict{String, Union{Symbol,Vector{Symbol}}}()
-const magic_list = Vector{Pair}(uninitialized, 0)    # sorted, see magic_cmp below
+const magic_list = Vector{Pair}(undef, 0)    # sorted, see magic_cmp below
 const sym2info   = Dict{Symbol,Any}()  # Symbol=>(magic, extension)
-const magic_func = Vector{Pair}(uninitialized, 0)    # for formats with complex magic #s
+const magic_func = Vector{Pair}(undef, 0)    # for formats with complex magic #s
 
 
 function add_format(fmt, magic, extension, load_save_libraries...)
@@ -399,7 +399,7 @@ format inferred from the magic bytes.
 query(io::IO, filename) = query(io, Nullable(String(filename)))
 
 function query(io::IO, filename::Nullable{String}=Nullable{String}())
-    magic = Vector{UInt8}(uninitialized, 0)
+    magic = Vector{UInt8}(undef, 0)
     pos = position(io)
     for p in magic_list
         m = first(p)

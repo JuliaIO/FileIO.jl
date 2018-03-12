@@ -71,7 +71,7 @@ end
 function load(s::Stream{format"DUMMY"})
     # We're already past the magic bytes
     n = read(s, Int64)
-    out = Vector{UInt8}(uninitialized, n)
+    out = Vector{UInt8}(undef, n)
     read!(s, out)
     close(s)
     out
