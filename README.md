@@ -168,8 +168,9 @@ end
 Note that these are `load` and `save`, **not** `FileIO.load` and `FileIO.save`.
 Because a given format might have multiple packages that are capable of reading it,
 FileIO will dispatch to these using module-scoping, e.g., `SomePkg.load(args...)`.
-Consequently, **packages should define "private" `load` and `save` methods, and 
-not extend (import) FileIO's**. 
+Consequently, **packages should define "private" `load` and `save` methods (also
+`loadstreaming` and `savestreaming` if you implement them), and not extend
+(import) FileIO's**.
 
 `load(::File)` and `save(::File)` should close any streams
 they open.  (If you use the `do` syntax, this happens for you
@@ -191,17 +192,19 @@ struct WAVReader
     ownstream::Bool
 end
 
-function read(reader::WAVReader, frames::Int)
+function Base.read(reader::WAVReader, frames::Int)
     # read and decode audio samples from reader.io
 end
 
-function close(reader::WAVReader)
+function Base.close(reader::WAVReader)
     # do whatever cleanup the reader needs
     reader.ownstream && close(reader.io)
 end
+
+# FileIO has fallback functions that make these work using `do` syntax as well,
+# and will automatically call `close` on the returned object.
 loadstreaming(f::File{format"WAV"}) = WAVReader(open(f), true)
 loadstreaming(s::Stream{format"WAV"}) = WAVReader(s, false)
-# FileIO has fallback functions that make these work using `do` syntax as well.
 ```
 
 If you choose to implement `loadstreaming` and `savestreaming` in your package,
@@ -215,7 +218,7 @@ function save(q::Formatted{format"WAV"}, data, args...; kwargs...)
 end
 
 function load(q::Formatted{format"WAV"}, args...; kwargs...)
-    savestreaming(q, args...; kwargs...) do stream
+    loadstreaming(q, args...; kwargs...) do stream
         read(stream)
     end
 end

@@ -44,8 +44,10 @@ add_saver
 - `load(filename)` loads the contents of a formatted file, trying to infer
 the format from `filename` and/or magic bytes in the file.
 - `load(strm)` loads from an `IOStream` or similar object. In this case,
-the magic bytes are essential.
-- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
+there is no filename extension, so we rely on the magic bytes for format
+identification.
+- `load(File(format"PNG", filename))` specifies the format directly, and bypasses inference.
+- `load(Stream(format"PNG", io))` specifies the format directly, and bypasses inference.
 - `load(f; options...)` passes keyword arguments on to the loader.
 """
 load
@@ -60,10 +62,14 @@ video or audio.
 the format from `filename` and/or magic bytes in the file. It returns a streaming
 type that can be read from in chunks, rather than loading the whole contents all
 at once
-- `loadstreaming(strm)` loads the stream from an `IOStream` or similar object. In this case,
-the magic bytes are essential.
-- `load(File(format"PNG",filename))` specifies the format directly, and bypasses inference.
-- `load(f; options...)` passes keyword arguments on to the loader.
+- `loadstreaming(strm)` loads the stream from an `IOStream` or similar object.
+In this case, there is no filename extension, so we rely on the magic bytes
+for format identification.
+- `loadstreaming(File(format"WAV",filename))` specifies the format directly, and
+bypasses inference.
+- `loadstreaming(Stream(format"WAV", io))` specifies the format directly, and
+bypasses inference.
+- `loadstreaming(f; options...)` passes keyword arguments on to the loader.
 """
 loadstreaming
 
@@ -71,6 +77,7 @@ loadstreaming
 - `save(filename, data...)` saves the contents of a formatted file,
 trying to infer the format from `filename`.
 - `save(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
+- `save(File(format"PNG",filename), data...)` specifies the format directly, and bypasses inference.
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """
 save
@@ -82,7 +89,10 @@ accept formatted objects, like an image or chunk of video or audio.
 
 - `savestreaming(filename, data...)` saves the contents of a formatted file,
 trying to infer the format from `filename`.
-- `savestreaming(Stream(format"PNG",io), data...)` specifies the format directly, and bypasses inference.
+- `savestreaming(File(format"WAV",filename))` specifies the format directly, and
+bypasses inference.
+- `savestreaming(Stream(format"WAV", io))` specifies the format directly, and
+bypasses inference.
 - `savestreaming(f, data...; options...)` passes keyword arguments on to the saver.
 """
 savestreaming
