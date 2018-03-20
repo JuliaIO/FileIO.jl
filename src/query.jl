@@ -72,6 +72,7 @@ For example:
     add_format(format"PNG", (UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]), [".tiff", ".tif"])
     add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
     add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
+    add_format(format"WAV", detectwav, [".wav", ".WAV"])
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
 """
