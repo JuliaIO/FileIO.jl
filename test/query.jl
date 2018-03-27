@@ -164,7 +164,7 @@ try
         @test typeof(q) == File{format"BAD"}
 
         # Unknown extension
-        fn = string("tempname", ".weird")
+        fn = string("tempname", ".wrd")
 
         open(fn, "w") do file
             write(file, "More data")
