@@ -164,10 +164,12 @@ try
         @test typeof(q) == File{format"BAD"}
 
         # Unknown extension
-        fn = string("tempname", ".wrd")
+        fn = string("tempname", ".weird")
+
         open(fn, "w") do file
             write(file, "More data")
         end
+
         @test unknown(query(fn))
         rm(fn)
 

@@ -167,10 +167,10 @@ function detect_bedgraph(io)
     line = ""
 
     # Check lines for magic bytes.
-    while !eof(io) && !contains(line, r"^\s*([A-Za-z]+\S*)\s+(\d+)\s+(\d+)\s+(\S*\d)\s*$") # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
+    while !eof(io) && !occursin(r"^\s*([A-Za-z]+\S*)\s+(\d+)\s+(\d+)\s+(\S*\d)\s*$", line) # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
         line = readline(io, keep=true)
 
-        if contains(line, String(bedgraph_magic)) # Note: String(bedgraph_magic) = "type=bedGraph"
+        if occursin(String(bedgraph_magic), line) # Note: String(bedgraph_magic) = "type=bedGraph"
             return true
         end
     end

@@ -151,7 +151,7 @@ function del_magic(magic::NTuple{N, UInt8}, sym) where N
 end
 
 function del_magic(magic::Function, sym)
-    deleteat!(magic_func, coalesce(findfirst(equalto(Pair(magic, sym)), magic_func), 0))
+    deleteat!(magic_func, coalesce(findfirst(isequal(Pair(magic, sym)), magic_func), 0))
     nothing
 end
 
