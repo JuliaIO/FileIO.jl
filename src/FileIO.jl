@@ -2,7 +2,7 @@ __precompile__()
 
 module FileIO
 
-using Compat
+using Compat, Nullables, Pkg
 
 export DataFormat,
        File,

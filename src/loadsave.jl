@@ -3,7 +3,7 @@ const sym2saver  = Dict{Symbol,Vector{Symbol}}()
 
 function is_installed(pkg::Symbol)
     isdefined(Main, pkg) && isa(getfield(Main, pkg), Module) && return true # is a module defined in Main scope
-    path = Base.find_in_path(string(pkg)) # hacky way to determine if a Package is installed
+    path = Base.find_package(string(pkg)) # hacky way to determine if a Package is installed
     path == nothing && return false
     return isfile(path)
 end
@@ -21,13 +21,13 @@ for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
         (:applicable_savers,  :add_saver,  :sym2saver))
     @eval begin
-        function $applicable_{sym}(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}})
+        function $applicable_(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}}) where sym
             if haskey($dict_, sym)
                 return $dict_[sym]
             end
             error("No $($applicable_) found for $(sym)")
         end
-        function $add_{sym}(::Type{DataFormat{sym}}, pkg::Symbol)
+        function $add_(::Type{DataFormat{sym}}, pkg::Symbol) where sym
             list = get($dict_, sym, Symbol[])
             $dict_[sym] = push!(list, pkg)
         end
@@ -66,14 +66,14 @@ function save(s::Union{AbstractString,IO}; options...)
 end
 
 # Forced format
-function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+function save(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
     eval(Main, :($save($File($(DataFormat{sym}), $f),
                        $data...; $options...)))
 end
 
-function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
+function save(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
     eval(Main, :($save($Stream($(DataFormat{sym}), $s),
@@ -82,7 +82,7 @@ end
 
 
 # Fallbacks
-function load{F}(q::Formatted{F}, args...; options...)
+function load(q::Formatted{F}, args...; options...) where F
     if unknown(q)
         isfile(filename(q)) || open(filename(q))  # force systemerror
         throw(UnknownFormat(q))
@@ -102,7 +102,7 @@ function load{F}(q::Formatted{F}, args...; options...)
     end
     handle_exceptions(failures, "loading \"$(filename(q))\"")
 end
-function save{F}(q::Formatted{F}, data...; options...)
+function save(q::Formatted{F}, data...; options...) where F
     unknown(q) && throw(UnknownFormat(q))
     libraries = applicable_savers(q)
     failures  = Any[]
@@ -129,8 +129,4 @@ function has_method_from(mt, Library)
     false
 end
 
-if VERSION < v"0.5.0-dev+3543"
-    getmodule(m) = m.func.code.module
-else
-    getmodule(m) = m.module
-end
+getmodule(m) = m.module

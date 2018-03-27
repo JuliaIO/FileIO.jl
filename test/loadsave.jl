@@ -1,5 +1,5 @@
 using FileIO
-using Base.Test
+using Test
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
@@ -18,7 +18,7 @@ sym2saver = copy(FileIO.sym2saver)
 try
     empty!(FileIO.sym2loader)
     empty!(FileIO.sym2saver)
-    file_dir = joinpath(dirname(@__FILE__), "files")
+    global file_dir = joinpath(dirname(@__FILE__), "files")
     @testset "Load" begin
 
         add_loader(format"PBMText", :TestLoadSave)
@@ -71,7 +71,7 @@ end
 function load(s::Stream{format"DUMMY"})
     # We're already past the magic bytes
     n = read(s, Int64)
-    out = Vector{UInt8}(n)
+    out = Vector{UInt8}(undef, n)
     read!(s, out)
     close(s)
     out
