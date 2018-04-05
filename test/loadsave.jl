@@ -61,15 +61,76 @@ module Dummy
 
 using FileIO
 
-function load(file::File{format"DUMMY"})
+mutable struct DummyReader{IOtype}
+    stream::IOtype
+    ownstream::Bool
+    bytesleft::Int64
+end
+
+function DummyReader(stream, ownstream)
+    read(stream, 5) == magic(format"DUMMY") || error("wrong magic bytes")
+    DummyReader(stream, ownstream, read(stream, Int64))
+end
+
+function Base.read(stream::DummyReader, n=stream.bytesleft)
+    toread = min(n, stream.bytesleft)
+    buf = read(stream.stream, toread)
+    stream.bytesleft -= length(buf)
+    buf
+end
+
+Base.eof(stream::DummyReader) = stream.bytesleft == 0 || eof(stream.stream)
+Base.close(stream::DummyReader) = stream.ownstream && close(stream.stream)
+
+mutable struct DummyWriter{IOtype}
+    stream::IOtype
+    ownstream::Bool
+    headerpos::Int64
+    byteswritten::Int
+end
+
+function DummyWriter(stream, ownstream)
+    write(stream, magic(format"DUMMY"))  # Write the magic bytes
+    # store the position where we'll need to write the length
+    pos = position(stream)
+    # write a dummy length value
+    write(stream, 0xffffffffffffffff)
+    DummyWriter(stream, ownstream, pos, 0)
+end
+
+function Base.write(stream::DummyWriter, data)
+    udata = convert(Vector{UInt8}, data)
+    n = write(stream.stream, udata)
+    stream.byteswritten += n
+
+    n
+end
+
+function Base.close(stream::DummyWriter)
+    here = position(stream.stream)
+    # go back and write the header
+    seek(stream.stream, stream.headerpos)
+    write(stream.stream, convert(Int64, stream.byteswritten))
+    seek(stream.stream, here)
+    stream.ownstream && close(stream.stream)
+
+    nothing
+end
+
+loadstreaming(s::Stream{format"DUMMY"}) = DummyReader(s, false)
+loadstreaming(file::File{format"DUMMY"}) = DummyReader(open(file), true)
+savestreaming(s::Stream{format"DUMMY"}) = DummyWriter(s, false)
+savestreaming(file::File{format"DUMMY"}) = DummyWriter(open(file, "w"), true)
+
+# we could implement `load` and `save` in terms of their streaming versions
+function FileIO.load(file::File{format"DUMMY"})
     open(file) do s
-        skipmagic(s)
         load(s)
     end
 end
 
-function load(s::Stream{format"DUMMY"})
-    # We're already past the magic bytes
+function FileIO.load(s::Stream{format"DUMMY"})
+    skipmagic(s)
     n = read(s, Int64)
     out = Vector{UInt8}(n)
     read!(s, out)
@@ -133,7 +194,6 @@ add_saver(format"DUMMY", :Dummy)
     @test a == b
 
     b = open(query(fn)) do s
-        skipmagic(s)
         load(s)
     end
     @test a == b
@@ -156,6 +216,46 @@ add_saver(format"DUMMY", :Dummy)
         @test read(s,2) == b"UM"
     end
     rm(fn)
+
+    # streaming I/O with filenames
+    fn = string(tempname(), ".dmy")
+    save(fn, a)
+    loadstreaming(fn) do reader
+        @test read(reader) == a
+    end
+    rm(fn)
+    savestreaming(fn) do writer
+        write(writer, a)
+    end
+    @test load(fn) == a
+    rm(fn)
+
+    # force format
+    fn = string(tempname(), ".dmy")
+    savestreaming(format"DUMMY", fn) do writer
+        write(writer, a)
+    end
+    @test load(fn) == a
+    rm(fn)
+
+    # streaming I/O with streams
+    save(fn, a)
+    open(fn) do io
+        loadstreaming(io) do reader
+            @test read(reader) == a
+        end
+        @test isopen(io)
+    end
+    rm(fn)
+    open(fn, "w") do io
+        savestreaming(format"DUMMY", io) do writer
+            write(writer, a)
+        end
+        @test isopen(io)
+    end
+    @test load(fn) == a
+    rm(fn)
+
 
     @test_throws Exception save("missing.fmt",5)
 end
@@ -210,6 +310,8 @@ end
     @test typeof(query(fn)) == File{format"AmbigExt1"}
 
     rm(fn)
+    del_format(format"AmbigExt1")
+    del_format(format"AmbigExt2")
 end
 
 @testset "Absent file" begin

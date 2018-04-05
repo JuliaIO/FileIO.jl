@@ -17,9 +17,11 @@ export DataFormat,
        file_extension,
        info,
        load,
+       loadstreaming,
        magic,
        query,
        save,
+       savestreaming,
        skipmagic,
        stream,
        unknown
@@ -40,7 +42,9 @@ include("registry.jl")
 
 - `load([filename|stream])`: read data in formatted file, inferring the format
 - `load(File(format"PNG",filename))`: specify the format manually
+- `loadstreaming([filename|stream])`: similar to `load`, except that it returns an object that can be read from
 - `save(filename, data...)` for similar operations involving saving data
+- `savestreaming([filename|stream])`: similar to `save`, except that it returns an object that can be written to
 
 - `io = open(f::File, args...)` opens a file
 - `io = stream(s::Stream)` returns the IOStream from the query object `s`
