@@ -99,7 +99,7 @@ savestreaming
 
 # if a bare filename or IO stream are given, query for the format and dispatch
 # to the formatted handlers below
-for fn in (:load, :loadstreaming, :save, :savestreaming)
+for fn in (:load, :loadstreaming, :save, :savestreaming, :metadata)
     @eval $fn(s::Union{AbstractString,IO}, args...; options...) =
         $fn(query(s), args...; options...)
 end
@@ -152,7 +152,7 @@ end
 
 # Handlers for formatted files/streams
 
-for fn in (:load, :loadstreaming)
+for fn in (:load, :loadstreaming, :metadata)
     @eval function $fn{F}(q::Formatted{F}, args...; options...)
         if unknown(q)
             isfile(filename(q)) || open(filename(q))  # force systemerror

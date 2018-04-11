@@ -24,7 +24,8 @@ export DataFormat,
        savestreaming,
        skipmagic,
        stream,
-       unknown
+       unknown,
+       metadata
 
 import Base.showerror
 

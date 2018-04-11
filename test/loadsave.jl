@@ -129,6 +129,14 @@ function FileIO.load(file::File{format"DUMMY"})
     end
 end
 
+function FileIO.metadata(file::File{format"DUMMY"})
+    s = open(file)
+    skipmagic(s)
+    n = read(s, Int64)
+    close(s)
+    return n
+end
+
 function FileIO.load(s::Stream{format"DUMMY"})
     skipmagic(s)
     n = read(s, Int64)
@@ -156,6 +164,7 @@ add_saver(format"DUMMY", :Dummy)
     a = [0x01,0x02,0x03]
     fn = string(tempname(), ".dmy")
     save(fn, a)
+    @test metadata(fn) == 3
 
     # Test for absolute paths
     cd(dirname(fn)) do
