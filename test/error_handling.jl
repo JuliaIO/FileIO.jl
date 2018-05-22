@@ -9,11 +9,11 @@ println("these tests will print warnings: ")
     rserr, wrerr = redirect_stderr()
     ref = @async save("test.not_installed", nothing)
     println(wr, "y")
-    @test_throws CompositeException wait(ref) #("unknown package NotInstalled")
+    @test_throws CompositeException fetch(ref) #("unknown package NotInstalled")
     ref = @async save("test.not_installed", nothing)
     println(wr, "invalid") #test invalid input
     println(wr, "n") # don't install
-    wait(ref)
+    fetch(ref)
     @test istaskdone(ref)
 
     close(rs);close(wr);close(rserr);close(wrerr)

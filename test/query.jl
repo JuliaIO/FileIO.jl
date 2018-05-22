@@ -93,12 +93,12 @@ try
         io = IOBuffer()
         s = Stream(format"JUNK", io)
         @test typeof(s) == Stream{DataFormat{:JUNK},IOBuffer}
-        @test isnull(filename(s))
+        @test filename(s) == nothing
         @test_throws Exception FileIO.file!(s)
         s = Stream(format"JUNK", io, "junk.jnk")
-        @test get(filename(s)) == "junk.jnk"
-        s = Stream(format"JUNK", io, Nullable("junk2.jnk"))
-        @test get(filename(s)) == "junk2.jnk"
+        @test filename(s) == "junk.jnk"
+        s = Stream(format"JUNK", io, "junk2.jnk")
+        @test filename(s) == "junk2.jnk"
     end
 
     @testset "query" begin
@@ -122,7 +122,7 @@ try
         q = query(io)
         @test typeof(q) == Stream{format"JUNK",typeof(io)}
         @test !(unknown(q))
-        @test isnull(file_extension(q))
+        @test file_extension(q) == nothing
 
         # File with correct extension
         str = String(take!(io))

@@ -175,8 +175,8 @@ add_saver(format"DUMMY", :Dummy)
         f = File(format"DUMMY", fnrel)
         @test !(isabspath(filename(f)))
         open(f) do s
-            @test isabspath(get(filename(s)))
-            @test endswith(get(filename(s)),fn)
+            @test isabspath(filename(s))
+            @test endswith(filename(s), fn)
         end
     end
 
@@ -192,8 +192,8 @@ add_saver(format"DUMMY", :Dummy)
         f = File(format"DUMMY", fnrel)
         @test !(isabspath(filename(f)))
         open(f) do s
-            @test isabspath(get(filename(s)))
-            @test endswith(get(filename(s)),fn2)
+            @test isabspath(filename(s))
+            @test endswith(filename(s),fn2)
         end
     end
     rm(fn2)
