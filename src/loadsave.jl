@@ -173,6 +173,10 @@ for fn in (:load, :loadstreaming, :metadata)
         for library in libraries
             try
                 Library = checked_import(library)
+                gen2_func_name = Symbol("fileio_" * $(string(fn)))
+                if isdefined(Library, gen2_func_name)
+                    return eval(Library, :($gen2_func_name($q, $args...; $options...)))
+                end
                 if !has_method_from(methods(Library.$fn), Library)
                     throw(LoaderError(string(library), "$($fn) not defined"))
                 end
@@ -193,6 +197,10 @@ for fn in (:save, :savestreaming)
         for library in libraries
             try
                 Library = checked_import(library)
+                gen2_func_name = Symbol("fileio_" * $(string(fn)))
+                if isdefined(Library, gen2_func_name)
+                    return eval(Library, :($gen2_func_name($q, $data...; $options...)))
+                end
                 if !has_method_from(methods(Library.$fn), Library)
                     throw(WriterError(string(library), "$($fn) not defined"))
                 end

@@ -172,6 +172,13 @@ Consequently, **packages should define "private" `load` and `save` methods (also
 `loadstreaming` and `savestreaming` if you implement them), and not extend
 (import) FileIO's**.
 
+If you run into a naming conflict with the `load` and `save` functions
+(for example, you already have another function in your package that has
+one of these names), you can instead name your loaders `fileio_load`, 
+`fileio_save` etc. Note that you cannot mix and match these styles: either
+all your loaders have to be named `load`, or all of them should be called
+`fileio_load`, but you cannot use both conventions in one module.
+
 `load(::File)` and `save(::File)` should close any streams
 they open.  (If you use the `do` syntax, this happens for you
 automatically even if the code inside the `do` scope throws an error.)
