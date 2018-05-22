@@ -28,6 +28,7 @@ export DataFormat,
        metadata
 
 import Base.showerror
+using Base: RefValue
 
 include("query.jl")
 include("error_handling.jl")

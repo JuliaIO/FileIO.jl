@@ -245,22 +245,22 @@ written in known `Format`.  For example, `Stream{PNG}(io)` would
 indicate PNG format.  If known, the optional `filename` argument can
 be used to improve error messages, etc.
 """
-struct Stream{F<:DataFormat,IOtype<:IO} <: Formatted{F}
+struct Stream{F <: DataFormat, IOtype <: IO} <: Formatted{F}
     io::IOtype
-    filename::Nullable{String}
+    filename::Union{String, Nothing}
 end
 
-Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, Nullable{String}())
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F,typeof(io)}(io,String(filename))
-Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F,typeof(io)}(io,filename)
-Stream{F}(file::File{F}, io::IO) = Stream{F,typeof(io)}(io,filename(file))
+Stream{F<:DataFormat}(::Type{F}, io::IO) = Stream{F,typeof(io)}(io, nothing)
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename::AbstractString) = Stream{F, typeof(io)}(io, String(filename))
+Stream{F<:DataFormat}(::Type{F}, io::IO, filename) = Stream{F, typeof(io)}(io, filename)
+Stream{F}(file::File{F}, io::IO) = Stream{F, typeof(io)}(io, filename(file))
 
 "`stream(s)` returns the stream associated with `Stream` `s`"
 stream(s::Stream) = s.io
 
 """
-`filename(stream)` returns a nullable-string of the filename
-associated with `Stream` `stream`.
+`filename(stream)` returns a string of the filename
+associated with `Stream` `stream`, or nothing if there is no file associated.
 """
 filename(s::Stream) = s.filename
 
@@ -268,8 +268,9 @@ filename(s::Stream) = s.filename
 `file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
 """
 function file_extension(f::Stream)
-    isnull(filename(f)) && return filename(f)
-    splitext(get(filename(f)))[2]
+    fname = filename(f)
+    (fname == nothing) && return nothing
+    splitext(fname)[2]
 end
 
 # Note this closes the stream. It's useful when you've opened
@@ -277,11 +278,9 @@ end
 # a dangling stream.
 function file!{F}(strm::Stream{F})
     f = filename(strm)
-    if isnull(f)
-        error("filename unknown")
-    end
+    f == nothing && error("filename unknown")
     close(strm.io)
-    File{F}(get(f))
+    File{F}(f)
 end
 
 # Implement standard I/O operations for File and Stream
@@ -329,9 +328,9 @@ skipmagic(io, magic::Function) = nothing
 skipmagic{N}(io, magic::NTuple{N,UInt8}) = seek(io, length(magic))
 function skipmagic(io, magic::Tuple)
     lengths = map(length, magic)
-    all(x->lengths[1] == x, lengths) && return seek(io, lengths[1]) # it doesn't matter what magic bytes get skipped as they all have the same length
+    all(x-> lengths[1] == x, lengths) && return seek(io, lengths[1]) # it doesn't matter what magic bytes get skipped as they all have the same length
     magic = [magic...]
-    sort!(magic, lt=(a,b)-> length(a)>= length(b)) # start with longest first, to avoid overlapping magic bytes
+    sort!(magic, lt = (a,b)-> length(a) >= length(b)) # start with longest first, to avoid overlapping magic bytes
     seekend(io)
     len = position(io)
     seekstart(io)
@@ -397,9 +396,9 @@ hasfunction(s::Tuple) = false #has magic
 `query(io, [filename])` returns a `Stream` object with information about the
 format inferred from the magic bytes.
 """
-query(io::IO, filename) = query(io, Nullable(String(filename)))
+query(io::IO, filename) = query(io, String(filename))
 
-function query(io::IO, filename::Nullable{String}=Nullable{String}())
+function query(io::IO, filename::Union{Nothing, String} = nothing)
     magic = Vector{UInt8}(0)
     pos = position(io)
     for p in magic_list
@@ -408,7 +407,7 @@ function query(io::IO, filename::Nullable{String}=Nullable{String}())
         while length(m) > length(magic)
             if eof(io)
                 seek(io, pos)
-                return Stream{unknown_df,typeof(io)}(io, filename)
+                return Stream{unknown_df, typeof(io)}(io, filename)
             end
             push!(magic, read(io, UInt8))
         end
@@ -421,8 +420,14 @@ function query(io::IO, filename::Nullable{String}=Nullable{String}())
         for p in magic_func
             seek(io, pos)
             f = first(p)
-            if f(io)
-                return Stream{DataFormat{last(p)},typeof(io)}(seek(io, pos), filename)
+            try
+                if f(io)
+                    return Stream{DataFormat{last(p)},typeof(io)}(seek(io, pos), filename)
+                end
+            catch e
+                println("There was an error in magick function $f")
+                println("Please open an issue at FileIO.jl. Error:")
+                println(e)
             end
         end
         seek(io, pos)

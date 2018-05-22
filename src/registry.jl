@@ -160,21 +160,19 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 ### Complex cases
 
 # bedGraph: the complication is that the magic bytes may start at any location within an indeterminate header.
-const bedgraph_magic = UInt8[0x74, 0x79, 0x70, 0x65, 0x3D, 0x62, 0x65, 0x64, 0x47, 0x72, 0x61, 0x70, 0x68]
 function detect_bedgraph(io)
-    position(io) == 0 || return false
-
-    line = ""
-
+    bedgraph_magic = b"type=bedGraph"
     # Check lines for magic bytes.
-    while !eof(io) && !ismatch(r"^\s*([A-Za-z]+\S*)\s+(\d+)\s+(\d+)\s+(\S*\d)\s*$", line) # Note: regex is used to limit the search by exiting the loop when a line matches the bedGraph track format.
-        line = readline(io, chomp=false)
-
-        if contains(line, String(bedgraph_magic)) # Note: String(bedgraph_magic) = "type=bedGraph"
-            return true
+    pos = 1
+    while !eof(io)
+        r = read(io, UInt8)
+        if bedgraph_magic[pos] == r
+            pos >= length(bedgraph_magic) && return true
+            pos += 1
+        else
+            pos = 1
         end
     end
-
     return false
 end
 add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles])
@@ -235,28 +233,27 @@ end
 add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"], [:HDF5])
 
 function detect_stlascii(io)
+    pos = position(io)
     try
-        position(io) != 0 && (seekstart(io); return false)
         seekend(io)
         len = position(io)
-        seekstart(io)
+        seek(io, pos)
         len < 80 && return false
         header = read(io, 80) # skip header
-        seekstart(io)
+        seek(io, pos)
         header[1:6] == b"solid " && !detect_stlbinary(io)
     finally
-        seekstart(io)
+        seek(io, pos)
     end
 end
 
 function detect_stlbinary(io)
-    size_header = 80+sizeof(UInt32)
-    size_triangleblock = (4*3*sizeof(Float32)) + sizeof(UInt16)
-
-    position(io) != 0 && (seekstart(io); return false)
+    size_header = 80 + sizeof(UInt32)
+    size_triangleblock = (4 * 3 * sizeof(Float32)) + sizeof(UInt16)
+    pos = position(io)
     seekend(io)
     len = position(io)
-    seekstart(io)
+    seek(io, pos)
     len < size_header && return false
 
     skip(io, 80) # skip header
@@ -267,7 +264,6 @@ function detect_stlbinary(io)
     attrib_byte_count = read(io, UInt16) # read last attrib_byte
     attrib_byte_count != zero(UInt16) && (seekstart(io); return false) # should be zero as not used
     result = eof(io) # if end of file, we have a stl!
-    seekstart(io)
     return result
 end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [:MeshIO])

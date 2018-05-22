@@ -1,4 +1,11 @@
 println("these tests will print warnings: ")
+
+if VERSION > v"0.6.9"
+    const fetch07 = fetch
+else
+    const fetch07 = wait
+end
+
 @testset "Not installed" begin
     eval(Base, :(is_interactive = true)) # for interactive error handling
 
@@ -9,11 +16,11 @@ println("these tests will print warnings: ")
     rserr, wrerr = redirect_stderr()
     ref = @async save("test.not_installed", nothing)
     println(wr, "y")
-    @test_throws CompositeException wait(ref) #("unknown package NotInstalled")
+    @test_throws CompositeException fetch07(ref) #("unknown package NotInstalled")
     ref = @async save("test.not_installed", nothing)
     println(wr, "invalid") #test invalid input
     println(wr, "n") # don't install
-    wait(ref)
+    fetch07(ref)
     @test istaskdone(ref)
 
     close(rs);close(wr);close(rserr);close(wrerr)
