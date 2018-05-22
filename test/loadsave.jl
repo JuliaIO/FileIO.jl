@@ -7,9 +7,12 @@ module TestLoadSave
 import FileIO: File, @format_str
 load(file::File{format"PBMText"})   = "PBMText"
 load(file::File{format"PBMBinary"}) = "PBMBinary"
-load(file::File{format"HDF5"})      = "HDF5"
 load(file::File{format"JLD"})       = "JLD"
 load(file::File{format"GZIP"})       = "GZIP"
+end
+module TestLoadSave2
+import FileIO: File, @format_str
+fileio_load(file::File{format"HDF5"})      = "HDF5"
 end
 
 sym2loader = copy(FileIO.sym2loader)
@@ -23,7 +26,7 @@ try
 
         add_loader(format"PBMText", :TestLoadSave)
         add_loader(format"PBMBinary", :TestLoadSave)
-        add_loader(format"HDF5", :TestLoadSave)
+        add_loader(format"HDF5", :TestLoadSave2)
         add_loader(format"JLD", :TestLoadSave)
         add_loader(format"GZIP", :TestLoadSave)
 
@@ -285,12 +288,12 @@ load(f::File{format"AmbigExt2"}) = open(f) do io
     read(stream(io), String)
 end
 
-save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
+fileio_save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
     s = stream(io)
     print(s, "ambigext1")
     print(s, testdata)
 end
-save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
+fileio_save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
     s = stream(io)
     print(s, "ambigext2")
     print(s, testdata)
