@@ -241,7 +241,6 @@ function detect_stlascii(io)
         len < 80 && return false
         header = read(io, 80) # skip header
         seek(io, pos)
-        @show String(header[1:6])
         header[1:6] == b"solid " && !detect_stlbinary(io)
     finally
         seek(io, pos)
