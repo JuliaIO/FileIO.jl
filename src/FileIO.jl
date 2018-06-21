@@ -2,8 +2,6 @@ __precompile__()
 
 module FileIO
 
-using Compat
-
 export DataFormat,
        File,
        Formatted,
@@ -29,6 +27,7 @@ export DataFormat,
 
 import Base.showerror
 using Base: RefValue
+using Pkg
 
 include("query.jl")
 include("error_handling.jl")

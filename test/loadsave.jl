@@ -1,5 +1,5 @@
 using FileIO
-using Base.Test
+using Test
 
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
@@ -143,7 +143,7 @@ end
 function FileIO.load(s::Stream{format"DUMMY"})
     skipmagic(s)
     n = read(s, Int64)
-    out = Vector{UInt8}(n)
+    out = Vector{UInt8}(undef, n)
     read!(s, out)
     close(s)
     out

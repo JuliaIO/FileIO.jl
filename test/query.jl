@@ -1,21 +1,21 @@
 using FileIO
-using Base.Test
-using Compat
+using Test
+using Random
 
 @testset "OS" begin
-    if Compat.Sys.islinux()
+    if Sys.islinux()
         @test FileIO.applies_to_os(FileIO.Linux)
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if Compat.Sys.isapple()
+    if Sys.isapple()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test FileIO.applies_to_os(FileIO.OSX)
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if Compat.Sys.iswindows()
+    if Sys.iswindows()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test !(FileIO.applies_to_os(FileIO.Unix))
@@ -230,7 +230,7 @@ try
     @testset "multiple libs" begin
         lensave0 = length(FileIO.sym2saver)
         lenload0 = length(FileIO.sym2loader)
-        OSKey = Compat.Sys.isapple() ? FileIO.OSX : Compat.Sys.iswindows() ? FileIO.Windows : Compat.Sys.islinux() ? FileIO.Linux : error("os not supported")
+        OSKey = Sys.isapple() ? FileIO.OSX : Sys.iswindows() ? FileIO.Windows : Sys.islinux() ? FileIO.Linux : error("os not supported")
         add_format(
             format"MultiLib",
             UInt8[0x42,0x4d],

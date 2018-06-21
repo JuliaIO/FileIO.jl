@@ -1,5 +1,5 @@
 using FileIO
-using Base.Test
+using Test
 
 @testset "Mime save" begin
 

@@ -1,7 +1,7 @@
 using FileIO
-using Base.Test
+using Test
 
-immutable MimeSaveTestType
+struct MimeSaveTestType
 end
 
 @testset "FileIO" begin
