@@ -170,7 +170,7 @@ for fn in (:load, :loadstreaming, :metadata)
                 push!(failures, (e, q))
             end
         end
-        handle_exceptions(failures, "loading \"$(filename(q))\"")
+        handle_exceptions(failures, "loading $(repr(filename(q)))")
     end
 end
 
@@ -194,7 +194,7 @@ for fn in (:save, :savestreaming)
                 push!(failures, (e, q))
             end
         end
-        handle_exceptions(failures, "saving \"$(filename(q))\"")
+        handle_exceptions(failures, "saving $(repr(filename(q)))")
     end
 end
 
