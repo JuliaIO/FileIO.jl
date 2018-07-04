@@ -21,7 +21,7 @@ install:
 build_script:
 # Need to convert from shallow to complete for Pkg.clone to work
 #  - git fetch --unshallow
-  - C:\projects\julia\bin\julia -e "versioninfo(); Pkg.init(); Pkg.clone(pwd(), \"FileIO\")"
+  - C:\projects\julia\bin\julia -e "using InteractiveUtils; versioninfo(); import Pkg; Pkg.develop(pwd())"
 
 test_script:
-  - C:\projects\julia\bin\julia -e "Pkg.test(\"FileIO\")"
+  - C:\projects\julia\bin\julia -e "import Pkg; Pkg.test(\"FileIO\")"
