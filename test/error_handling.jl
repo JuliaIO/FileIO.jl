@@ -1,27 +1,29 @@
 println("these tests will print warnings: ")
 
 @testset "Not installed" begin
-    Core.eval(Base, :(is_interactive = true)) # for interactive error handling
-
     add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
-    stdin_copy = stdin
-    stderr_copy = stderr
-    rs, wr = redirect_stdin()
-    rserr, wrerr = redirect_stderr()
-    ref = @async save("test.not_installed", nothing)
-    println(wr, "y")
-    @test_throws Pkg.Types.CommandError fetch(ref) #("unknown package NotInstalled")
-    ref = @async save("test.not_installed", nothing)
-    println(wr, "invalid") #test invalid input
-    println(wr, "n") # don't install
-    fetch(ref)
-    @test istaskdone(ref)
+    @test_throws ArgumentError save("test.not_installed", nothing)
 
-    close(rs);close(wr);close(rserr);close(wrerr)
-    redirect_stdin(stdin_copy)
-    redirect_stderr(stderr_copy)
+    # Core.eval(Base, :(is_interactive = true)) # for interactive error handling
+    # add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
+    # stdin_copy = stdin
+    # stderr_copy = stderr
+    # rs, wr = redirect_stdin()
+    # rserr, wrerr = redirect_stderr()
+    # ref = @async save("test.not_installed", nothing)
+    # println(wr, "y")
+    # @test_throws ArgumentError fetch(ref) #("unknown package NotInstalled")
+    # ref = @async save("test.not_installed", nothing)
+    # println(wr, "invalid") #test invalid input
+    # println(wr, "n") # don't install
+    # fetch(ref)
+    # @test istaskdone(ref)
 
-    Core.eval(Base, :(is_interactive = false)) # for interactive error handling
+    # close(rs);close(wr);close(rserr);close(wrerr)
+    # redirect_stdin(stdin_copy)
+    # redirect_stderr(stderr_copy)
+
+    # Core.eval(Base, :(is_interactive = false)) # for interactive error handling
 
 end
 
