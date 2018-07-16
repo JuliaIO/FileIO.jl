@@ -3,12 +3,32 @@ const sym2saver  = Dict{Symbol,Vector{Symbol}}()
 
 is_installed(pkg::Symbol) = get(Pkg.installed(), string(pkg), nothing) != nothing
 
+function _findmod(f::Symbol)
+    for (u,v) in Base.loaded_modules
+        (Symbol(v) == f) && return u
+    end
+    nothing
+end
+function topimport(modname)
+    @eval Base.__toplevel__  import $modname
+    u = _findmod(modname)
+    @eval $modname = Base.loaded_modules[$u]
+end
+
 function checked_import(pkg::Symbol)
-    isdefined(Main, pkg) && return getfield(Main, pkg)
-    isdefined(FileIO, pkg) && return getfield(FileIO, pkg)
-    !is_installed(pkg) && throw(NotInstalledError(pkg, ""))
-    !isdefined(Main, pkg) && Core.eval(Main, Expr(:import, pkg))
-    return getfield(Main, pkg)
+    # kludge for test suite
+    if isdefined(Main, pkg)
+        m1 = getfield(Main, pkg)
+        isa(m1, Module) && return m1
+    end
+    if isdefined(FileIO, pkg)
+        m1 = getfield(FileIO, pkg)
+        isa(m1, Module) && return m1
+    end
+    m = _findmod(pkg)
+    m == nothing || return Base.loaded_modules[m]
+    topimport(pkg)
+    return Base.loaded_modules[_findmod(pkg)]
 end
 
 

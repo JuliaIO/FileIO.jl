@@ -37,7 +37,7 @@ for filetype in [".svg", ".pdf", ".eps", ".png"]
 
         @test content_new == content_original
     finally
-        rm(output_filename * filetype)
+        isfile(output_filename * filetype) && rm(output_filename * filetype)
     end
 
 end
