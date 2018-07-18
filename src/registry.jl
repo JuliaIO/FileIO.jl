@@ -283,4 +283,4 @@ add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
 
 add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
 
-add_format(format"ProteinDataBank", (), ".pdb")
+add_format(format"ProteinDataBank", (), [".pdb"], [:DiffEqPhysics])
