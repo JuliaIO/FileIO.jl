@@ -67,9 +67,9 @@ try
         @test unknown(format"UNKNOWN")
 
         add_format(format"CSV", UInt8[], ".csv")
-        @test info(format"CSV") == ((),".csv")
+        @test FileIO.info(format"CSV") == ((),".csv")
         add_format(format"FOO", (), ".foo")  # issue #17
-        @test_throws Exception info(format"OOPS")
+        @test_throws Exception FileIO.info(format"OOPS")
         @test FileIO.ext2sym[".csv"] == :CSV
         del_format(format"FOO")
         @test FileIO.magic_list == [Pair((),:CSV)]
@@ -77,11 +77,11 @@ try
         @test isempty(FileIO.ext2sym)
         @test isempty(FileIO.magic_list)
         @test isempty(FileIO.sym2info)
-        @test_throws Exception info(format"CSV")
+        @test_throws Exception FileIO.info(format"CSV")
 
         add_format(format"JUNK", "JUNK", [".jnk",".junk",".JNK"])
 
-        @test info(format"JUNK") == (tuple(b"JUNK"...),[".jnk",".junk",".JNK"])
+        @test FileIO.info(format"JUNK") == (tuple(b"JUNK"...),[".jnk",".junk",".JNK"])
         @test FileIO.ext2sym[".jnk"] == :JUNK
         @test FileIO.ext2sym[".junk"] == :JUNK
         @test FileIO.ext2sym[".JNK"] == :JUNK
