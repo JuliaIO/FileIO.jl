@@ -159,7 +159,7 @@ end
 `info(fmt)` returns the magic bytes/extension information for
 `DataFormat` `fmt`.
 """
-Base.info(::Type{DataFormat{sym}}) where {sym} = sym2info[sym]
+info(::Type{DataFormat{sym}}) where {sym} = sym2info[sym]
 
 
 canonicalize_magic(m::NTuple{N,UInt8}) where {N} = m
