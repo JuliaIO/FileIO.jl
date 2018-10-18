@@ -41,6 +41,7 @@ format ascii 1.0 |
 format binary_little_endian 1.0 |
 | 2DM | .2dm | loads and saves on **all** platforms with [MeshIO](http:///github.com/JuliaIO/MeshIO.jl.git)  | MESH2D |
 | OFF | .off | loads and saves on **all** platforms with [MeshIO](http:///github.com/JuliaIO/MeshIO.jl.git)  | OFF |
+| GTS | .gts | loads and saves on **all** platforms with [MeshIO](http:///github.com/JuliaIO/MeshIO.jl.git)  | only extension |
 | AVI | .avi | loads and saves on **all** platforms with [ImageMagick](http:///github.com/JuliaIO/ImageMagick.jl.git)  | has detection function |
 | HDF5 | .h5, .hdf5 | loads and saves on **all** platforms with [HDF5](http:///github.com/JuliaLang/HDF5.jl.git)  | has detection function |
 | STL_ASCII | .stl, .STL | loads and saves on **all** platforms with [MeshIO](http:///github.com/JuliaIO/MeshIO.jl.git)  | has detection function |
