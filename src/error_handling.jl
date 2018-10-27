@@ -49,9 +49,9 @@ function handle_current_error(e, library, islast::Bool)
     bt = catch_backtrace()
     bts = sprint(io->Base.show_backtrace(io, bt))
     message = islast ? "" : "\nTrying next loading library! Please report this issue on the Github page for $library"
-    warn(string(e, bts, message))
+    @warn string(e, bts, message)
 end
-handle_current_error(e::NotInstalledError) = warn(string("lib ", e.library, " not installed, trying next library"))
+handle_current_error(e::NotInstalledError) = @warn string("lib ", e.library, " not installed, trying next library")
 
 
 """
