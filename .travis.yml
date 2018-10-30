@@ -10,12 +10,6 @@ julia:
 matrix:
   allow_failures:
     - julia: nightly
-branches:
-  only:
-    - master
-    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 after_success:
-  - if [[ $TRAVIS_JULIA_VERSION = 1.0 ]] && [[ $TRAVIS_OS_NAME = linux ]]; then
-      julia --project=test/coverage -e 'using Pkg; Pkg.instantiate();
-          using Coverage; Codecov.submit(Codecov.process_folder())';
-    fi
+  - julia -e 'cd(Pkg.dir("FileIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
+
