@@ -13,4 +13,3 @@ after_success:
   - julia -e 'cd(Pkg.dir("FileIO")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'
 notifications:	matrix:
   email: false
-  
