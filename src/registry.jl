@@ -31,7 +31,7 @@ add_format(format"RDataSingle", detect_rdata_single, [".rds"], [:RData, LOAD])
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
 add_format(format"TSV", (), [".tsv"], [:CSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
-add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles, LOAD])
+add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles])
 add_format(format"Stata", (), [".dta"], [:StatFiles, LOAD])
 add_format(format"SPSS", "\$FL2", [".sav"], [:StatFiles, LOAD])
 add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
