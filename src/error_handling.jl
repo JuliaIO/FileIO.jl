@@ -77,7 +77,7 @@ function handle_exceptions(exceptions::Vector, action)
     end
 end
 
-handle_error(e, q) = rethrow(e)
+handle_error(e, q) = throw(e)
 
 function handle_error(e::NotInstalledError, q)
     println("Library \"", e.library, "\" is not installed but is recommended as a library to load format: \"", file_extension(q), "\"")
