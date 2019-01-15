@@ -6,13 +6,13 @@ add_format(format"JLD", (unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), ver
 add_format(format"JLD2", "Julia data file (HDF5), version 0.2", ".jld2", [:JLD2])
 add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz])
 
-# test for RD?2 magic sequence at the beginning of R data input stream
+# test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
     read(io, UInt8) == UInt8('R') &&
     read(io, UInt8) == UInt8('D') &&
     read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
-    read(io, UInt8) == UInt8('2') &&
+    read(io, UInt8) in (UInt8('2'), UInt8('3')) &&
     (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
 end
 
