@@ -27,7 +27,6 @@ function detect_rdata_single(io)
 end
 
 add_format(format"RDataSingle", detect_rdata_single, [".rds"], [:RData, LOAD])
-
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
 add_format(format"TSV", (), [".tsv"], [:CSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
@@ -284,3 +283,5 @@ add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
 add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
 
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
+
+add_format(format"LAS", (), [".las",".LAS"],[:LASFiles])
