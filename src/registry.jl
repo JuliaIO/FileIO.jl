@@ -284,3 +284,5 @@ add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
 add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
 
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
+
+add_format(format"LAS", (), [".las",".LAS"], [:WellLogIO])
