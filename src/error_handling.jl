@@ -31,6 +31,14 @@ struct NotInstalledError <: Exception
     library::Symbol
     message::String
 end
+function NotInstalledError(e::ArgumentError)
+    if match(r"Package (.)* not found", e.msg) |> isnothing
+        return e
+    else
+        library = split(e.msg, ' ')[2]
+        return NotInstalledError(Symbol(library), e.msg)
+    end
+end
 Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not installed.")
 
 """
@@ -41,6 +49,13 @@ struct UnknownFormat{T <: Formatted} <: Exception
 end
 Base.showerror(io::IO, e::UnknownFormat) = println(io, e.format, " couldn't be recognized by FileIO.")
 
+function wrap_error(t::Tuple{Exception,Any})
+    e = t[1]
+    for ERR in [:NotInstalledError,]
+        e = @eval $(ERR)($(e))
+    end
+    return (e,t[2])
+end
 
 """
 Handles error as soon as they get thrown while doing IO
@@ -59,6 +74,7 @@ Handles a list of thrown errors after no IO library was found working
 """
 function handle_exceptions(exceptions::Vector, action)
     # first show all errors when there are more then one
+    map!(wrap_error, exceptions, exceptions)
     multiple = length(exceptions) > 1
     println(stderr, "Error$(multiple ? "s" : "") encountered while $action.")
     if multiple
@@ -69,7 +85,12 @@ function handle_exceptions(exceptions::Vector, action)
     end
     # then handle all errors.
     # this way first fatal exception throws and user can still see all errors
-    # TODO, don't throw, if it contains a NotInstalledError?!
+    exceptions_notinstalled = filter(x -> isa(x, NotInstalledError), exceptions)
+    setdiff!(exceptions, exceptions_notinstalled)
+    for exception in exceptions_notinstalled
+        continue_ = handle_error(exception...)
+        continue_ || break
+    end
     println(stderr, "Fatal error:")
     for exception in exceptions
         continue_ = handle_error(exception...)
