@@ -31,7 +31,7 @@ struct NotInstalledError <: Exception
     library::Symbol
     message::String
 end
-function NotInstalledError(e::ArgumentError)
+function NotInstalledError(e::Exception)
     if match(r"Package (.)* not found", e.msg) |> isnothing
         return e
     else
