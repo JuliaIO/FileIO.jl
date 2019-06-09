@@ -25,7 +25,7 @@ using FileIO
 obj = load(filename)
 ```
 to read data from a formatted file.  Likewise, saving might be as simple as
-```
+```jl
 save(filename, obj)
 ```
 
@@ -91,9 +91,11 @@ add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
 # have one of two possible file extensions
 add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
 
-# A format whose magic bytes might not be at the beginning of the file,
-# necessitating a custom function `detecthdf5` to find them
-add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"])
+# A format whose magic bytes more complicated, necessitating a custom function
+# `detectwav` to find them. The function should assume that the stream is
+# positioned at the beginning of the file being detected, and the query
+# infrastructure will handle seeking to the correct position afterwards.
+add_format(format"WAV", detectwav, ".wav")
 
 # A fictitious format that, unfortunately, provides no magic
 # bytes. Here we have to place our faith in the file extension.
@@ -141,7 +143,6 @@ using FileIO
 # See important note about scope below
 function load(f::File{format"PNG"})
     open(f) do s
-        skipmagic(s)  # skip over the magic bytes
         # You can just call the method below...
         ret = load(s)
         # ...or implement everything here instead
@@ -150,7 +151,7 @@ end
 
 # You can support streams and add keywords:
 function load(s::Stream{format"PNG"}; keywords...)
-    # s is already positioned after the magic bytes
+    skipmagic(s)  # skip over the magic bytes
     # Do the stuff to read a PNG file
     chunklength = read(s, UInt32)
     ...
@@ -174,7 +175,7 @@ Consequently, **packages should define "private" `load` and `save` methods (also
 
 If you run into a naming conflict with the `load` and `save` functions
 (for example, you already have another function in your package that has
-one of these names), you can instead name your loaders `fileio_load`, 
+one of these names), you can instead name your loaders `fileio_load`,
 `fileio_save` etc. Note that you cannot mix and match these styles: either
 all your loaders have to be named `load`, or all of them should be called
 `fileio_load`, but you cannot use both conventions in one module.

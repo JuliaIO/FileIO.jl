@@ -336,13 +336,32 @@ end
     q = query(joinpath(file_dir, "minimal_ascii.rds"))
     @test typeof(q) == File{format"RDataSingle"}
     open(q) do io
-        @test position(io) == 0
         @test FileIO.detect_rdata_single(io)
-        # need to seek to beginning of file where data structure starts
-        @test position(io)  == 0
     end
 end
 @testset "Format with function for magic bytes" begin
     add_format(format"FUNCTION_FOR_MAGIC_BYTES", x -> 0x00, ".wav", [:WAV])
     del_format(format"FUNCTION_FOR_MAGIC_BYTES")
+end
+
+function detect_position_test(io)
+    return read(io, 3) == b"DET"
+end
+
+@testset "Detection function called with properly-positioned stream" begin
+    add_format(format"DET", detect_position_test, ".det")
+    # we need extra junk to work around issue #176
+    junk = rand(UInt8, 35)
+    io = IOBuffer()
+    write(io, "DET")
+    write(io, junk)
+    seek(io, 0)
+    @test query(io) isa Formatted{format"DET"}
+    @test position(io) == 0
+    write(io, "junkDET")
+    write(io, junk)
+    seek(io, 4)
+    @test query(io) isa Formatted{format"DET"}
+    @test position(io) == 4
+    del_format(format"DET")
 end

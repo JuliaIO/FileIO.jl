@@ -9,7 +9,6 @@ add_format(format"BSON",(),".bson", [:BSON])
 
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
-    seekstart(io)
     read(io, UInt8) == UInt8('R') &&
     read(io, UInt8) == UInt8('D') &&
     read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
@@ -20,10 +19,8 @@ end
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [:RData, LOAD])
 
 function detect_rdata_single(io)
-    seekstart(io)
     res = read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
         (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
-    seekstart(io)
     return res
 end
 
@@ -146,10 +143,9 @@ add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 
 ### Audio formats
 function detectwav(io)
-    seekstart(io)
     magic = read!(io, Vector{UInt8}(undef, 4))
     magic == b"RIFF" || return false
-    seek(io, 8)
+    skip(io, 4)
     submagic = read!(io, Vector{UInt8}(undef, 4))
 
     submagic == b"WAVE"
@@ -199,10 +195,9 @@ skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
 
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
-    seekstart(io)
     magic = read!(io, Vector{UInt8}(undef, 4))
     magic == b"RIFF" || return false
-    seek(io, 8)
+    skip(io, 4)
     submagic = read!(io, Vector{UInt8}(undef, 4))
 
     submagic == b"AVI "
@@ -211,6 +206,8 @@ add_format(format"AVI", detectavi, ".avi", [:ImageMagick])
 
 # HDF5: the complication is that the magic bytes may start at
 # 0, 512, 1024, 2048, or any multiple of 2 thereafter
+# this detection function assumes that the stream start and end match the
+# file start and end, which is true if it's just a file on disk
 h5magic = (0x89,0x48,0x44,0x46,0x0d,0x0a,0x1a,0x0a)
 function detecthdf5(io)
     position(io) == 0 || return false
@@ -233,6 +230,8 @@ function detecthdf5(io)
 end
 add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"], [:HDF5])
 
+# the STL detection functions assumes that the stream start and end match the
+# file start and end, which is true if it's just a file on disk
 function detect_stlascii(io)
     pos = position(io)
     try
