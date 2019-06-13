@@ -283,5 +283,6 @@ add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [
 add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
 
 add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
+add_format(format"vega", (), [".vega"], [:VegaLite])
 
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
