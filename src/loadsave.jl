@@ -1,29 +1,34 @@
 const sym2loader = Dict{Symbol,Vector{Symbol}}()
 const sym2saver  = Dict{Symbol,Vector{Symbol}}()
-const has_pkg3 = try
-    using Pkg3
-    true
-catch e
-    false
-end
 
-if isdefined(Base, :find_in_path)
-    function is_installed(pkg::Symbol)
-        isdefined(Main, pkg) && isa(getfield(Main, pkg), Module) && return true # is a module defined in Main scope
-        path = Base.find_in_path(string(pkg)) # hacky way to determine if a Package is installed
-        path == nothing && return false
-        return isfile(path)
+is_installed(pkg::Symbol) = get(Pkg.installed(), string(pkg), nothing) != nothing
+
+function _findmod(f::Symbol)
+    for (u,v) in Base.loaded_modules
+        (Symbol(v) == f) && return u
     end
-elseif has_pkg3 && isdefined(Pkg3, :installed)
-    is_installed(pkg::Symbol) = get(Pkg3.installed(), string(pkg), nothing) != nothing
+    nothing
+end
+function topimport(modname)
+    @eval Base.__toplevel__  import $modname
+    u = _findmod(modname)
+    @eval $modname = Base.loaded_modules[$u]
 end
 
 function checked_import(pkg::Symbol)
-    isdefined(Main, pkg) && return getfield(Main, pkg)
-    isdefined(FileIO, pkg) && return getfield(FileIO, pkg)
-    !is_installed(pkg) && throw(NotInstalledError(pkg, ""))
-    !isdefined(Main, pkg) && eval(Main, Expr(:import, pkg))
-    return getfield(Main, pkg)
+    # kludge for test suite
+    if isdefined(Main, pkg)
+        m1 = getfield(Main, pkg)
+        isa(m1, Module) && return m1
+    end
+    if isdefined(FileIO, pkg)
+        m1 = getfield(FileIO, pkg)
+        isa(m1, Module) && return m1
+    end
+    m = _findmod(pkg)
+    m == nothing || return Base.loaded_modules[m]
+    topimport(pkg)
+    return Base.loaded_modules[_findmod(pkg)]
 end
 
 
@@ -31,13 +36,13 @@ for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
         (:applicable_savers,  :add_saver,  :sym2saver))
     @eval begin
-        function $applicable_{sym}(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}})
+        function $applicable_(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}}) where sym
             if haskey($dict_, sym)
                 return $dict_[sym]
             end
             error("No $($applicable_) found for $(sym)")
         end
-        function $add_{sym}(::Type{DataFormat{sym}}, pkg::Symbol)
+        function $add_(::Type{DataFormat{sym}}, pkg::Symbol) where sym
             list = get($dict_, sym, Symbol[])
             $dict_[sym] = push!(list, pkg)
         end
@@ -120,31 +125,31 @@ function save(s::Union{AbstractString,IO}; options...)
 end
 
 # Allow format to be overridden with first argument
-function save{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+function save(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    eval(Main, :($save($File($(DataFormat{sym}), $f),
+    Core.eval(Main, :($save($File($(DataFormat{sym}), $f),
                        $data...; $options...)))
 end
 
-function savestreaming{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
+function savestreaming(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    eval(Main, :($savestreaming($Stream($(DataFormat{sym}), $s),
+    Core.eval(Main, :($savestreaming($Stream($(DataFormat{sym}), $s),
                                 $data...; $options...)))
 end
 
-function save{sym}(df::Type{DataFormat{sym}}, s::IO, data...; options...)
+function save(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    eval(Main, :($save($Stream($(DataFormat{sym}), $s),
+    Core.eval(Main, :($save($Stream($(DataFormat{sym}), $s),
                        $data...; $options...)))
 end
 
-function savestreaming{sym}(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...)
+function savestreaming(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    eval(Main, :($savestreaming($File($(DataFormat{sym}), $f),
+    Core.eval(Main, :($savestreaming($File($(DataFormat{sym}), $f),
                                 $data...; $options...)))
 end
 
@@ -163,7 +168,7 @@ end
 # Handlers for formatted files/streams
 
 for fn in (:load, :loadstreaming, :metadata)
-    @eval function $fn{F}(q::Formatted{F}, args...; options...)
+    @eval function $fn(q::Formatted{F}, args...; options...) where F
         if unknown(q)
             isfile(filename(q)) || open(filename(q))  # force systemerror
             throw(UnknownFormat(q))
@@ -175,22 +180,22 @@ for fn in (:load, :loadstreaming, :metadata)
                 Library = checked_import(library)
                 gen2_func_name = Symbol("fileio_" * $(string(fn)))
                 if isdefined(Library, gen2_func_name)
-                    return eval(Library, :($gen2_func_name($q, $args...; $options...)))
+                    return Core.eval(Library, :($gen2_func_name($q, $args...; $options...)))
                 end
                 if !has_method_from(methods(Library.$fn), Library)
                     throw(LoaderError(string(library), "$($fn) not defined"))
                 end
-                return eval(Main, :($(Library.$fn)($q, $args...; $options...)))
+                return Core.eval(Main, :($(Library.$fn)($q, $args...; $options...)))
             catch e
                 push!(failures, (e, q))
             end
         end
-        handle_exceptions(failures, "loading \"$(filename(q))\"")
+        handle_exceptions(failures, "loading $(repr(filename(q)))")
     end
 end
 
 for fn in (:save, :savestreaming)
-    @eval function $fn{F}(q::Formatted{F}, data...; options...)
+    @eval function $fn(q::Formatted{F}, data...; options...) where F
         unknown(q) && throw(UnknownFormat(q))
         libraries = applicable_savers(q)
         failures  = Any[]
@@ -199,17 +204,17 @@ for fn in (:save, :savestreaming)
                 Library = checked_import(library)
                 gen2_func_name = Symbol("fileio_" * $(string(fn)))
                 if isdefined(Library, gen2_func_name)
-                    return eval(Library, :($gen2_func_name($q, $data...; $options...)))
+                    return Core.eval(Library, :($gen2_func_name($q, $data...; $options...)))
                 end
                 if !has_method_from(methods(Library.$fn), Library)
                     throw(WriterError(string(library), "$($fn) not defined"))
                 end
-                return eval(Main, :($(Library.$fn)($q, $data...; $options...)))
+                return Core.eval(Main, :($(Library.$fn)($q, $data...; $options...)))
             catch e
                 push!(failures, (e, q))
             end
         end
-        handle_exceptions(failures, "saving \"$(filename(q))\"")
+        handle_exceptions(failures, "saving $(repr(filename(q)))")
     end
 end
 
@@ -224,8 +229,4 @@ function has_method_from(mt, Library)
     false
 end
 
-if VERSION < v"0.5.0-dev+3543"
-    getmodule(m) = m.func.code.module
-else
-    getmodule(m) = m.module
-end
+getmodule(m) = m.module

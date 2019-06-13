@@ -49,9 +49,9 @@ function handle_current_error(e, library, islast::Bool)
     bt = catch_backtrace()
     bts = sprint(io->Base.show_backtrace(io, bt))
     message = islast ? "" : "\nTrying next loading library! Please report this issue on the Github page for $library"
-    warn(string(e, bts, message))
+    @warn string(e, bts, message)
 end
-handle_current_error(e::NotInstalledError) = warn(string("lib ", e.library, " not installed, trying next library"))
+handle_current_error(e::NotInstalledError) = @warn string("lib ", e.library, " not installed, trying next library")
 
 
 """
@@ -60,7 +60,7 @@ Handles a list of thrown errors after no IO library was found working
 function handle_exceptions(exceptions::Vector, action)
     # first show all errors when there are more then one
     multiple = length(exceptions) > 1
-    println(STDERR, "Error$(multiple ? "s" : "") encountered while $action.")
+    println(stderr, "Error$(multiple ? "s" : "") encountered while $action.")
     if multiple
         println("All errors:")
         for (err, file) in exceptions
@@ -70,27 +70,27 @@ function handle_exceptions(exceptions::Vector, action)
     # then handle all errors.
     # this way first fatal exception throws and user can still see all errors
     # TODO, don't throw, if it contains a NotInstalledError?!
-    println(STDERR, "Fatal error:")
+    println(stderr, "Fatal error:")
     for exception in exceptions
         continue_ = handle_error(exception...)
         continue_ || break
     end
 end
 
-handle_error(e, q) = rethrow(e)
+handle_error(e, q) = throw(e)
 
 function handle_error(e::NotInstalledError, q)
     println("Library \"", e.library, "\" is not installed but is recommended as a library to load format: \"", file_extension(q), "\"")
     !isinteractive() && rethrow(e) # if we're not in interactive mode just throw
     while true
         println("Should we install \"", e.library, "\" for you? (y/n):")
-        input = lowercase(chomp(strip(readline(STDIN))))
+        input = lowercase(chomp(strip(readline(stdin))))
         if input == "y"
-            info(string("Start installing ", e.library, "..."))
+            @info(string("Start installing ", e.library, "..."))
             Pkg.add(string(e.library))
             return false # don't continue
         elseif input == "n"
-            info(string("Not installing ", e.library))
+            @info(string("Not installing ", e.library))
             return true # User does not install, continue going through errors.
         else
             println("$input is not a valid choice. Try typing y or n")

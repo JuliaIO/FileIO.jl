@@ -1,21 +1,21 @@
 using FileIO
-using Base.Test
-using Compat
+using Test
+using Random
 
 @testset "OS" begin
-    if Compat.Sys.islinux()
+    if Sys.islinux()
         @test FileIO.applies_to_os(FileIO.Linux)
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if Compat.Sys.isapple()
+    if Sys.isapple()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test FileIO.applies_to_os(FileIO.OSX)
         @test FileIO.applies_to_os(FileIO.Unix)
         @test !(FileIO.applies_to_os(FileIO.Windows))
     end
-    if Compat.Sys.iswindows()
+    if Sys.iswindows()
         @test !(FileIO.applies_to_os(FileIO.Linux))
         @test !(FileIO.applies_to_os(FileIO.OSX))
         @test !(FileIO.applies_to_os(FileIO.Unix))
@@ -67,9 +67,9 @@ try
         @test unknown(format"UNKNOWN")
 
         add_format(format"CSV", UInt8[], ".csv")
-        @test info(format"CSV") == ((),".csv")
+        @test FileIO.info(format"CSV") == ((),".csv")
         add_format(format"FOO", (), ".foo")  # issue #17
-        @test_throws Exception info(format"OOPS")
+        @test_throws Exception FileIO.info(format"OOPS")
         @test FileIO.ext2sym[".csv"] == :CSV
         del_format(format"FOO")
         @test FileIO.magic_list == [Pair((),:CSV)]
@@ -77,11 +77,11 @@ try
         @test isempty(FileIO.ext2sym)
         @test isempty(FileIO.magic_list)
         @test isempty(FileIO.sym2info)
-        @test_throws Exception info(format"CSV")
+        @test_throws Exception FileIO.info(format"CSV")
 
         add_format(format"JUNK", "JUNK", [".jnk",".junk",".JNK"])
 
-        @test info(format"JUNK") == (tuple(b"JUNK"...),[".jnk",".junk",".JNK"])
+        @test FileIO.info(format"JUNK") == (tuple(b"JUNK"...),[".jnk",".junk",".JNK"])
         @test FileIO.ext2sym[".jnk"] == :JUNK
         @test FileIO.ext2sym[".junk"] == :JUNK
         @test FileIO.ext2sym[".JNK"] == :JUNK
@@ -230,7 +230,7 @@ try
     @testset "multiple libs" begin
         lensave0 = length(FileIO.sym2saver)
         lenload0 = length(FileIO.sym2loader)
-        OSKey = Compat.Sys.isapple() ? FileIO.OSX : Compat.Sys.iswindows() ? FileIO.Windows : Compat.Sys.islinux() ? FileIO.Linux : error("os not supported")
+        OSKey = Sys.isapple() ? FileIO.OSX : Sys.iswindows() ? FileIO.Windows : Sys.islinux() ? FileIO.Linux : error("os not supported")
         add_format(
             format"MultiLib",
             UInt8[0x42,0x4d],

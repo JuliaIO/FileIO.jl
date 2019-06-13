@@ -1,18 +1,19 @@
 ### Simple cases
 
 # data formats
-add_format(format"JLD", (Vector{UInt8}("Julia data file (HDF5), version 0.0"),
-                         Vector{UInt8}("Julia data file (HDF5), version 0.1")), ".jld", [:JLD])
+add_format(format"JLD", (unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.0"),
+                         unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")), ".jld", [:JLD])
 add_format(format"JLD2", "Julia data file (HDF5), version 0.2", ".jld2", [:JLD2])
 add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz])
+add_format(format"BSON",(),".bson", [:BSON])
 
-# test for RD?2 magic sequence at the beginning of R data input stream
+# test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
     read(io, UInt8) == UInt8('R') &&
     read(io, UInt8) == UInt8('D') &&
     read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
-    read(io, UInt8) == UInt8('2') &&
+    read(io, UInt8) in (UInt8('2'), UInt8('3')) &&
     (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
 end
 
@@ -31,7 +32,7 @@ add_format(format"RDataSingle", detect_rdata_single, [".rds"], [:RData, LOAD])
 add_format(format"CSV", (), [".csv"], [:CSVFiles])
 add_format(format"TSV", (), [".tsv"], [:CSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles])
-add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles, LOAD])
+add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles])
 add_format(format"Stata", (), [".dta"], [:StatFiles, LOAD])
 add_format(format"SPSS", "\$FL2", [".sav"], [:StatFiles, LOAD])
 add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -146,10 +147,10 @@ add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 ### Audio formats
 function detectwav(io)
     seekstart(io)
-    magic = read!(io, Vector{UInt8}(4))
+    magic = read!(io, Vector{UInt8}(undef, 4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read!(io, Vector{UInt8}(4))
+    submagic = read!(io, Vector{UInt8}(undef, 4))
 
     submagic == b"WAVE"
 end
@@ -181,7 +182,7 @@ add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles])
 const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
 function detecttiff(io)
     seekstart(io)
-    magic = read!(io, Vector{UInt8}(4))
+    magic = read!(io, Vector{UInt8}(undef, 4))
     # do any of the first 4 bytes match any of the 4 possible combinations of tiff magics
     return any(map(x->all(magic .== x), tiff_magic))
 end
@@ -199,10 +200,10 @@ skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
 # AVI is a subtype of RIFF, as is WAV
 function detectavi(io)
     seekstart(io)
-    magic = read!(io, Vector{UInt8}(4))
+    magic = read!(io, Vector{UInt8}(undef, 4))
     magic == b"RIFF" || return false
     seek(io, 8)
-    submagic = read!(io, Vector{UInt8}(4))
+    submagic = read!(io, Vector{UInt8}(undef, 4))
 
     submagic == b"AVI "
 end
@@ -216,7 +217,7 @@ function detecthdf5(io)
     seekend(io)
     len = position(io)
     seekstart(io)
-    magic = Vector{UInt8}(length(h5magic))
+    magic = Vector{UInt8}(undef, length(h5magic))
     pos = position(io)
     while pos+length(h5magic) <= len
         read!(io, magic)
@@ -283,3 +284,5 @@ add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
 
 add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
 add_format(format"vega", (), [".vega"], [:VegaLite])
+
+add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
