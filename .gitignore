@@ -1,3 +1,5 @@
 *.jl.cov
 *.jl.mem
 src/all_magic_bytes/
+Manifest.toml
+
