@@ -300,6 +300,8 @@ Base.eof(s::Stream) = eof(stream(s))
 @inline Base.read(s::Stream, args...)  = read(stream(s), args...)
 Base.read!(s::Stream, array::Array) = read!(stream(s), array)
 @inline Base.write(s::Stream, args...) = write(stream(s), args...)
+@inline Base.write(so::Stream, si::Stream, args...) = write(stream(so), stream(si), args...)
+@inline Base.write(io::IO, si::Stream, args...) = write(io, stream(si), args...)
 # Note: we can't sensibly support the all keyword. If you need that,
 # call read(stream(s), ...; all=value) manually
 Base.readbytes!(s::Stream, b) = readbytes!(stream(s), b)
