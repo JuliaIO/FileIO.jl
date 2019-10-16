@@ -26,11 +26,14 @@ import Base.showerror
 using Base: RefValue
 using Pkg
 
+include("types.jl")
+include("registry_setup.jl")
 include("query.jl")
 include("error_handling.jl")
 include("loadsave.jl")
 include("mimesave.jl")
 include("registry.jl")
+
 
 """
 `FileIO` API (brief summary, see individual functions for more detail):
