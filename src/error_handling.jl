@@ -72,7 +72,7 @@ function handle_exceptions(exceptions::Vector, action)
     # then handle all errors.
     # this way first fatal exception throws and user can still see all errors
     # TODO, don't throw, if it contains a NotInstalledError?!
-    println(stderr, "Fatal error:")
+    println(stderr, "\nFatal error:")
     for exception in exceptions
         continue_ = handle_error(exception...)
         continue_ || break
