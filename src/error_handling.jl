@@ -63,14 +63,16 @@ function handle_exceptions(exceptions::Vector, action)
     println(stderr, "Error$(multiple ? "s" : "") encountered while $action.")
     if multiple
         println("All errors:")
+        println("===========================================")
         for (err, file) in exceptions
-            println("   ", err)
+            showerror(stdout, err)
+            println("\n===========================================")
         end
     end
     # then handle all errors.
     # this way first fatal exception throws and user can still see all errors
     # TODO, don't throw, if it contains a NotInstalledError?!
-    println(stderr, "Fatal error:")
+    println(stderr, "\nFatal error:")
     for exception in exceptions
         continue_ = handle_error(exception...)
         continue_ || break
