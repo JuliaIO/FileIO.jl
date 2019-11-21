@@ -63,8 +63,10 @@ function handle_exceptions(exceptions::Vector, action)
     println(stderr, "Error$(multiple ? "s" : "") encountered while $action.")
     if multiple
         println("All errors:")
+        println("===========================================")
         for (err, file) in exceptions
-            println("   ", err)
+            showerror(stdout, err)
+            println("\n===========================================")
         end
     end
     # then handle all errors.
