@@ -126,13 +126,13 @@ savestreaming(s::Stream{format"DUMMY"}) = DummyWriter(s, false)
 savestreaming(file::File{format"DUMMY"}) = DummyWriter(open(file, "w"), true)
 
 # we could implement `load` and `save` in terms of their streaming versions
-function FileIO.load(file::File{format"DUMMY"})
+function load(file::File{format"DUMMY"}; extra=UInt8[])
     open(file) do s
-        load(s)
+        load(s; extra=extra)
     end
 end
 
-function FileIO.metadata(file::File{format"DUMMY"})
+function metadata(file::File{format"DUMMY"})
     s = open(file)
     skipmagic(s)
     n = read(s, Int64)
@@ -140,28 +140,39 @@ function FileIO.metadata(file::File{format"DUMMY"})
     return n
 end
 
-function FileIO.load(s::Stream{format"DUMMY"})
+function load(s::Stream{format"DUMMY"}; extra=UInt8[])
     skipmagic(s)
     n = read(s, Int64)
     out = Vector{UInt8}(undef, n)
     read!(s, out)
+    # verify that the extradata is as expected. This is just to test that
+    # the keyword arguments are handled properly in loading and saving
+    extradata = read(s, length(extra))
+    if extradata != extra
+        throw(ErrorException("Got extra data $extradata instead of $extra"))
+    end
     close(s)
     out
 end
 
-function save(file::File{format"DUMMY"}, data)
+function save(file::File{format"DUMMY"}, data; extra=UInt8[])
     open(file, "w") do s
-        write(s, magic(format"DUMMY"))  # Write the magic bytes
-        write(s, convert(Int64, length(data)))
-        udata = convert(Vector{UInt8}, data)
-        write(s, udata)
+        save(s, data; extra=extra)
     end
 end
 
+function save(s::Stream{format"DUMMY"}, data; extra=UInt8[])
+    write(s, magic(format"DUMMY"))  # Write the magic bytes
+    write(s, convert(Int64, length(data)))
+    udata = convert(Vector{UInt8}, data)
+    write(s, udata)
+    write(s, extra)
 end
 
 add_loader(format"DUMMY", :Dummy)
 add_saver(format"DUMMY", :Dummy)
+
+end # module Dummy
 
 @testset "Save" begin
     a = [0x01,0x02,0x03]
@@ -268,6 +279,13 @@ add_saver(format"DUMMY", :Dummy)
     @test load(fn) == a
     rm(fn)
 
+    # test keyword arguments
+
+    a = [0x01,0x02,0x03]
+    fn = string(tempname(), ".dmy")
+    save(fn, a; extra=[0x42, 0x43])
+    # the loader verifies that the extra data was written properly
+    load(fn; extra=[0x42, 0x43])
 
     @test_throws Exception save("missing.fmt",5)
 end
