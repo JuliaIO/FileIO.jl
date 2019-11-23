@@ -225,6 +225,11 @@ function detect_bedgraph(io)
 
         pos = 1
 
+        # Allow whitespace.
+        if UInt8('\t') == r || UInt8(' ') == r
+            continue
+        end
+
         # Check whether on "track" and allowed to continue scanning.
         if !keep_scanning && !ontrack
             break # Ending scan for bedGraph magic.
