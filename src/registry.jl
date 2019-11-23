@@ -162,18 +162,72 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
 # bedGraph: the complication is that the magic bytes may start at any location within an indeterminate header.
 function detect_bedgraph(io)
+
     bedgraph_magic = b"type=bedGraph"
+
+    # Line start constraints.
+    browser_magic = b"browser"
+    track_magic   = b"track"
+    comment_magic = b"#"
+
+    keep_scanning = false # Allow scan to continue until new line.
+    ontrack = false # On the track that may contain the magic bytes.
+
     # Check lines for magic bytes.
     pos = 1
     while !eof(io)
         r = read(io, UInt8)
-        if bedgraph_magic[pos] == r
+
+        # Check whether the line starts with a comment.
+        if !keep_scanning && pos == 1 && comment_magic[pos] == r
+            keep_scanning = true # Now scanning for newline.
+            pos += 1
+            continue
+        end
+
+        # Check whether the line starts with "browser".
+        if !keep_scanning && browser_magic[pos] == r
+            if pos >= length(browser_magic)
+                keep_scanning = true # Now scanning for newline.
+            end
+            pos += 1
+            continue
+        end
+
+        # Check whether the line starts with "track".
+        if !keep_scanning && track_magic[pos] == r
+            if pos >= length(track_magic)
+                ontrack = true # Found the "track" line where the magic bytes may exist.
+                keep_scanning = true # Allow scan to continue until the end of the current line.
+            end
+            pos += 1
+            continue
+        end
+
+        # Check whether the line has ended.
+        if UInt8('\n') == r
+            keep_scanning = false
+            ontrack = false
+            pos = 1
+            continue
+        end
+
+        # On "track" and checking whether "type=bedGraph" is contained within the line.
+        if ontrack && bedgraph_magic[pos] == r
             pos >= length(bedgraph_magic) && return true
             pos += 1
-        else
-            pos = 1
+            continue
         end
+
+        pos = 1
+
+        # Check whether on "track" and allowed to continue scanning.
+        if !keep_scanning && !ontrack
+            break # Ending scan for bedGraph magic.
+        end
+
     end
+
     return false
 end
 add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles])
