@@ -160,7 +160,11 @@ add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
 ### Complex cases
 
-# bedGraph: the complication is that the magic bytes may start at any location within an indeterminate header.
+#=
+The bedGraph file format is line-based, and its magic bytes may occur at an indeterminate location within its header.
+Certain conditions must be imposed to constrain the scan for its magic bytes and prevent unnecessary scanning of whole files.
+Lines must start with particular byte strings that are recognisable to the bedGraph format to allow the scan for its magic bytes to continue.
+=#
 function detect_bedgraph(io)
 
     bedgraph_magic = b"type=bedGraph"
