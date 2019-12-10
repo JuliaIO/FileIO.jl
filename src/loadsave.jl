@@ -155,7 +155,7 @@ end
 
 # do-syntax for streaming IO
 for fn in (:loadstreaming, :savestreaming)
-    @eval function $fn(f::Function, args...; kwargs...)
+    @eval function $fn(@nospecialize(f::Function), @nospecialize(args...); @nospecialize(kwargs...))
         str = $fn(args...; kwargs...)
         try
             f(str)
@@ -168,7 +168,7 @@ end
 # Handlers for formatted files/streams
 
 for fn in (:load, :loadstreaming, :metadata)
-    @eval function $fn(q::Formatted{F}, args...; options...) where F
+    @eval function $fn(@nospecialize(q::Formatted), @nospecialize(args...); @nospecialize(options...))
         if unknown(q)
             isfile(filename(q)) || open(filename(q))  # force systemerror
             throw(UnknownFormat(q))
@@ -195,7 +195,7 @@ for fn in (:load, :loadstreaming, :metadata)
 end
 
 for fn in (:save, :savestreaming)
-    @eval function $fn(q::Formatted{F}, data...; options...) where F
+    @eval function $fn(@nospecialize(q::Formatted), @nospecialize(data...); @nospecialize(options...))
         unknown(q) && throw(UnknownFormat(q))
         libraries = applicable_savers(q)
         failures  = Any[]
