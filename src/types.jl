@@ -33,12 +33,12 @@ File(fmt::Type{DataFormat{sym}}, filename) where {sym} = File{fmt}(filename)
 """
 `filename(file)` returns the filename associated with `File` `file`.
 """
-filename(f::File) = f.filename
+filename(@nospecialize(f::File)) = f.filename
 
 """
 `file_extension(file)` returns the file extension associated with `File` `file`.
 """
-file_extension(f::File) = splitext(filename(f))[2]
+file_extension(@nospecialize(f::File)) = splitext(filename(f))[2]
 
 ## Stream:
 
@@ -59,18 +59,18 @@ Stream(::Type{F}, io::IO, filename) where {F<:DataFormat} = Stream{F, typeof(io)
 Stream(file::File{F}, io::IO) where {F} = Stream{F, typeof(io)}(io, filename(file))
 
 "`stream(s)` returns the stream associated with `Stream` `s`"
-stream(s::Stream) = s.io
+stream(@nospecialize(s::Stream)) = s.io
 
 """
 `filename(stream)` returns a string of the filename
 associated with `Stream` `stream`, or nothing if there is no file associated.
 """
-filename(s::Stream) = s.filename
+filename(@nospecialize(s::Stream)) = s.filename
 
 """
 `file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
 """
-function file_extension(f::Stream)
+function file_extension(@nospecialize(f::Stream))
     fname = filename(f)
     (fname == nothing) && return nothing
     splitext(fname)[2]
@@ -87,17 +87,17 @@ function file!(strm::Stream{F}) where F
 end
 
 # Implement standard I/O operations for File and Stream
-@inline function Base.open(file::File{F}, args...) where F<:DataFormat
+@inline function Base.open(@nospecialize(file::File{F}), @nospecialize(args...)) where F<:DataFormat
     fn = filename(file)
     Stream(F, open(fn, args...), abspath(fn))
 end
-Base.close(s::Stream) = close(stream(s))
+Base.close(@nospecialize(s::Stream)) = close(stream(s))
 
-Base.position(s::Stream) = position(stream(s))
-Base.seek(s::Stream, offset::Integer) = (seek(stream(s), offset); s)
-Base.seekstart(s::Stream) = (seekstart(stream(s)); s)
-Base.seekend(s::Stream) = (seekend(stream(s)); s)
-Base.skip(s::Stream, offset::Integer) = (skip(stream(s), offset); s)
+Base.position(@nospecialize(s::Stream)) = position(stream(s))
+Base.seek(@nospecialize(s::Stream), offset::Integer) = (seek(stream(s), offset); s)
+Base.seekstart(@nospecialize(s::Stream)) = (seekstart(stream(s)); s)
+Base.seekend(@nospecialize(s::Stream)) = (seekend(stream(s)); s)
+Base.skip(@nospecialize(s::Stream), offset::Integer) = (skip(stream(s), offset); s)
 Base.eof(s::Stream) = eof(stream(s))
 
 @inline Base.read(s::Stream, args...)  = read(stream(s), args...)

@@ -62,4 +62,7 @@ include("registry.jl")
 """
 FileIO
 
+include("precompile.jl")
+_precompile_()
+
 end
