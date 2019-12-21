@@ -128,29 +128,25 @@ end
 function save(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    Core.eval(Main, :($save($File($(DataFormat{sym}), $f),
-                       $data...; $options...)))
+    return Base.invokelatest(save, File(DataFormat{sym}, f), data...; options...)
 end
 
 function savestreaming(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    Core.eval(Main, :($savestreaming($Stream($(DataFormat{sym}), $s),
-                                $data...; $options...)))
+    return Base.invokelatest(savestreaming, Stream(DataFormat{sym}, s), data...; options...)
 end
 
 function save(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    Core.eval(Main, :($save($Stream($(DataFormat{sym}), $s),
-                       $data...; $options...)))
+    return Base.invokelatest(save, Stream(DataFormat{sym}, s), data...; options...)
 end
 
 function savestreaming(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    Core.eval(Main, :($savestreaming($File($(DataFormat{sym}), $f),
-                                $data...; $options...)))
+    return Base.invokelatest(savestreaming, File(DataFormat{sym}, f), data...; options...)
 end
 
 # do-syntax for streaming IO
@@ -168,6 +164,7 @@ end
 # Handlers for formatted files/streams
 
 for fn in (:load, :loadstreaming, :metadata)
+    gen2_func_name = Symbol("fileio_", fn)
     @eval function $fn(@nospecialize(q::Formatted), @nospecialize(args...); @nospecialize(options...))
         if unknown(q)
             isfile(filename(q)) || open(filename(q))  # force systemerror
@@ -178,14 +175,13 @@ for fn in (:load, :loadstreaming, :metadata)
         for library in libraries
             try
                 Library = checked_import(library)
-                gen2_func_name = Symbol("fileio_" * $(string(fn)))
-                if isdefined(Library, gen2_func_name)
-                    return Core.eval(Library, :($gen2_func_name($q, $args...; $options...)))
+                if isdefined(Library, $(QuoteNode(gen2_func_name)))
+                    return Base.invokelatest(Library.$gen2_func_name, q, args...; options...)
                 end
                 if !has_method_from(methods(Library.$fn), Library)
                     throw(LoaderError(string(library), "$($fn) not defined"))
                 end
-                return Core.eval(Main, :($(Library.$fn)($q, $args...; $options...)))
+                return Base.invokelatest(Library.$fn, q, args...; options...)
             catch e
                 push!(failures, (e, q))
             end
@@ -195,6 +191,7 @@ for fn in (:load, :loadstreaming, :metadata)
 end
 
 for fn in (:save, :savestreaming)
+    gen2_func_name = Symbol("fileio_", fn)
     @eval function $fn(@nospecialize(q::Formatted), @nospecialize(data...); @nospecialize(options...))
         unknown(q) && throw(UnknownFormat(q))
         libraries = applicable_savers(q)
@@ -202,14 +199,13 @@ for fn in (:save, :savestreaming)
         for library in libraries
             try
                 Library = checked_import(library)
-                gen2_func_name = Symbol("fileio_" * $(string(fn)))
-                if isdefined(Library, gen2_func_name)
-                    return Core.eval(Library, :($gen2_func_name($q, $data...; $options...)))
+                if isdefined(Library, $(QuoteNode(gen2_func_name)))
+                    return Base.invokelatest(Library.$gen2_func_name, q, data...; options...)
                 end
                 if !has_method_from(methods(Library.$fn), Library)
                     throw(WriterError(string(library), "$($fn) not defined"))
                 end
-                return Core.eval(Main, :($(Library.$fn)($q, $data...; $options...)))
+                return Base.invokelatest(Library.$fn, q, data...; options...)
             catch e
                 push!(failures, (e, q))
             end
