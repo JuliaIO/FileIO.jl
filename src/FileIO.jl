@@ -62,7 +62,9 @@ include("registry.jl")
 """
 FileIO
 
-include("precompile.jl")
-_precompile_()
+if VERSION >= v"1.1.0"
+    include("precompile.jl")
+    _precompile_()
+end
 
 end
