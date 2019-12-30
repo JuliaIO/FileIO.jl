@@ -30,15 +30,18 @@ struct File{F<:DataFormat} <: Formatted{F}
 end
 File(fmt::Type{DataFormat{sym}}, filename) where {sym} = File{fmt}(filename)
 
+# The docs are separated from the definition because of https://github.com/JuliaLang/julia/issues/34122
+filename(@nospecialize(f::File)) = f.filename
 """
 `filename(file)` returns the filename associated with `File` `file`.
 """
-filename(@nospecialize(f::File)) = f.filename
+filename(::File)
 
+file_extension(@nospecialize(f::File)) = splitext(filename(f))[2]
 """
 `file_extension(file)` returns the file extension associated with `File` `file`.
 """
-file_extension(@nospecialize(f::File)) = splitext(filename(f))[2]
+file_extension(::File)
 
 ## Stream:
 
@@ -58,23 +61,26 @@ Stream(::Type{F}, io::IO, filename::AbstractString) where {F<:DataFormat} = Stre
 Stream(::Type{F}, io::IO, filename) where {F<:DataFormat} = Stream{F, typeof(io)}(io, filename)
 Stream(file::File{F}, io::IO) where {F} = Stream{F, typeof(io)}(io, filename(file))
 
-"`stream(s)` returns the stream associated with `Stream` `s`"
 stream(@nospecialize(s::Stream)) = s.io
+"`stream(s)` returns the stream associated with `Stream` `s`"
+stream(::Stream)
 
+filename(@nospecialize(s::Stream)) = s.filename
 """
 `filename(stream)` returns a string of the filename
 associated with `Stream` `stream`, or nothing if there is no file associated.
 """
-filename(@nospecialize(s::Stream)) = s.filename
+filename(::Stream)
 
-"""
-`file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
-"""
 function file_extension(@nospecialize(f::Stream))
     fname = filename(f)
     (fname == nothing) && return nothing
     splitext(fname)[2]
 end
+"""
+`file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
+"""
+file_extension(::Stream)
 
 # Note this closes the stream. It's useful when you've opened
 # the file to check the magic bytes, but don't want to leave
