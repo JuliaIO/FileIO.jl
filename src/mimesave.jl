@@ -42,4 +42,18 @@ function save(file::File{format"EPS"}, data)
     end
 end
 
+function save(file::File{format"HTML"}, data)
+    if showable("application/vnd.julia.fileio.htmlfile", data)
+        open(file.filename, "w") do s
+            show(s, "application/vnd.julia.fileio.htmlfile", data)
+        end
+    elseif showable("text/html", data)
+        open(file.filename, "w") do s
+            show(s, "text/html", data)
+        end
+    else
+        throw(ArgumentError("Argument does not support conversion to HTML."))
+    end
+end
+
 end

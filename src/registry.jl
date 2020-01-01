@@ -349,3 +349,5 @@ add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
 add_format(format"vega", (), [".vega"], [:VegaLite])
 
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
+
+add_format(format"HTML", (), [".html", ".htm"], [:MimeWriter, SAVE])
