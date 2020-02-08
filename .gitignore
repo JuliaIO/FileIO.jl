@@ -2,4 +2,4 @@
 *.jl.mem
 src/all_magic_bytes/
 Manifest.toml
-
+.vscode
