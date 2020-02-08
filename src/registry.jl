@@ -157,6 +157,8 @@ end
 add_format(format"WAV", detectwav, ".wav", [:WAV])
 add_format(format"FLAC","fLaC",".flac",[:FLAC])
 
+## Profile data
+add_format(format"JLPROF", [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00], ".jlprof", [:FlameGraphs])  # magic is "JLPROF" followed by [0x01, 0x00]
 
 ### Complex cases
 
