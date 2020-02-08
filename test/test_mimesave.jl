@@ -23,11 +23,16 @@ function Base.show(io::IO, m::MIME"image/png", data::MimeSaveTestType)
     write(io, content)
 end
 
+function Base.show(io::IO, m::MIME"text/html", data::MimeSaveTestType)
+    content = read(joinpath(@__DIR__, "files", "mimesavetest.html"))
+    write(io, content)
+end
+
 data = MimeSaveTestType()
 
 output_filename = tempname()
 
-for filetype in [".svg", ".pdf", ".eps", ".png"]
+for filetype in [".svg", ".pdf", ".eps", ".png", ".html"]
 
     try
         save(output_filename * filetype, data)
