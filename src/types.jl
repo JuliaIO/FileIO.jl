@@ -26,7 +26,7 @@ DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
 file.
 """
 struct File{F<:DataFormat} <: Formatted{F}
-    filename::String
+    filename
 end
 File(fmt::Type{DataFormat{sym}}, filename) where {sym} = File{fmt}(filename)
 
@@ -53,7 +53,7 @@ be used to improve error messages, etc.
 """
 struct Stream{F <: DataFormat, IOtype <: IO} <: Formatted{F}
     io::IOtype
-    filename::Union{String, Nothing}
+    filename
 end
 
 Stream(::Type{F}, io::IO) where {F<:DataFormat} = Stream{F,typeof(io)}(io, nothing)
