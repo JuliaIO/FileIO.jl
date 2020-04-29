@@ -266,7 +266,7 @@ finally
     merge!(FileIO.sym2info, sym2info)
 end
 
-file_dir = joinpath(dirname(@__FILE__), "files")
+file_dir = joinpath(@__DIR__, "files")
 file_path = Path(file_dir)
 
 @testset "Querying with $(typeof(fp))" for fp in (file_dir, file_path)

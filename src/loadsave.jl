@@ -122,10 +122,10 @@ end
 save(s; options...) = data -> save(s, data; options...)
 
 # Allow format to be overridden with first argument
-function save(df::Type{DataFormat{sym}}, f, data...; options...) where sym
+function save(df::Type{DataFormat{sym}}, filename, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    return Base.invokelatest(save, File(DataFormat{sym}, f), data...; options...)
+    return Base.invokelatest(save, File(DataFormat{sym}, filename), data...; options...)
 end
 
 function savestreaming(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
@@ -140,10 +140,10 @@ function save(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     return Base.invokelatest(save, Stream(DataFormat{sym}, s), data...; options...)
 end
 
-function savestreaming(df::Type{DataFormat{sym}}, f, data...; options...) where sym
+function savestreaming(df::Type{DataFormat{sym}}, filename, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    return Base.invokelatest(savestreaming, File(DataFormat{sym}, f), data...; options...)
+    return Base.invokelatest(savestreaming, File(DataFormat{sym}, filename), data...; options...)
 end
 
 # do-syntax for streaming IO
