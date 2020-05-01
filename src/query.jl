@@ -65,7 +65,7 @@ end
 `query(filename)` returns a `File` object with information about the
 format inferred from the file's extension and/or magic bytes.
 """
-function query(filename::AbstractString)
+function query(filename)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
@@ -102,9 +102,7 @@ hasfunction(s::Tuple) = false #has magic
 `query(io, [filename])` returns a `Stream` object with information about the
 format inferred from the magic bytes.
 """
-query(io::IO, filename) = query(io, String(filename))
-
-function query(io::IO, filename::Union{Nothing, String} = nothing)
+function query(io::IO, filename = nothing)
     magic = Vector{UInt8}()
     pos = position(io)
     for p in magic_list

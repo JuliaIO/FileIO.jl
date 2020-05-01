@@ -22,7 +22,9 @@ try
     empty!(FileIO.sym2loader)
     empty!(FileIO.sym2saver)
     file_dir = joinpath(dirname(@__FILE__), "files")
-    @testset "Load" begin
+    file_path = Path(file_dir)
+
+    @testset "Load $(typeof(fp))" for fp in (file_dir, file_path)
 
         add_loader(format"PBMText", :TestLoadSave)
         add_loader(format"PBMBinary", :TestLoadSave)
@@ -30,22 +32,22 @@ try
         add_loader(format"JLD", :TestLoadSave)
         add_loader(format"GZIP", :TestLoadSave)
 
-        @test load(joinpath(file_dir,"file1.pbm")) == "PBMText"
-        @test load(joinpath(file_dir,"file2.pbm")) == "PBMBinary"
+        @test load(joinpath(fp,"file1.pbm")) == "PBMText"
+        @test load(joinpath(fp,"file2.pbm")) == "PBMBinary"
 
         # Regular HDF5 file with magic bytes starting at position 0
-        @test load(joinpath(file_dir,"file1.h5")) == "HDF5"
+        @test load(joinpath(fp,"file1.h5")) == "HDF5"
         # This one is actually a JLD file saved with an .h5 extension,
         # and the JLD magic bytes edited to prevent it from being recognized
         # as JLD.
         # JLD files are also HDF5 files, so this should be recognized as
         # HDF5. However, what makes this more interesting is that the
         # magic bytes start at position 512.
-        @test load(joinpath(file_dir,"file2.h5")) == "HDF5"
+        @test load(joinpath(fp,"file2.h5")) == "HDF5"
         # JLD file saved with .jld extension
-        @test load(joinpath(file_dir,"file.jld")) == "JLD"
+        @test load(joinpath(fp,"file.jld")) == "JLD"
         # GZIP file saved with .gz extension
-        @test load(joinpath(file_dir,"file.csv.gz")) == "GZIP"
+        @test load(joinpath(fp,"file.csv.gz")) == "GZIP"
         @test_throws Exception load("missing.fmt")
     end
 finally

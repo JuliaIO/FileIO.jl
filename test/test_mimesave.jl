@@ -30,21 +30,22 @@ end
 
 data = MimeSaveTestType()
 
-output_filename = tempname()
+# Test with string and paths
+for output_filename in (tempname(), tmpname())
+    for filetype in [".svg", ".pdf", ".eps", ".png", ".html"]
 
-for filetype in [".svg", ".pdf", ".eps", ".png", ".html"]
+        try
+            save(output_filename * filetype, data)
 
-    try
-        save(output_filename * filetype, data)
+            content_original = read(joinpath(@__DIR__, "files", "mimesavetest$filetype"))
+            content_new = read(output_filename * filetype)
 
-        content_original = read(joinpath(@__DIR__, "files", "mimesavetest$filetype"))
-        content_new = read(output_filename * filetype)
+            @test content_new == content_original
+        finally
+            isfile(output_filename * filetype) && rm(output_filename * filetype)
+        end
 
-        @test content_new == content_original
-    finally
-        isfile(output_filename * filetype) && rm(output_filename * filetype)
     end
-
 end
 
 end

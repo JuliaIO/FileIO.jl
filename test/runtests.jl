@@ -1,5 +1,9 @@
 using FileIO
+using FilePathsBase
 using Test
+
+# Both FileIO and FilePathsBase export filename, but we only want the FileIO definition.
+using FileIO: filename
 
 struct MimeSaveTestType
 end

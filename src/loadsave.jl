@@ -115,20 +115,17 @@ savestreaming
 # if a bare filename or IO stream are given, query for the format and dispatch
 # to the formatted handlers below
 for fn in (:load, :loadstreaming, :save, :savestreaming, :metadata)
-    @eval $fn(s::Union{AbstractString,IO}, args...; options...) =
-        $fn(query(s), args...; options...)
+    @eval $fn(file, args...; options...) = $fn(query(file), args...; options...)
 end
 
 # return a save function, so you can do `thing_to_save |> save("filename.ext")`
-function save(s::Union{AbstractString,IO}; options...)
-    data -> save(s, data; options...)
-end
+save(file; options...) = data -> save(file, data; options...)
 
 # Allow format to be overridden with first argument
-function save(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
+function save(df::Type{DataFormat{sym}}, filename, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    return Base.invokelatest(save, File(DataFormat{sym}, f), data...; options...)
+    return Base.invokelatest(save, File(DataFormat{sym}, filename), data...; options...)
 end
 
 function savestreaming(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
@@ -143,10 +140,10 @@ function save(df::Type{DataFormat{sym}}, s::IO, data...; options...) where sym
     return Base.invokelatest(save, Stream(DataFormat{sym}, s), data...; options...)
 end
 
-function savestreaming(df::Type{DataFormat{sym}}, f::AbstractString, data...; options...) where sym
+function savestreaming(df::Type{DataFormat{sym}}, filename, data...; options...) where sym
     libraries = applicable_savers(df)
     checked_import(libraries[1])
-    return Base.invokelatest(savestreaming, File(DataFormat{sym}, f), data...; options...)
+    return Base.invokelatest(savestreaming, File(DataFormat{sym}, filename), data...; options...)
 end
 
 # do-syntax for streaming IO
