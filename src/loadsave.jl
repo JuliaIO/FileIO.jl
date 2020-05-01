@@ -115,11 +115,11 @@ savestreaming
 # if a bare filename or IO stream are given, query for the format and dispatch
 # to the formatted handlers below
 for fn in (:load, :loadstreaming, :save, :savestreaming, :metadata)
-    @eval $fn(s, args...; options...) = $fn(query(s), args...; options...)
+    @eval $fn(file, args...; options...) = $fn(query(file), args...; options...)
 end
 
 # return a save function, so you can do `thing_to_save |> save("filename.ext")`
-save(s; options...) = data -> save(s, data; options...)
+save(file; options...) = data -> save(file, data; options...)
 
 # Allow format to be overridden with first argument
 function save(df::Type{DataFormat{sym}}, filename, data...; options...) where sym
