@@ -148,9 +148,6 @@ add_loader(format"ZIP", :ZipeFile)
 add_saver(format"ZIP", :ZipeFile)
 =#
 
-#Shader files
-# add_format(format"GLSLShader", (), [".frag", ".vert", ".geom", ".comp"], [:GLAbstraction])
-
 # Mesh formats
 add_format(format"OBJ", (), ".obj", [idMeshIO])
 add_format(format"PLY_ASCII", "ply\nformat ascii 1.0", ".ply", [idMeshIO])
@@ -380,3 +377,5 @@ add_format(format"vega", (), [".vega"], [:Vega => UUID("239c3e63-733f-47ad-beb7-
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles => UUID("d76558cf-badf-52d4-a17e-381ab0b0d937")])
 
 add_format(format"HTML", (), [".html", ".htm"], [MimeWriter, SAVE])
+
+add_format(format"GPX", (), [".gpx"], [:GPX=>UUID("b55ef746-885f-40a4-ab22-c8118be08013"), LOAD])
