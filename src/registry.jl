@@ -133,7 +133,7 @@ add_loader(format"ZIP", :ZipeFile)
 add_saver(format"ZIP", :ZipeFile)
 =#
 
-#Shader files
+# Shader files
 add_format(format"GLSLShader", (), [".frag", ".vert", ".geom", ".comp"], [:GLAbstraction])
 
 # Mesh formats
@@ -356,3 +356,5 @@ add_format(format"vega", (), [".vega"], [:VegaLite])
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
 
 add_format(format"HTML", (), [".html", ".htm"], [:MimeWriter, SAVE])
+
+add_format(format"GPX", (), [".gpx"], [:GPX, LOAD])
