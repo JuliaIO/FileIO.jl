@@ -1,5 +1,24 @@
 println("these tests will print warnings: ")
 
+module PathError
+import FileIO: File, @format_str
+save(file::File{format"PATHERROR"}, data) = nothing
+load(file::File{format"PATHERROR"}) = nothing
+end
+add_format(format"PATHERROR", (), ".patherror", [:PathError])
+
+@testset "Path errors" begin
+    # handling a nonexistent parent directory, during save
+    fn = joinpath(mktempdir(), "dir_that_does_not_exist", "file.patherror")
+    @test_throws ArgumentError save(fn, "test content")
+    
+    # handling a filepath that's an existing directory, during save
+    @test_throws ArgumentError save(format"PATHERROR", mktempdir(), "test content")
+    
+    # handling a nonexistent filepath, during load
+    @test_throws ArgumentError load(joinpath(mktempdir(), "dummy.patherror"))
+end
+
 @testset "Not installed" begin
     add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
     @test_throws ArgumentError save("test.not_installed", nothing)
