@@ -60,6 +60,10 @@ end
         [:MultiError1],
         [:MultiError2]
     )
-    ret = @test_throws ErrorException load("test.multierr")
+    tmpfile = joinpath(mktempdir(), "test.multierr")
+    open(tmpfile, "w") do io
+        println(io, "dummy content")
+    end
+    ret = @test_throws ErrorException load(tmpfile)
     #@test ret.value.msg == "1" # this is 0.5 only
 end
