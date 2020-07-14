@@ -9,8 +9,11 @@ add_format(format"PATHERROR", (), ".patherror", [:PathError])
 
 @testset "Path errors" begin
     # handling a nonexistent parent directory, during save
-    fn = joinpath(mktempdir(), "dir_that_does_not_exist", "file.patherror")
-    @test_throws ArgumentError save(fn, "test content")
+    temp_dir = joinpath(mktempdir(), "dir_that_did_not_exist")
+    @assert !isdir(temp_dir) "Testing error. This dir shouldn't exist"
+    fn = joinpath(temp_dir, "file.patherror")
+    save(fn, "test content")
+    @test isdir(temp_dir)
     
     # handling a filepath that's an existing directory, during save
     @test_throws ArgumentError save(format"PATHERROR", mktempdir(), "test content")

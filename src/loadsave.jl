@@ -196,7 +196,7 @@ for fn in (:save, :savestreaming)
         unknown(q) && throw(UnknownFormat(q))
         if q isa File
             isdir(filename(q)) && throw(ArgumentError("Given file path is a directory: $(filename(q))"))
-            !isdir(dirname(filename(q))) && throw(ArgumentError("Directory of file path does not exist: $(filename(q))"))
+            !isdir(dirname(filename(q))) && mkpath(dirname(filename(q)))
         end
         libraries = applicable_savers(q)
         failures  = Any[]
