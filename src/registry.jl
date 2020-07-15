@@ -358,4 +358,3 @@ add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
 add_format(format"HTML", (), [".html", ".htm"], [:MimeWriter, SAVE])
 
 add_format(format"GPX", (), [".gpx"], [:GPX, LOAD])
-add_format(format"KML", (), [".kml"], [:KMLTracks, LOAD])
