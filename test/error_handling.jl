@@ -1,5 +1,27 @@
 println("these tests will print warnings: ")
 
+module PathError
+import FileIO: File, @format_str
+save(file::File{format"PATHERROR"}, data) = nothing
+load(file::File{format"PATHERROR"}) = nothing
+end
+add_format(format"PATHERROR", (), ".patherror", [:PathError])
+
+@testset "Path errors" begin
+    # handling a nonexistent parent directory, during save
+    temp_dir = joinpath(mktempdir(), "dir_that_did_not_exist")
+    @assert !isdir(temp_dir) "Testing error. This dir shouldn't exist"
+    fn = joinpath(temp_dir, "file.patherror")
+    save(fn, "test content")
+    @test isdir(temp_dir)
+    
+    # handling a filepath that's an existing directory, during save
+    @test_throws ArgumentError save(format"PATHERROR", mktempdir(), "test content")
+    
+    # handling a nonexistent filepath, during load
+    @test_throws ArgumentError load(joinpath(mktempdir(), "dummy.patherror"))
+end
+
 @testset "Not installed" begin
     add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
     @test_throws ArgumentError save("test.not_installed", nothing)
@@ -60,6 +82,10 @@ end
         [:MultiError1],
         [:MultiError2]
     )
-    ret = @test_throws ErrorException load("test.multierr")
+    tmpfile = joinpath(mktempdir(), "test.multierr")
+    open(tmpfile, "w") do io
+        println(io, "dummy content")
+    end
+    ret = @test_throws ErrorException load(tmpfile)
     #@test ret.value.msg == "1" # this is 0.5 only
 end

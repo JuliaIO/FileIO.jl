@@ -167,6 +167,9 @@ for fn in (:load, :loadstreaming, :metadata)
             isfile(filename(q)) || open(filename(q))  # force systemerror
             throw(UnknownFormat(q))
         end
+        if q isa File
+            !isfile(filename(q)) && throw(ArgumentError("No file exists at given path: $(filename(q))"))
+        end
         libraries = applicable_loaders(q)
         failures  = Any[]
         for library in libraries
@@ -191,6 +194,10 @@ for fn in (:save, :savestreaming)
     gen2_func_name = Symbol("fileio_", fn)
     @eval function $fn(@nospecialize(q::Formatted), @nospecialize(data...); @nospecialize(options...))
         unknown(q) && throw(UnknownFormat(q))
+        if q isa File
+            isdir(filename(q)) && throw(ArgumentError("Given file path is a directory: $(filename(q))"))
+            !isdir(dirname(filename(q))) && mkpath(dirname(filename(q)))
+        end
         libraries = applicable_savers(q)
         failures  = Any[]
         for library in libraries
