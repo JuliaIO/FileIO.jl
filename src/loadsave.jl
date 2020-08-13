@@ -50,9 +50,22 @@ for (applicable_, add_, dict_) in (
 end
 
 
-"`add_loader(fmt, :Package)` triggers `using Package` before loading format `fmt`"
+"""
+    add_loader(fmt, :Package)
+    add_loader(fmt, [:Package, specifiers...])
+
+Declare that format `fmt` can be loaded with package `:Package`.
+Specifiers include `OSX`, `Unix`, `Windows` and `Linux` to restrict usage to particular operating systems.
+"""
 add_loader
-"`add_saver(fmt, :Package)` triggers `using Package` before saving format `fmt`"
+
+"""
+    add_saver(fmt, :Package)
+    add_saver(fmt, [:Package, specifiers...])
+
+Declare that format `fmt` can be saved with package `:Package`.
+Specifiers include `OSX`, `Unix`, `Windows` and `Linux` to restrict usage to particular operating systems.
+"""
 add_saver
 
 """

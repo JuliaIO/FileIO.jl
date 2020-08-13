@@ -78,7 +78,7 @@ function add_format(fmt, magic, extension, load_save_libraries...)
 end
 
 """
-`add_format(fmt, magic, extention)` registers a new `DataFormat`.
+`add_format(fmt, magic, extension)` registers a new `DataFormat`.
 For example:
 
     add_format(format"TIFF", (UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]), [".tiff", ".tif"])
@@ -86,6 +86,16 @@ For example:
     add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
 
 Note that extensions, magic numbers, and format-identifiers are case-sensitive.
+
+You can also specify particular packages that support the format with `add_format(fmt, magic, extension, pkgspecifiers...)`,
+where example `pkgspecifiers` are:
+
+    add_format(fmt, magic, extension, [:PkgA])                  # only PkgA supports the format (load & save)
+    add_format(fmt, magic, extension, [:PkgA], [:PkgB])         # try PkgA first, but if it fails try PkgB
+    add_format(fmt, magic, extension, [:PkgA, LOAD], [:PkgB])   # try PkgA first for `load`, otherwise use PkgB
+    add_format(fmt, magic, extension, [:PkgA, OSX], [:PkgB])    # use PkgA on OSX, and PkgB otherwise
+
+You can combine `LOAD`, `SAVE`, `OSX`, `Unix`, `Windows` and `Linux` arbitrarily to narrow `pkgspecifiers`.
 """
 function add_format(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,String}, extension) where sym
     haskey(sym2info, sym) && error("format ", fmt, " is already registered")
