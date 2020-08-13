@@ -114,8 +114,11 @@ savestreaming
 
 # if a bare filename or IO stream are given, query for the format and dispatch
 # to the formatted handlers below
-for fn in (:load, :loadstreaming, :save, :savestreaming, :metadata)
+for fn in (:load, :loadstreaming, :metadata)
     @eval $fn(file, args...; options...) = $fn(query(file), args...; options...)
+end
+for fn in (:save, :savestreaming)
+    @eval $fn(file, args...; options...) = $fn(query(file; checkfile=false), args...; options...)
 end
 
 # return a save function, so you can do `thing_to_save |> save("filename.ext")`
