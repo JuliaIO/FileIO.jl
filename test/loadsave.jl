@@ -8,7 +8,7 @@ import FileIO: File, @format_str
 load(file::File{format"PBMText"})   = "PBMText"
 load(file::File{format"PBMBinary"}) = "PBMBinary"
 load(file::File{format"JLD"})       = "JLD"
-load(file::File{format"GZIP"})       = "GZIP"
+load(file::File{format"GZIP"})      = "GZIP"
 end
 module TestLoadSave2
 import FileIO: File, @format_str

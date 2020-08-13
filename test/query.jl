@@ -266,83 +266,83 @@ finally
     merge!(FileIO.sym2info, sym2info)
 end
 
-file_dir = joinpath(@__DIR__, "files")
-file_path = Path(file_dir)
 
-@testset "Querying with $(typeof(fp))" for fp in (file_dir, file_path)
-    @testset "bedGraph" begin
-        q = query(joinpath(file_dir, "file.bedgraph"))
-        @test typeof(q) == File{format"bedGraph"}
-        open(q) do io
-            @test position(io) == 0
-            skipmagic(io)
-            @test position(io) == 0 # no skipping for functions
-            # @test FileIO.detect_bedgraph(io) # MethodError: no method matching readline(::FileIO.Stream{FileIO.DataFormat{:bedGraph},IOStream}; chomp=false)
+let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
+    @testset "Querying with $(typeof(fp))" for fp in (file_dir, file_path)
+        @testset "bedGraph" begin
+            q = query(joinpath(file_dir, "file.bedgraph"))
+            @test typeof(q) == File{format"bedGraph"}
+            open(q) do io
+                @test position(io) == 0
+                skipmagic(io)
+                @test position(io) == 0 # no skipping for functions
+                # @test FileIO.detect_bedgraph(io) # MethodError: no method matching readline(::FileIO.Stream{FileIO.DataFormat{:bedGraph},IOStream}; chomp=false)
+            end
+            open(joinpath(file_dir, "file.bedgraph")) do io
+                @test (FileIO.detect_bedgraph(io))
+            end
         end
-        open(joinpath(file_dir, "file.bedgraph")) do io
-            @test (FileIO.detect_bedgraph(io))
+        @testset "STL detection" begin
+            q = query(joinpath(file_dir, "ascii.stl"))
+            @test typeof(q) == File{format"STL_ASCII"}
+            q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
+            @test typeof(q) == File{format"STL_BINARY"}
+            open(q) do io
+                @test position(io) == 0
+                skipmagic(io)
+                @test position(io) == 0 # no skipping for functions
+            end
         end
-    end
-    @testset "STL detection" begin
-        q = query(joinpath(file_dir, "ascii.stl"))
-        @test typeof(q) == File{format"STL_ASCII"}
-        q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
-        @test typeof(q) == File{format"STL_BINARY"}
-        open(q) do io
-            @test position(io) == 0
-            skipmagic(io)
-            @test position(io) == 0 # no skipping for functions
-        end
-    end
-    @testset "PLY detection" begin
-        q = query(joinpath(file_dir, "ascii.ply"))
-        @test typeof(q) == File{format"PLY_ASCII"}
-        q = query(joinpath(file_dir, "binary.ply"))
-        @test typeof(q) == File{format"PLY_BINARY"}
+        @testset "PLY detection" begin
+            q = query(joinpath(file_dir, "ascii.ply"))
+            @test typeof(q) == File{format"PLY_ASCII"}
+            q = query(joinpath(file_dir, "binary.ply"))
+            @test typeof(q) == File{format"PLY_BINARY"}
 
-    end
-    @testset "Multiple Magic bytes" begin
-        q = query(joinpath(file_dir, "magic1.tiff"))
-        @test typeof(q) == File{format"TIFF"}
-        q = query(joinpath(file_dir, "magic2.tiff"))
-        @test typeof(q) == File{format"TIFF"}
-        open(q) do io
-            @test position(io) == 0
-            skipmagic(io)
-            @test position(io) == 4
         end
-    end
-    @testset "AVI Detection" begin
-        open(joinpath(file_dir, "bees.avi")) do s
-            @test FileIO.detectavi(s)
+        @testset "Multiple Magic bytes" begin
+            q = query(joinpath(file_dir, "magic1.tiff"))
+            @test typeof(q) == File{format"TIFF"}
+            q = query(joinpath(file_dir, "magic2.tiff"))
+            @test typeof(q) == File{format"TIFF"}
+            open(q) do io
+                @test position(io) == 0
+                skipmagic(io)
+                @test position(io) == 4
+            end
         end
-        open(joinpath(file_dir, "sin.wav")) do s
-            @test !(FileIO.detectavi(s))
+        @testset "AVI Detection" begin
+            open(joinpath(file_dir, "bees.avi")) do s
+                @test FileIO.detectavi(s)
+            end
+            open(joinpath(file_dir, "sin.wav")) do s
+                @test !(FileIO.detectavi(s))
+            end
+            open(joinpath(file_dir, "magic1.tiff")) do s
+                @test !(FileIO.detectavi(s))
+            end
+            q = query(joinpath(file_dir, "bees.avi"))
+            @test typeof(q) == File{format"AVI"}
         end
-        open(joinpath(file_dir, "magic1.tiff")) do s
-            @test !(FileIO.detectavi(s))
+        @testset "RDA detection" begin
+            q = query(joinpath(file_dir, "minimal_ascii.rda"))
+            @test typeof(q) == File{format"RData"}
+            open(q) do io
+                @test position(io) == 0
+                @test FileIO.detect_rdata(io)
+                # 6 for /r/n  and 5 for /n
+                @test (position(io) in (5, 6))
+            end
         end
-        q = query(joinpath(file_dir, "bees.avi"))
-        @test typeof(q) == File{format"AVI"}
-    end
-    @testset "RDA detection" begin
-        q = query(joinpath(file_dir, "minimal_ascii.rda"))
-        @test typeof(q) == File{format"RData"}
-        open(q) do io
-            @test position(io) == 0
-            @test FileIO.detect_rdata(io)
-            # 6 for /r/n  and 5 for /n
-            @test (position(io) in (5, 6))
-        end
-    end
-    @testset "RDS detection" begin
-        q = query(joinpath(file_dir, "minimal_ascii.rds"))
-        @test typeof(q) == File{format"RDataSingle"}
-        open(q) do io
-            @test position(io) == 0
-            @test FileIO.detect_rdata_single(io)
-            # need to seek to beginning of file where data structure starts
-            @test position(io)  == 0
+        @testset "RDS detection" begin
+            q = query(joinpath(file_dir, "minimal_ascii.rds"))
+            @test typeof(q) == File{format"RDataSingle"}
+            open(q) do io
+                @test position(io) == 0
+                @test FileIO.detect_rdata_single(io)
+                # need to seek to beginning of file where data structure starts
+                @test position(io)  == 0
+            end
         end
     end
 end
