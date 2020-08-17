@@ -62,24 +62,29 @@ end
 
 
 """
-`query(filename)` returns a `File` object with information about the
+    query(filename; checkfile=true)
+
+Return a `File` object with information about the
 format inferred from the file's extension and/or magic bytes.
+If `filename` already exists, the file's magic bytes will take priority
+unless `checkfile` is false.
 """
-function query(filename)
+function query(filename; checkfile::Bool=true)
+    checkfile &= isfile(filename)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
         no_magic = !hasmagic(sym)
-        if lensym(sym) == 1 && (no_magic || !isfile(filename)) # we only found one candidate and there is no magic bytes, or no file, trust the extension
+        if lensym(sym) == 1 && (no_magic || !checkfile) # we only found one candidate and there is no magic bytes, or no file, trust the extension
             return File{DataFormat{sym}}(filename)
-        elseif !isfile(filename) && lensym(sym) > 1
+        elseif !checkfile && lensym(sym) > 1
             return File{DataFormat{sym[1]}}(filename)
         end
         if no_magic && !hasfunction(sym)
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
     end
-    !isfile(filename) && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
+    !checkfile && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
     # Otherwise, check the magic bytes
     file!(query(open(filename), abspath(filename)))
 end
