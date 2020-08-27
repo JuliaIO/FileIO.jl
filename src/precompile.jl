@@ -18,6 +18,13 @@ function _precompile_()
     @assert precompile(Tuple{typeof(hasfunction),Function})
     @assert precompile(Tuple{typeof(hasmagic),Function})
 
+    @assert precompile(Tuple{typeof(applicable_loaders),Type{<:DataFormat}})
+    @assert precompile(Tuple{typeof(applicable_loaders),Formatted})
+    @assert precompile(Tuple{typeof(applicable_savers),Type{<:DataFormat}})
+    @assert precompile(Tuple{typeof(applicable_savers),Formatted})
+    @assert precompile(Tuple{typeof(add_loader),Type{<:DataFormat},Symbol})
+    @assert precompile(Tuple{typeof(add_saver),Type{<:DataFormat},Symbol})
+
     @assert precompile(Tuple{typeof(iter_eq),Array{UInt8,1},NTuple{10,UInt8}})
     @assert precompile(Tuple{typeof(iter_eq),Array{UInt8,1},NTuple{20,UInt8}})
     @assert precompile(Tuple{typeof(iter_eq),Array{UInt8,1},NTuple{30,UInt8}})

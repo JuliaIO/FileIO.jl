@@ -14,9 +14,12 @@ macro format_str(s)
     :(DataFormat{$(Expr(:quote, Symbol(s)))})
 end
 
+formatname(::Type{DataFormat{sym}}) where sym = sym
 
 
 abstract type Formatted{F<:DataFormat} end  # A specific file or stream
+
+formatname(::Formatted{F}) where F<:DataFormat = formatname(F)
 
 ## File:
 

@@ -36,13 +36,15 @@ for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
         (:applicable_savers,  :add_saver,  :sym2saver))
     @eval begin
-        function $applicable_(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}}) where sym
+        function $applicable_(@nospecialize(fmt::Union{Type{<:DataFormat}, Formatted}))
+            sym = formatname(fmt)
             if haskey($dict_, sym)
                 return $dict_[sym]
             end
             error("No $($applicable_) found for $(sym)")
         end
-        function $add_(::Type{DataFormat{sym}}, pkg::Symbol) where sym
+        function $add_(@nospecialize(fmt::Type{<:DataFormat}), pkg::Symbol)
+            sym = formatname(fmt)
             list = get($dict_, sym, Symbol[])
             $dict_[sym] = push!(list, pkg)
         end
