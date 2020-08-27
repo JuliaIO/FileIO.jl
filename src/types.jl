@@ -87,7 +87,7 @@ file_extension(::Stream)
 # a dangling stream.
 function file!(strm::Stream{F}) where F
     f = filename(strm)
-    f == nothing && error("filename unknown")
+    f === nothing && error("filename unknown")
     close(strm.io)
     File{F}(f)
 end
