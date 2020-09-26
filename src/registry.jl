@@ -346,7 +346,23 @@ add_format(format"FITS",
            [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54],
            [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS"], [:FITSIO])
 
-add_format(format"Gadget2", (), [".gadget2", ".Gadget2", ".GADGET2", ".g2", ".G2"], [:AstroIO])
+function detect_gadget2(io)
+    pos = position(io)
+    seekend(io)
+    len = position(io)
+    len > 264 && return false # at least 256 Header + 2 * Int32
+    seek(io, pos) # Return to start
+    temp1 = read(io, Int32)
+    header = read(io, 256)
+    temp2 = read(io, Int32)
+    seek(io, pos)
+    if temp1 == temp2
+        return true
+    else
+        return false
+    end
+end
+add_format(format"Gadget2", detect_gadget2, [".gadget2", ".Gadget2", ".GADGET2"], [:AstroIO])
 
 
 add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [:RawArray])
