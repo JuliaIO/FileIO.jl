@@ -30,8 +30,8 @@ function checked_import(pkg::Symbol)
         m = _findmod(pkg)
         m == nothing || return Base.loaded_modules[m]
         topimport(pkg)
+        return Base.loaded_modules[_findmod(pkg)]
     end
-    return Base.loaded_modules[_findmod(pkg)]
 end
 
 
