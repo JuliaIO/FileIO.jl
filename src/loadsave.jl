@@ -1,5 +1,6 @@
 const sym2loader = Dict{Symbol,Vector{Symbol}}()
 const sym2saver  = Dict{Symbol,Vector{Symbol}}()
+const load_locker = Base.ReentrantLock()
 
 is_installed(pkg::Symbol) = get(Pkg.installed(), string(pkg), nothing) != nothing
 
@@ -16,18 +17,20 @@ function topimport(modname)
 end
 
 function checked_import(pkg::Symbol)
-    # kludge for test suite
-    if isdefined(Main, pkg)
-        m1 = getfield(Main, pkg)
-        isa(m1, Module) && return m1
+    lock(load_locker) do
+        # kludge for test suite
+        if isdefined(Main, pkg)
+            m1 = getfield(Main, pkg)
+            isa(m1, Module) && return m1
+        end
+        if isdefined(FileIO, pkg)
+            m1 = getfield(FileIO, pkg)
+            isa(m1, Module) && return m1
+        end
+        m = _findmod(pkg)
+        m == nothing || return Base.loaded_modules[m]
+        topimport(pkg)
     end
-    if isdefined(FileIO, pkg)
-        m1 = getfield(FileIO, pkg)
-        isa(m1, Module) && return m1
-    end
-    m = _findmod(pkg)
-    m == nothing || return Base.loaded_modules[m]
-    topimport(pkg)
     return Base.loaded_modules[_findmod(pkg)]
 end
 
