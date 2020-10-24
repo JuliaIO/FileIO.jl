@@ -255,6 +255,13 @@ end # module Dummy
     @test load(fn) == a
     rm(fn)
 
+    if Threads.nthreads() > 1
+        Threads.@threads for i in 1:(Threads.nthreads() * 5)
+            fn = string(tempname(), ".dmy")
+            save(fn, a)
+        end
+    end
+
     # force format
     fn = string(tempname(), ".dmy")
     savestreaming(format"DUMMY", fn) do writer
