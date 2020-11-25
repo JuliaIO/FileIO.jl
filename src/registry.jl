@@ -44,12 +44,12 @@ add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 add_format(format"Parquet", "PAR1", [".parquet"], [:ParquetFiles, LOAD])
 
 # Image formats
-add_format(format"PBMBinary", b"P4", ".pbm", [:ImageIO])
-add_format(format"PGMBinary", b"P5", ".pgm", [:ImageIO])
-add_format(format"PPMBinary", b"P6", ".ppm", [:ImageIO])
-add_format(format"PBMText",   b"P1", ".pbm", [:ImageIO])
-add_format(format"PGMText",   b"P2", ".pgm", [:ImageIO])
-add_format(format"PPMText",   b"P3", ".ppm", [:ImageIO])
+add_format(format"PBMBinary", b"P4", ".pbm", [:ImageIO], [:Netpbm], [:ImageMagick])
+add_format(format"PGMBinary", b"P5", ".pgm", [:ImageIO], [:Netpbm])
+add_format(format"PPMBinary", b"P6", ".ppm", [:ImageIO], [:Netpbm])
+add_format(format"PBMText",   b"P1", ".pbm", [:ImageIO], [:Netpbm], [:ImageMagick, LOAD])
+add_format(format"PGMText",   b"P2", ".pgm", [:ImageIO], [:Netpbm], [:ImageMagick, LOAD])
+add_format(format"PPMText",   b"P3", ".ppm", [:ImageIO], [:Netpbm], [:ImageMagick, LOAD])
 
 add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"], [:NRRD])
 
