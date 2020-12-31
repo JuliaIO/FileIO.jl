@@ -9,6 +9,12 @@ function _precompile_()
     @assert precompile(Tuple{typeof(load),File})
     @assert precompile(Tuple{typeof(load),Formatted})
     @assert precompile(Tuple{typeof(load),String})
+    @assert precompile(Tuple{typeof(FileIO.load_filename),Formatted,String})
+    if isdefined(Base, :bodyfunction)
+        fbody = Base.bodyfunction(which(FileIO.load_filename, (Formatted, String)))
+        @assert precompile(fbody, (Any, typeof(FileIO.load_filename), Formatted, String))
+        @assert precompile(fbody, (Any, typeof(FileIO.load_filename), Formatted, String, Vararg{Any,100}))
+    end
 
     @assert precompile(Tuple{typeof(query),String})
     @assert precompile(Tuple{typeof(query),IOStream})
