@@ -34,6 +34,7 @@ function checked_import(pkg::Symbol)
     end
 end
 
+applicable_error(applicable, sym) = error("No $applicable found for $sym")
 
 for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
@@ -44,7 +45,7 @@ for (applicable_, add_, dict_) in (
             if haskey($dict_, sym)
                 return $dict_[sym]
             end
-            error("No $($applicable_) found for $(sym)")
+            Base.invokelatest(applicable_error, $applicable_, sym)
         end
         function $add_(@nospecialize(fmt::Type{<:DataFormat}), pkg::Symbol)
             sym = formatname(fmt)
