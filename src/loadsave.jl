@@ -34,6 +34,7 @@ function checked_import(pkg::Symbol)
     end
 end
 
+applicable_error(applicable, sym) = error("No $applicable found for $sym")
 
 for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
@@ -44,7 +45,7 @@ for (applicable_, add_, dict_) in (
             if haskey($dict_, sym)
                 return $dict_[sym]
             end
-            error("No $($applicable_) found for $(sym)")
+            Base.invokelatest(applicable_error, $applicable_, sym)
         end
         function $add_(@nospecialize(fmt::Type{<:DataFormat}), pkg::Symbol)
             sym = formatname(fmt)
@@ -182,14 +183,18 @@ end
 # Handlers for formatted files/streams
 
 for fn in (:load, :loadstreaming, :metadata)
+    fn_func_name = Symbol(fn, "_filename")
     gen2_func_name = Symbol("fileio_", fn)
     @eval function $fn(@nospecialize(q::Formatted), @nospecialize(args...); @nospecialize(options...))
+        Base.invokelatest($fn_func_name, q, filename(q), args...; options...)
+    end
+    @eval function $fn_func_name(@nospecialize(q::Formatted), filename, @nospecialize(args...); @nospecialize(options...))
         if unknown(q)
-            isfile(filename(q)) || open(filename(q))  # force systemerror
+            isfile(filename) || open(filename)  # force systemerror
             throw(UnknownFormat(q))
         end
         if q isa File
-            !isfile(filename(q)) && throw(ArgumentError("No file exists at given path: $(filename(q))"))
+            !isfile(filename) && throw(ArgumentError("No file exists at given path: $(filename)"))
         end
         libraries = applicable_loaders(q)
         failures  = Any[]
@@ -207,7 +212,7 @@ for fn in (:load, :loadstreaming, :metadata)
                 push!(failures, (e, q))
             end
         end
-        handle_exceptions(failures, "loading $(repr(filename(q)))")
+        handle_exceptions(failures, "loading $(repr(filename))")
     end
 end
 
