@@ -16,7 +16,17 @@ jobs:
             julia-arch: x86
 
     steps:
-      - uses: actions/checkout@v1.0.0
+      - name: Set git to use LF (Windows only)
+        if: matrix.os == 'windows-latest'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - name: Fix TEMP issue (Windows only) # See https://github.com/actions/virtual-environments/issues/712
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "TMP=${USERPROFILE}\AppData\Local\Temp" >> ${GITHUB_ENV}
+          echo "TEMP=${USERPROFILE}\AppData\Local\Temp" >> ${GITHUB_ENV}
+      - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.julia-version }}
