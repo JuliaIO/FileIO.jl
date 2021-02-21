@@ -6,6 +6,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         julia-version: ['1.0', '1', 'nightly']
         julia-arch: [x64]
