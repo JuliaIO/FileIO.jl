@@ -9,7 +9,7 @@ jobs:
       fail-fast: false
       matrix:
         julia-version: ['1.0', '1', 'nightly']
-        julia-arch: [x64]
+        julia-arch: [x64, x86]
         os: [ubuntu-latest, macOS-latest, windows-latest]
         exclude:
           - os: macOS-latest
