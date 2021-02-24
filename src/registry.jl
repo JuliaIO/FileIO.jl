@@ -55,6 +55,7 @@ add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"], [:NRRD])
 
 add_format(format"AndorSIF", "Andor Technology Multi-Channel File", ".sif", [:AndorSIF, LOAD])
 
+add_format(format"FLO", b"PIEH", ".flo", [:OpticalFlowUtils])
 
 add_format(format"CRW", UInt8[0x49,0x49,0x1a,0x00,0x00,0x00,0x48,0x45], ".crw", [:ImageMagick])
 add_format(format"CUR", UInt8[0x00,0x00,0x02,0x00],                     ".cur", [:ImageMagick])
