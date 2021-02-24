@@ -3,7 +3,8 @@
 # data formats
 add_format(format"JLD", (unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.0"),
                          unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")), ".jld", [:JLD])
-add_format(format"JLD2", "Julia data file (HDF5), version 0.2", ".jld2", [:JLD2])
+add_format(format"JLD2", (unsafe_wrap(Vector{UInt8},"Julia data file (HDF5), version 0.2"),
+                          unsafe_wrap(Vector{UInt8}, "HDF5-based Julia Data Format, version ")), ".jld2", [:JLD2])
 add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz])
 add_format(format"BSON",(),".bson", [:BSON])
 add_format(format"JLSO", (), ".jlso", [:JLSO])
@@ -43,17 +44,18 @@ add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 add_format(format"Parquet", "PAR1", [".parquet"], [:ParquetFiles, LOAD])
 
 # Image formats
-add_format(format"PBMBinary", b"P4", ".pbm", [:ImageMagick])
-add_format(format"PGMBinary", b"P5", ".pgm", [:Netpbm])
-add_format(format"PPMBinary", b"P6", ".ppm", [:Netpbm])
-add_format(format"PBMText",   b"P1", ".pbm", [:ImageMagick, LOAD])
-add_format(format"PGMText",   b"P2", ".pgm", [:ImageMagick, LOAD])
-add_format(format"PPMText",   b"P3", ".ppm", [:ImageMagick, LOAD])
+add_format(format"PBMBinary", b"P4", ".pbm", [:ImageIO], [:Netpbm], [:ImageMagick])
+add_format(format"PGMBinary", b"P5", ".pgm", [:ImageIO], [:Netpbm])
+add_format(format"PPMBinary", b"P6", ".ppm", [:ImageIO], [:Netpbm])
+add_format(format"PBMText",   b"P1", ".pbm", [:ImageIO], [:Netpbm], [:ImageMagick, LOAD])
+add_format(format"PGMText",   b"P2", ".pgm", [:ImageIO], [:Netpbm], [:ImageMagick, LOAD])
+add_format(format"PPMText",   b"P3", ".ppm", [:ImageIO], [:Netpbm], [:ImageMagick, LOAD])
 
 add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"], [:NRRD])
 
 add_format(format"AndorSIF", "Andor Technology Multi-Channel File", ".sif", [:AndorSIF, LOAD])
 
+add_format(format"FLO", b"PIEH", ".flo", [:OpticalFlowUtils])
 
 add_format(format"CRW", UInt8[0x49,0x49,0x1a,0x00,0x00,0x00,0x48,0x45], ".crw", [:ImageMagick])
 add_format(format"CUR", UInt8[0x00,0x00,0x02,0x00],                     ".cur", [:ImageMagick])
@@ -338,8 +340,6 @@ end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [:MeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [:MeshIO])
 
-add_format(format"ABAQUS_INP", (), [".inp"], [:MeshIO])
-
 # Astro Data
 add_format(format"FITS",
            # See https://www.loc.gov/preservation/digital/formats/fdd/fdd000317.shtml#sign
@@ -370,7 +370,7 @@ add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [
 add_format(format"MetaImage", "ObjectType", ".mhd", [:MetaImageFormat])
 
 add_format(format"vegalite", (), [".vegalite"], [:VegaLite])
-add_format(format"vega", (), [".vega"], [:VegaLite])
+add_format(format"vega", (), [".vega"], [:Vega], [:VegaLite, SAVE])
 
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles])
 

@@ -62,7 +62,7 @@ include("registry.jl")
 """
 FileIO
 
-if VERSION >= v"1.1.0"
+if VERSION >= v"1.4.2" # https://github.com/JuliaLang/julia/pull/35378
     include("precompile.jl")
     _precompile_()
 end

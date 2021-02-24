@@ -1,5 +1,6 @@
 const sym2loader = Dict{Symbol,Vector{Symbol}}()
 const sym2saver  = Dict{Symbol,Vector{Symbol}}()
+const load_locker = Base.ReentrantLock()
 
 is_installed(pkg::Symbol) = get(Pkg.installed(), string(pkg), nothing) != nothing
 
@@ -16,33 +17,38 @@ function topimport(modname)
 end
 
 function checked_import(pkg::Symbol)
-    # kludge for test suite
-    if isdefined(Main, pkg)
-        m1 = getfield(Main, pkg)
-        isa(m1, Module) && return m1
+    lock(load_locker) do
+        # kludge for test suite
+        if isdefined(Main, pkg)
+            m1 = getfield(Main, pkg)
+            isa(m1, Module) && return m1
+        end
+        if isdefined(FileIO, pkg)
+            m1 = getfield(FileIO, pkg)
+            isa(m1, Module) && return m1
+        end
+        m = _findmod(pkg)
+        m == nothing || return Base.loaded_modules[m]
+        topimport(pkg)
+        return Base.loaded_modules[_findmod(pkg)]
     end
-    if isdefined(FileIO, pkg)
-        m1 = getfield(FileIO, pkg)
-        isa(m1, Module) && return m1
-    end
-    m = _findmod(pkg)
-    m == nothing || return Base.loaded_modules[m]
-    topimport(pkg)
-    return Base.loaded_modules[_findmod(pkg)]
 end
 
+applicable_error(applicable, sym) = error("No $applicable found for $sym")
 
 for (applicable_, add_, dict_) in (
         (:applicable_loaders, :add_loader, :sym2loader),
         (:applicable_savers,  :add_saver,  :sym2saver))
     @eval begin
-        function $applicable_(::Union{Type{DataFormat{sym}}, Formatted{DataFormat{sym}}}) where sym
+        function $applicable_(@nospecialize(fmt::Union{Type{<:DataFormat}, Formatted}))
+            sym = formatname(fmt)
             if haskey($dict_, sym)
                 return $dict_[sym]
             end
-            error("No $($applicable_) found for $(sym)")
+            Base.invokelatest(applicable_error, $applicable_, sym)
         end
-        function $add_(::Type{DataFormat{sym}}, pkg::Symbol) where sym
+        function $add_(@nospecialize(fmt::Type{<:DataFormat}), pkg::Symbol)
+            sym = formatname(fmt)
             list = get($dict_, sym, Symbol[])
             $dict_[sym] = push!(list, pkg)
         end
@@ -50,9 +56,22 @@ for (applicable_, add_, dict_) in (
 end
 
 
-"`add_loader(fmt, :Package)` triggers `using Package` before loading format `fmt`"
+"""
+    add_loader(fmt, :Package)
+    add_loader(fmt, [:Package, specifiers...])
+
+Declare that format `fmt` can be loaded with package `:Package`.
+Specifiers include `OSX`, `Unix`, `Windows` and `Linux` to restrict usage to particular operating systems.
+"""
 add_loader
-"`add_saver(fmt, :Package)` triggers `using Package` before saving format `fmt`"
+
+"""
+    add_saver(fmt, :Package)
+    add_saver(fmt, [:Package, specifiers...])
+
+Declare that format `fmt` can be saved with package `:Package`.
+Specifiers include `OSX`, `Unix`, `Windows` and `Linux` to restrict usage to particular operating systems.
+"""
 add_saver
 
 """
@@ -114,8 +133,11 @@ savestreaming
 
 # if a bare filename or IO stream are given, query for the format and dispatch
 # to the formatted handlers below
-for fn in (:load, :loadstreaming, :save, :savestreaming, :metadata)
+for fn in (:load, :loadstreaming, :metadata)
     @eval $fn(file, args...; options...) = $fn(query(file), args...; options...)
+end
+for fn in (:save, :savestreaming)
+    @eval $fn(file, args...; options...) = $fn(query(file; checkfile=false), args...; options...)
 end
 
 # return a save function, so you can do `thing_to_save |> save("filename.ext")`
@@ -161,11 +183,18 @@ end
 # Handlers for formatted files/streams
 
 for fn in (:load, :loadstreaming, :metadata)
+    fn_func_name = Symbol(fn, "_filename")
     gen2_func_name = Symbol("fileio_", fn)
     @eval function $fn(@nospecialize(q::Formatted), @nospecialize(args...); @nospecialize(options...))
+        Base.invokelatest($fn_func_name, q, filename(q), args...; options...)
+    end
+    @eval function $fn_func_name(@nospecialize(q::Formatted), filename, @nospecialize(args...); @nospecialize(options...))
         if unknown(q)
-            isfile(filename(q)) || open(filename(q))  # force systemerror
+            isfile(filename) || open(filename)  # force systemerror
             throw(UnknownFormat(q))
+        end
+        if q isa File
+            !isfile(filename) && throw(ArgumentError("No file exists at given path: $(filename)"))
         end
         libraries = applicable_loaders(q)
         failures  = Any[]
@@ -183,7 +212,7 @@ for fn in (:load, :loadstreaming, :metadata)
                 push!(failures, (e, q))
             end
         end
-        handle_exceptions(failures, "loading $(repr(filename(q)))")
+        handle_exceptions(failures, "loading $(repr(filename))")
     end
 end
 
@@ -191,6 +220,10 @@ for fn in (:save, :savestreaming)
     gen2_func_name = Symbol("fileio_", fn)
     @eval function $fn(@nospecialize(q::Formatted), @nospecialize(data...); @nospecialize(options...))
         unknown(q) && throw(UnknownFormat(q))
+        if q isa File
+            isdir(filename(q)) && throw(ArgumentError("Given file path is a directory: $(filename(q))"))
+            !isdir(dirname(filename(q))) && mkpath(dirname(filename(q)))
+        end
         libraries = applicable_savers(q)
         failures  = Any[]
         for library in libraries

@@ -2,6 +2,8 @@ using FileIO
 using FilePathsBase
 using Test
 
+Threads.nthreads() <= 1 && @info "Threads.nthreads() = $(Threads.nthreads()), multithread tests will be disabled"
+
 # Both FileIO and FilePathsBase export filename, but we only want the FileIO definition.
 using FileIO: filename
 

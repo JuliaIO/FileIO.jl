@@ -14,9 +14,12 @@ macro format_str(s)
     :(DataFormat{$(Expr(:quote, Symbol(s)))})
 end
 
+formatname(::Type{DataFormat{sym}}) where sym = sym
 
 
 abstract type Formatted{F<:DataFormat} end  # A specific file or stream
+
+formatname(::Formatted{F}) where F<:DataFormat = formatname(F)
 
 ## File:
 
@@ -87,7 +90,7 @@ file_extension(::Stream)
 # a dangling stream.
 function file!(strm::Stream{F}) where F
     f = filename(strm)
-    f == nothing && error("filename unknown")
+    f === nothing && error("filename unknown")
     close(strm.io)
     File{F}(f)
 end

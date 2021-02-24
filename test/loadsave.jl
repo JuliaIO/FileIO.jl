@@ -255,6 +255,13 @@ end # module Dummy
     @test load(fn) == a
     rm(fn)
 
+    if Threads.nthreads() > 1
+        Threads.@threads for i in 1:(Threads.nthreads() * 5)
+            fn = string(tempname(), ".dmy")
+            save(fn, a)
+        end
+    end
+
     # force format
     fn = string(tempname(), ".dmy")
     savestreaming(format"DUMMY", fn) do writer
@@ -290,6 +297,19 @@ end # module Dummy
     load(fn; extra=[0x42, 0x43])
 
     @test_throws Exception save("missing.fmt",5)
+end
+
+@testset "Overwrite file with bad magic bytes" begin
+    # issue #267
+    a = [0x01,0x02,0x03]
+    fn = tempname()*".dmy"
+    open(fn, "w") do io
+        write(io, "Ceci n'est pas un DUMMY")
+    end
+    save(fn, a)
+    @test isa(query(fn), File{format"DUMMY"})
+    @test load(fn) == a
+    rm(fn)
 end
 
 del_format(format"DUMMY")

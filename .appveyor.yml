@@ -1,4 +1,5 @@
 environment:
+  JULIA_NUM_THREADS: 2
   matrix:
   - julia_version: 0.7
   - julia_version: 1.0
