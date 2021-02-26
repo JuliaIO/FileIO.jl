@@ -80,12 +80,18 @@ function query(filename; checkfile::Bool=true)
         elseif !checkfile && lensym(sym) > 1
             return File{DataFormat{sym[1]}}(filename)
         end
-        if no_magic && !hasfunction(sym)
+        no_function = !hasfunction(sym)
+        if no_magic && no_function
             error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
         end
+        if no_magic && !no_function
+            # try specific function first, if available
+            ret = query(open(filename), abspath(filename), sym)
+            ret !== nothing && return file!(ret)
+        end
     end
-    !checkfile && return File{unknown_df}(filename) # (no extension || no magic byte) && no file
-    # Otherwise, check the magic bytes
+    !checkfile && return File{unknown_df}(filename) # (no extension || no magic byte || no function) && no file
+    # Otherwise, check against all magic bytes, then functions
     file!(query(open(filename), abspath(filename)))
 end
 
@@ -142,6 +148,28 @@ function query(io::IO, filename = nothing)
         seek(io, pos)
     end
     Stream{unknown_df,typeof(io)}(io, filename)
+end
+function query(io::IO, filename::String, sym::Vector{Symbol})
+    magic = Vector{UInt8}()
+    pos = position(io)
+    if seekable(io)
+        for (f, fmtsym) in magic_func
+            fmtsym in sym || continue
+            seek(io, pos)
+            try
+                if f(io)
+                    return Stream{DataFormat{fmtsym},typeof(io)}(seek(io, pos), filename)
+                end
+            catch e
+                println("There was an error in magick function $f")
+                println("Please open an issue at FileIO.jl. Error:")
+                println(e)
+            end
+        end
+        seek(io, pos)
+    end
+    close(io)
+    nothing
 end
 
 seekable(io::IOBuffer) = io.seekable
