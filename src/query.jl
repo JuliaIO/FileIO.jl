@@ -87,7 +87,7 @@ function query(filename; checkfile::Bool=true)
         if no_magic && !no_function
             # try specific function first, if available
             ret = query(open(filename), abspath(filename), sym)
-            ret != nothing && return file!(ret)
+            ret !== nothing && return file!(ret)
         end
     end
     !checkfile && return File{unknown_df}(filename) # (no extension || no magic byte || no function) && no file
@@ -153,7 +153,8 @@ function query(io::IO, filename::String, sym::Vector{Symbol})
     magic = Vector{UInt8}()
     pos = position(io)
     if seekable(io)
-        for p in filter(x->last(x) in sym, magic_func)
+        for (f, fmtsym) in magic_func
+            fmtsym in sym || continue
             seek(io, pos)
             f = first(p)
             try

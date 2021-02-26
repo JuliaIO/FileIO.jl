@@ -3,7 +3,7 @@
 const ext2sym    = Dict{String, Union{Symbol,Vector{Symbol}}}()
 const magic_list = Vector{Pair}()     # sorted, see magic_cmp below
 const sym2info   = Dict{Symbol,Any}() # Symbol=>(magic, extension)
-const magic_func = Vector{Pair}()     # for formats with complex magic #s
+const magic_func = Vector{Pair{Function,Symbol}}() # for formats with complex magic #s
 
 ## OS:
 abstract type OS end
