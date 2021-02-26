@@ -156,10 +156,9 @@ function query(io::IO, filename::String, sym::Vector{Symbol})
         for (f, fmtsym) in magic_func
             fmtsym in sym || continue
             seek(io, pos)
-            f = first(p)
             try
                 if f(io)
-                    return Stream{DataFormat{last(p)},typeof(io)}(seek(io, pos), filename)
+                    return Stream{DataFormat{fmtsym},typeof(io)}(seek(io, pos), filename)
                 end
             catch e
                 println("There was an error in magick function $f")
