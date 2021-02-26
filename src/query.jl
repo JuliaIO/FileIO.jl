@@ -87,7 +87,7 @@ function query(filename; checkfile::Bool=true)
         if no_magic && !no_function
             # try specific function first, if available
             ret = query(open(filename), abspath(filename), sym)
-            !isnothing(ret) && return file!(ret)
+            ret != nothing && return file!(ret)
         end
     end
     !checkfile && return File{unknown_df}(filename) # (no extension || no magic byte || no function) && no file
