@@ -1,4 +1,7 @@
-# The core types that represent the file formats
+# "Public" types that represent the file formats. These are used
+# to communicate results externally, but are generally avoided for
+# internal operations because they trigger excessive specialization
+# and inference failures.
 
 ## DataFormat:
 """
@@ -24,14 +27,17 @@ formatname(::Formatted{F}) where F<:DataFormat = formatname(F)
 ## File:
 
 """
-`File(fmt, filename)` indicates that `filename` is a file of known
-DataFormat `fmt`.  For example, `File{fmtpng}(filename)` would indicate a PNG
+`File{fmt}(filename)` indicates that `filename` is a file of known
+DataFormat `fmt`.  For example, `File{format"PNG"}(filename)` would indicate a PNG
 file.
 """
-struct File{F<:DataFormat} <: Formatted{F}
-    filename
+struct File{F<:DataFormat, Name} <: Formatted{F}
+    filename::Name
 end
-File(fmt::Type{DataFormat{sym}}, filename) where {sym} = File{fmt}(filename)
+File{F}(file::File{F}) where F<:DataFormat = file
+File{DataFormat{sym}}(@nospecialize(file::Formatted)) where sym = error("cannot change the format of $file to $sym")
+File{F}(file::AbstractString) where F<:DataFormat = File{F,String}(String(file)) # canonicalize to limit type-diversity
+File{F}(file) where F<:DataFormat = File{F,typeof(file)}(file)
 
 # The docs are separated from the definition because of https://github.com/JuliaLang/julia/issues/34122
 filename(@nospecialize(f::File)) = f.filename
@@ -49,20 +55,25 @@ file_extension(::File)
 ## Stream:
 
 """
-`Stream(fmt, io, [filename])` indicates that the stream `io` is
-written in known `Format`.  For example, `Stream{PNG}(io)` would
+`Stream{fmt}(io, [filename])` indicates that the stream `io` is
+written in known format `fmt`.  For example, `Stream{format"PNG"}(io)` would
 indicate PNG format.  If known, the optional `filename` argument can
 be used to improve error messages, etc.
 """
-struct Stream{F <: DataFormat, IOtype <: IO} <: Formatted{F}
+struct Stream{F <: DataFormat, IOtype <: IO, Name} <: Formatted{F}
     io::IOtype
-    filename
+    filename::Name
 end
 
-Stream(::Type{F}, io::IO) where {F<:DataFormat} = Stream{F,typeof(io)}(io, nothing)
-Stream(::Type{F}, io::IO, filename::AbstractString) where {F<:DataFormat} = Stream{F, typeof(io)}(io, String(filename))
-Stream(::Type{F}, io::IO, filename) where {F<:DataFormat} = Stream{F, typeof(io)}(io, filename)
-Stream(file::File{F}, io::IO) where {F} = Stream{F, typeof(io)}(io, filename(file))
+Stream{F,IOtype}(io::IO, filename::AbstractString) where {F<:DataFormat,IOtype} = Stream{F, IOtype, String}(io, String(filename))
+Stream{F,IOtype}(io::IO, filename)                 where {F<:DataFormat,IOtype} = Stream{F, IOtype, typeof(filename)}(io, filename)
+Stream{F,IOtype}(io::IO)                           where {F<:DataFormat,IOtype} = Stream{F, IOtype}(io, nothing)
+
+Stream{F,IOtype}(file::Formatted{F}, io::IO) where {F<:DataFormat,IOtype} = Stream{F,IOtype}(io, filename(file))
+Stream{F,IOtype}(@nospecialize(file::Formatted), io::IO) where {F<:DataFormat,IOtype} = error("cannot change the format of $file to $(formatname(F)::Symbol)")
+
+Stream{F}(io::IO, args...) where {F<:DataFormat} = Stream{F, typeof(io)}(io, args...)
+Stream(file::File{F}, io::IO) where {F<:DataFormat} = Stream{F}(io, filename(file))
 
 stream(@nospecialize(s::Stream)) = s.io
 "`stream(s)` returns the stream associated with `Stream` `s`"
@@ -77,7 +88,7 @@ filename(::Stream)
 
 function file_extension(@nospecialize(f::Stream))
     fname = filename(f)
-    (fname == nothing) && return nothing
+    (fname === nothing) && return nothing
     splitext(fname)[2]
 end
 """
@@ -98,7 +109,7 @@ end
 # Implement standard I/O operations for File and Stream
 @inline function Base.open(@nospecialize(file::File{F}), @nospecialize(args...)) where F<:DataFormat
     fn = filename(file)
-    Stream(F, open(fn, args...), abspath(fn))
+    Stream{F}(open(fn, args...), abspath(fn))
 end
 Base.close(@nospecialize(s::Stream)) = close(stream(s))
 

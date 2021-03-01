@@ -1,58 +1,66 @@
 # This file contains the code that allows things to be added to the registry
 
 const ext2sym    = Dict{String, Union{Symbol,Vector{Symbol}}}()
-const magic_list = Vector{Pair}()     # sorted, see magic_cmp below
-const sym2info   = Dict{Symbol,Any}() # Symbol=>(magic, extension)
-const magic_func = Vector{Pair{Function,Symbol}}() # for formats with complex magic #s
+const magic_list = Vector{Pair{Vector{UInt8},Symbol}}()     # sorted, see magic_cmp below
+const sym2info   = Dict{Symbol,Tuple{Any,Any}}()   # Symbol=>(magic, extension)
+const magic_func = Vector{Pair{Function,Symbol}}() # for formats with complex magic detection
+const empty_magic = UInt8[]
 
 ## OS:
-abstract type OS end
-abstract type Unix <: OS end
-struct Windows <: OS end
-struct OSX <: Unix end
-struct Linux <: Unix end
+@enum OS Unix Windows OSX Linux
 
-split_predicates(list) = filter(x-> x <: OS, list), filter(x-> !(x <: OS), list)
-applies_to_os(os::Vector) = isempty(os) || any(applies_to_os, os)
-applies_to_os(os::Type{<:OS}) = false
-
-applies_to_os(os::Type{<:Unix}) = Sys.isunix()
-applies_to_os(os::Type{Windows}) = Sys.iswindows()
-applies_to_os(os::Type{OSX}) = Sys.isapple()
-applies_to_os(os::Type{Linux}) = Sys.islinux()
+applies_to_os(oslist) = isempty(oslist) || any(applies_to_os, oslist)
+function applies_to_os(os::OS)
+    os == Unix && return Sys.isunix()
+    os == Windows && return Sys.iswindows()
+    os == OSX && return Sys.isapple()
+    os == Linux && return Sys.islinux()
+    return false
+end
 
 ## Magic bytes:
 
 # magic_cmp results in magic_list being sorted in order of increasing
-# length(magic), then (among tuples with the same length) in
-# dictionary order. This ordering has the advantage that you can
+# length(magic), then (among sequences with the same length) in
+# lexographic order. This ordering has the advantage that you can
 # incrementally read bytes from the stream without worrying that
 # you'll encounter an EOF yet still have potential matches later in
 # the list.
-function magic_cmp(p::Pair, t::Tuple)
-    pt = first(p)
-    lp, lt = length(pt), length(t)
-    lp < lt && return true
-    lp > lt && return false
-    pt < t
+function magic_cmp(a::Vector{UInt8}, b::Vector{UInt8})
+    la, lb = length(a), length(b)
+    la < lb && return true
+    la > lb && return false
+    for (ia, ib) in zip(a, b)
+        ia < ib && return true
+        ia > ib && return false
+    end
+    return false
 end
-function magic_cmp(t::Tuple, p::Pair)
-    pt = first(p)
-    lp, lt = length(pt), length(t)
-    lt < lp && return true
-    lt > lp && return false
-    t < pt
-end
+magic_cmp(p::Pair, m::Vector{UInt8}) = magic_cmp(p.first, m)
+magic_cmp(m::Vector{UInt8}, p::Pair) = magic_cmp(m, p.first)
 
-canonicalize_magic(m::NTuple{N,UInt8}) where {N} = m
-canonicalize_magic(m::AbstractVector{UInt8}) = tuple(m...)
+canonicalize_magic(@nospecialize(m::Tuple{Vararg{UInt8}})) = UInt8[m...]
+canonicalize_magic(m::AbstractVector{UInt8}) = convert(Vector{UInt8}, m)
 canonicalize_magic(m::String) = canonicalize_magic(codeunits(m))
 
 
 ## Load/Save
 
-struct LOAD end
-struct SAVE end
+@enum IOSupport LOAD SAVE
+
+function split_predicates(list)
+    os = OS[]
+    ls = IOSupport[]
+    for item in list
+        if isa(item, OS)
+            push!(os, item)
+        else
+            push!(ls, item)
+        end
+    end
+    return os, ls
+end
+
 
 function add_loadsave(format, predicates)
     library = popfirst!(predicates)
@@ -70,10 +78,11 @@ end
 ## Add Format:
 
 function add_format(fmt, magic, extension, load_save_libraries...)
-    add_format(fmt, magic, extension)
     for library in load_save_libraries
         add_loadsave(fmt, library)
     end
+    # Add the format after we've validated the packages (to prevent a partially-registered format)
+    add_format(fmt, magic, extension)
     fmt
 end
 
@@ -97,50 +106,56 @@ where example `pkgspecifiers` are:
 
 You can combine `LOAD`, `SAVE`, `OSX`, `Unix`, `Windows` and `Linux` arbitrarily to narrow `pkgspecifiers`.
 """
-function add_format(fmt::Type{DataFormat{sym}}, magic::Union{Tuple,AbstractVector,String}, extension) where sym
-    haskey(sym2info, sym) && error("format ", fmt, " is already registered")
-    m = canonicalize_magic(magic)
-    rng = searchsorted(magic_list, m, lt=magic_cmp)
-    if !isempty(m) && !isempty(rng)
-        error("magic bytes ", m, " are already registered")
+add_format(@nospecialize(fmt::Type), args...) = add_format(formatname(fmt)::Symbol, args...)
+add_format(sym::Symbol, magic::Union{Tuple,AbstractVector{UInt8},String}, extension) =
+    add_format(sym, canonicalize_magic(magic), extension)
+function add_format(sym::Symbol,
+                    @nospecialize(magics::Tuple{Vector{UInt8},Vararg{Vector{UInt8}}}), extension)
+    add_format(sym, [magics...], extension)
+end
+
+function add_format(sym::Symbol, magic::Vector{UInt8}, extension)
+    haskey(sym2info, sym) && error("format ", sym, " is already registered")
+    rng = searchsorted(magic_list, magic, lt=magic_cmp)
+    if !isempty(magic) && !isempty(rng)
+        error("magic bytes ", magic, " are already registered")
     end
-    insert!(magic_list, first(rng), Pair(m, sym))  # m=>sym in 0.4
-    sym2info[sym] = (m, extension)
+    insert!(magic_list, first(rng), magic=>sym)
+    sym2info[sym] = (magic, extension)
     add_extension(extension, sym)
-    fmt
+    nothing
 end
 
 # for multiple magic bytes
-function add_format(fmt::Type{DataFormat{sym}},
-                    magics::Tuple{T,Vararg{T}}, extension) where {sym, T <: Vector{UInt8}}
-    haskey(sym2info, sym) && error("format ", fmt, " is already registered")
-    magics = map(canonicalize_magic, magics)
+function add_format(sym::Symbol, magics::Vector{Vector{UInt8}}, extension)
+    haskey(sym2info, sym) && error("format ", sym, " is already registered")
     for magic in magics
         rng = searchsorted(magic_list, magic, lt=magic_cmp)
         if !isempty(magic) && !isempty(rng)
             error("magic bytes ", magic, " are already registered")
         end
-        insert!(magic_list, first(rng), Pair(magic, sym))  # m=>sym in 0.4
+        insert!(magic_list, first(rng), magic=>sym)
     end
-    sym2info[sym] = (magics, extension)
+    sym2info[sym] = (sort(magics; lt=magic_cmp), extension)
     add_extension(extension, sym)
-    fmt
+    nothing
 end
 
 # For when "magic" is supplied as a function (see the HDF5 example in
 # registry.jl)
-function add_format(fmt::Type{DataFormat{sym}}, magic, extension) where sym
-    haskey(sym2info, sym) && error("format ", fmt, " is already registered")
+function add_format(sym::Symbol, @nospecialize(magic::Function), extension)
+    haskey(sym2info, sym) && error("format ", sym, " is already registered")
     push!(magic_func, Pair(magic,sym))  # magic=>sym in 0.4
     sym2info[sym] = (magic, extension)
     add_extension(extension, sym)
-    fmt
+    nothing
 end
 
 """
 `del_format(fmt::DataFormat)` deletes `fmt` from the format registry.
 """
-function del_format(fmt::Type{DataFormat{sym}}) where sym
+del_format(@nospecialize(fmt::Type)) = del_format(formatname(fmt)::Symbol)
+function del_format(sym::Symbol)
     magic, extension = sym2info[sym]
     del_magic(magic, sym)
     delete!(sym2info, sym)
@@ -148,12 +163,13 @@ function del_format(fmt::Type{DataFormat{sym}}) where sym
     nothing
 end
 
-# Deletes multiple magic bytes
-del_magic(magic::Tuple, sym) = for m in magic
-    del_magic(m, sym)
-end
+# # Deletes multiple magic bytes
+# del_magic(magic::Tuple, sym) = for m in magic
+#     del_magic(m, sym)
+# end
 # Deletes single magic bytes
-function del_magic(magic::NTuple{N, UInt8}, sym) where N
+del_magic(@nospecialize(magic), sym::Symbol) = del_magic(canonicalize_magic(magic), sym)
+function del_magic(magic::Vector{UInt8}, sym::Symbol)
     rng = searchsorted(magic_list, magic, lt=magic_cmp)
     if length(magic) == 0
         fullrng = rng
@@ -171,15 +187,18 @@ function del_magic(magic::NTuple{N, UInt8}, sym) where N
     deleteat!(magic_list, first(rng))
     nothing
 end
+del_magic(magics::Vector{Vector{UInt8}}, sym::Symbol) = foreach(magics) do magic
+    del_magic(magic, sym)
+end
 
-function del_magic(magic::Function, sym)
-    deleteat!(magic_func, something(findfirst(isequal(Pair(magic,sym)), magic_func), 0))
+function del_magic(@nospecialize(magic::Function), sym::Symbol)
+    deleteat!(magic_func, something(findfirst(isequal(Pair{Function,Symbol}(magic,sym)), magic_func), 0))
     nothing
 end
 
 ## File Extensions:
 
-function add_extension(ext::String, sym)
+function add_extension(ext::String, sym::Symbol)
     if haskey(ext2sym, ext)
         v = ext2sym[ext]
         if isa(v, Symbol)

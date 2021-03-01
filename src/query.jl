@@ -3,48 +3,43 @@
 """
 `unknown(f)` returns true if the format of `f` is unknown.
 """
-unknown(::Type{format"UNKNOWN"}) = true
-unknown(::Type{DataFormat{sym}}) where {sym} = false
-
-unknown(::File{F}) where {F} = unknown(F)
-unknown(::Stream{F}) where {F} = unknown(F)
+unknown(@nospecialize(f::Union{Formatted,Type})) = unknown(formatname(f)::Symbol)
+unknown(name::Symbol) = name === :UNKNOWN
 
 const unknown_df = DataFormat{:UNKNOWN}
 
 
 """
 `info(fmt)` returns the magic bytes/extension information for
-`DataFormat` `fmt`.
+`fmt`.
 """
-info(::Type{DataFormat{sym}}) where {sym} = sym2info[sym]
+info(@nospecialize(f::Union{Formatted,Type})) = info(formatname(f)::Symbol)
+info(sym::Symbol) = sym2info[sym]
 
 "`magic(fmt)` returns the magic bytes of format `fmt`"
-magic(fmt::Type{<:DataFormat})= UInt8[info(fmt)[1]...]
-
+magic(@nospecialize(fmt::Type)) = magic(formatname(fmt)::Symbol)
+magic(sym::Symbol) = info(sym)[1]
 
 """
-`skipmagic(s)` sets the position of `Stream` `s` to be just after the magic bytes.
+`skipmagic(s::Stream)` sets the position of `s` to be just after the magic bytes.
 For a plain IO object, you can use `skipmagic(io, fmt)`.
 """
-skipmagic(s::Stream{F}) where {F} = (skipmagic(stream(s), F); s)
-function skipmagic(io, fmt::Type{DataFormat{sym}}) where sym
+skipmagic(@nospecialize(s::Stream)) = (skipmagic(stream(s), formatname(s)::Symbol); s)
+skipmagic(io, @nospecialize(fmt::Type)) = skipmagic(io, formatname(fmt)::Symbol)
+function skipmagic(io, sym::Symbol)
     magic, _ = sym2info[sym]
     skipmagic(io, magic)
     nothing
 end
-skipmagic(io, magic::Function) = nothing
-skipmagic(io, magic::NTuple{N,UInt8}) where {N} = seek(io, length(magic))
-function skipmagic(io, magic::Tuple)
-    lengths = map(length, magic)
-    all(x-> lengths[1] == x, lengths) && return seek(io, lengths[1]) # it doesn't matter what magic bytes get skipped as they all have the same length
-    magic = [magic...]
-    sort!(magic, lt = (a,b)-> length(a) >= length(b)) # start with longest first, to avoid overlapping magic bytes
-    seekend(io)
-    len = position(io)
-    seekstart(io)
-    filter!(x-> length(x) <= len, magic) # throw out magic bytes that are longer than IO
-    tmp = read(io, length(first(magic))) # now, first is both the longest and guaranteed to fit into io, so we can just read the bytes
-    for m in magic
+skipmagic(io, @nospecialize(magic::Function)) = nothing
+skipmagic(io, magic::Vector{UInt8}) = seek(io, length(magic))
+function skipmagic(io, magics::Vector{Vector{UInt8}})
+    lengths = map(length, magics)
+    l1 = lengths[1]
+    all(isequal(l1), lengths) && return seek(io, l1) # it doesn't matter what magic bytes get skipped as they all have the same length
+    len = getlength(io)
+    tmp = read(io, min(len, maximum(lengths)))
+    for m in reverse(magics)  # start with the longest since they are most specific
         if magic_equal(m, tmp)
             seek(io, length(m))
             return nothing
@@ -52,14 +47,21 @@ function skipmagic(io, magic::Tuple)
     end
     error("tried to skip magic bytes of an IO that does not contain the magic bytes of the format. IO: $io")
 end
+
 function magic_equal(magic, buffer)
+    length(magic) > length(buffer) && return false
     for (i,elem) in enumerate(magic)
         buffer[i] != elem && return false
     end
     true
 end
 
-
+function getlength(io, pos=position(io))
+    seekend(io)
+    len = position(io)
+    seek(io, pos)
+    return len
+end
 
 """
     query(filename; checkfile=true)
@@ -70,87 +72,143 @@ If `filename` already exists, the file's magic bytes will take priority
 unless `checkfile` is false.
 """
 function query(filename; checkfile::Bool=true)
+    filename = abspath(filename)
+    sym = querysym(filename; checkfile=checkfile)
+    return File{DataFormat{sym}}(filename)
+end
+query(@nospecialize(f::Formatted); checkfile::Bool=true) = f
+
+# This is recommended for internal use because it returns Symbol (or errors)
+function querysym(filename; checkfile::Bool=true)
+    hasmagic(@nospecialize(magic)) = !(isa(magic, Vector{UInt8}) && isempty(magic))
+
     checkfile &= isfile(filename)
     _, ext = splitext(filename)
     if haskey(ext2sym, ext)
         sym = ext2sym[ext]
-        no_magic = !hasmagic(sym)
-        if lensym(sym) == 1 && (no_magic || !checkfile) # we only found one candidate and there is no magic bytes, or no file, trust the extension
-            return File{DataFormat{sym}}(filename)
-        elseif !checkfile && lensym(sym) > 1
-            return File{DataFormat{sym[1]}}(filename)
+        if isa(sym, Symbol)               # there's only one format with this extension
+            checkfile || return sym       # since we're not checking, we can return it immediately
+            magic = sym2info[sym][1]
+            hasmagic(magic) || return sym
+            return open(filename) do io
+                match(io, magic) && return sym
+                # if it doesn't match, we prioritize the magic bytes over the guess based on extension
+                return querysym_all(io)[1]
+            end
         end
-        no_function = !hasfunction(sym)
-        if no_magic && no_function
-            error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
-        end
-        if no_magic && !no_function
-            # try specific function first, if available
-            ret = query(open(filename), abspath(filename), sym)
-            ret !== nothing && return file!(ret)
+        # There are multiple formats consistent with this extension
+        syms = sym::Vector{Symbol}
+        checkfile || return syms[1]     # with !checkfile we default to the first. TODO?: change to an error?
+        return open(filename) do io
+            badmagic = false
+            for sym in syms
+                magic = sym2info[sym][1]
+                if !hasmagic(magic)
+                    badmagic = true
+                    continue
+                end
+                match(io, magic) && return sym
+            end
+            badmagic && error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
+            return querysym_all(io)[1]
         end
     end
-    !checkfile && return File{unknown_df}(filename) # (no extension || no magic byte || no function) && no file
-    # Otherwise, check against all magic bytes, then functions
-    file!(query(open(filename), abspath(filename)))
+    !checkfile && return :UNKNOWN
+    return open(filename) do io
+        return querysym_all(io)[1]
+    end
 end
 
-lensym(s::Symbol) = 1
-lensym(v::Vector) = length(v)
+function match(io, magic::Vector{UInt8})
+    len = getlength(io)
+    len < length(magic) && return false
+    return magic_equal(magic, read(io, length(magic)))
+end
 
-hasmagic(s::Symbol) = hasmagic(sym2info[s][1])
-hasmagic(v::Vector) = any(hasmagic, v)
+function match(io, magics::Vector{Vector{UInt8}})
+    lengths = map(length, magics)
+    len = getlength(io)
+    tmp = read(io, min(len, maximum(lengths)))
+    for m in reverse(magics)  # start with the longest since they are most specific
+        if magic_equal(m, tmp)
+            return true
+        end
+    end
+    return false
+end
 
-hasmagic(t::Tuple) = !isempty(t)
-hasmagic(::Any) = false   # for when magic is a function
+function match(io, @nospecialize(magic::Function))
+    seekstart(io)
+    try
+        magic(io)
+    catch e
+        println("There was an error in magic function $magic")
+        println("Please open an issue at FileIO.jl. Error:")
+        println(e)
+        false
+    end
+end
 
-hasfunction(s::Symbol) = hasfunction(sym2info[s][1])
-hasfunction(v::Vector) = any(hasfunction, v)
-hasfunction(s::Any) = true #has function
-hasfunction(s::Tuple) = false #has magic
+# Returns sym, magic (the latter may be empty if a magic-function matched)
+# Upon return the stream position is set to the end of magic.
+function querysym_all(io)
+    seekstart(io)
+    len = getlength(io)
+    lengths = map(magic_list) do p
+        length(p.first)
+    end
+    tmp = read(io, min(len, maximum(lengths)))
+    for (magic, sym) in reverse(magic_list)
+        isempty(magic) && break
+        if magic_equal(magic, tmp)
+            seek(io, length(magic))
+            return sym, magic
+        end
+    end
+    for (magic, sym) in magic_func
+        seekstart(io)
+        match(io, magic) && return sym, empty_magic
+    end
+    seekstart(io)
+    return :UNKNOWN, empty_magic
+end
+
+function querysym(io::IO)
+    if seekable(io)
+        sym, _ = querysym_all(io)
+        seekstart(io)
+        return sym
+    end
+    # When it's not seekable, we can only work our way upwards in length of magic bytes
+    # We're essentially counting on the fact that one of them will match, otherwise the stream
+    # is corrupted.
+    buffer = UInt8[]
+    for (magic, sym) in magic_list
+        isempty(magic) && continue
+        while length(buffer) < length(magic) && !eof(io)
+            push!(buffer, read(io, UInt8))
+        end
+        if magic_equal(magic, buffer)
+            return sym
+        end
+        eof(io) && break
+    end
+    return :UNKNOWN
+end
+
 
 """
 `query(io, [filename])` returns a `Stream` object with information about the
 format inferred from the magic bytes.
 """
 function query(io::IO, filename = nothing)
-    magic = Vector{UInt8}()
-    pos = position(io)
-    for p in magic_list
-        m = first(p)
-        length(m) == 0 && continue
-        while length(m) > length(magic)
-            if eof(io)
-                seek(io, pos)
-                return Stream{unknown_df, typeof(io)}(io, filename)
-            end
-            push!(magic, read(io, UInt8))
-        end
-        if iter_eq(magic, m)
-            seek(io, pos)
-            return Stream{DataFormat{last(p)},typeof(io)}(io, filename)
-        end
-    end
-    if seekable(io)
-        for p in magic_func
-            seek(io, pos)
-            f = first(p)
-            try
-                if f(io)
-                    return Stream{DataFormat{last(p)},typeof(io)}(seek(io, pos), filename)
-                end
-            catch e
-                println("There was an error in magick function $f")
-                println("Please open an issue at FileIO.jl. Error:")
-                println(e)
-            end
-        end
-        seek(io, pos)
-    end
-    Stream{unknown_df,typeof(io)}(io, filename)
+    sym = querysym(io)
+    return Stream{DataFormat{sym}}(io, filename)
 end
+query(io::IO, @nospecialize(filename::Formatted)) = error("no need to query when format is known")
+
+# TODO?: update to querysym?
 function query(io::IO, filename::String, sym::Vector{Symbol})
-    magic = Vector{UInt8}()
     pos = position(io)
     if seekable(io)
         for (f, fmtsym) in magic_func
@@ -161,30 +219,17 @@ function query(io::IO, filename::String, sym::Vector{Symbol})
                     return Stream{DataFormat{fmtsym},typeof(io)}(seek(io, pos), filename)
                 end
             catch e
-                println("There was an error in magick function $f")
+                println("There was an error in magic function $f")
                 println("Please open an issue at FileIO.jl. Error:")
                 println(e)
             end
         end
         seek(io, pos)
     end
-    close(io)
+    close(io)    # FIXME?
     nothing
 end
 
 seekable(io::IOBuffer) = io.seekable
 seekable(::IOStream) = true
 seekable(::Any) = false
-
-function iter_eq(A, B)
-    length(A) == length(B) || return false
-    i,j = 1,1
-    for _=1:length(A)
-        a=A[i]; b=B[j]
-        a == b && (i+=1; j+=1; continue)
-        a == UInt32('\r') && (i+=1; continue) # this seems like the shadiest solution to deal with windows \r\n
-        b == UInt32('\r') && (j+=1; continue)
-        return false #now both must be unequal, and no \r windows excemption any more
-    end
-    true
-end

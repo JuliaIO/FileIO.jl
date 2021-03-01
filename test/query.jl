@@ -67,12 +67,12 @@ try
         @test unknown(format"UNKNOWN")
 
         add_format(format"CSV", UInt8[], ".csv")
-        @test FileIO.info(format"CSV") == ((),".csv")
+        @test FileIO.info(format"CSV") == ([],".csv")
         add_format(format"FOO", (), ".foo")  # issue #17
         @test_throws Exception FileIO.info(format"OOPS")
         @test FileIO.ext2sym[".csv"] == :CSV
         del_format(format"FOO")
-        @test FileIO.magic_list == [Pair((),:CSV)]
+        @test FileIO.magic_list == [Pair([],:CSV)]
         del_format(format"CSV")
         @test isempty(FileIO.ext2sym)
         @test isempty(FileIO.magic_list)
@@ -81,18 +81,18 @@ try
 
         add_format(format"JUNK", "JUNK", [".jnk",".junk",".JNK"])
 
-        @test FileIO.info(format"JUNK") == (tuple(b"JUNK"...),[".jnk",".junk",".JNK"])
+        @test FileIO.info(format"JUNK") == (b"JUNK",[".jnk",".junk",".JNK"])
         @test FileIO.ext2sym[".jnk"] == :JUNK
         @test FileIO.ext2sym[".junk"] == :JUNK
         @test FileIO.ext2sym[".JNK"] == :JUNK
-        @test FileIO.magic_list == [Pair((0x4a,0x55,0x4e,0x4b),:JUNK)]
+        @test FileIO.magic_list == [Pair([0x4a,0x55,0x4e,0x4b],:JUNK)]
 
     end
 
     @testset "streams" begin
         io = IOBuffer()
         s = Stream(format"JUNK", io)
-        @test typeof(s) == Stream{DataFormat{:JUNK},IOBuffer}
+        @test typeof(s) <: Stream{DataFormat{:JUNK},IOBuffer}
         @test filename(s) == nothing
         @test_throws Exception FileIO.file!(s)
         s = Stream(format"JUNK", io, "junk.jnk")
@@ -120,7 +120,7 @@ try
         write(io, "JUNK and some more stuff")
         seek(io, 0)
         q = query(io)
-        @test typeof(q) == Stream{format"JUNK",typeof(io)}
+        @test typeof(q) <: Stream{format"JUNK",typeof(io)}
         @test !(unknown(q))
         @test file_extension(q) == nothing
 
@@ -131,7 +131,7 @@ try
             write(file, str)
         end
         q = query(fn)
-        @test typeof(q) == File{format"JUNK"}
+        @test typeof(q) <: File{format"JUNK"}
         @test file_extension(q) == ".jnk"
 
         rm(fn)
@@ -142,7 +142,7 @@ try
             write(file, str)
         end
         q = query(fn)
-        @test typeof(q) == File{format"JUNK"}
+        @test typeof(q) <: File{format"JUNK"}
         @test file_extension(q) == ".csv"
         rm(fn)
 
@@ -153,12 +153,12 @@ try
             write(file, "Here's some data")
         end
         q = query(fn)
-        @test typeof(q) == File{format"BAD"}
+        @test typeof(q) <: File{format"BAD"}
         @test file_extension(q) == ".bad"
         rm(fn)
 
         q = query( "some_non_existant_file.bad")
-        @test typeof(q) == File{format"BAD"}
+        @test typeof(q) <: File{format"BAD"}
 
         # Unknown extension
         fn = string("tempname", ".wrd")
@@ -176,13 +176,13 @@ try
             write(file, "test1")
         end
         q = query(fn)
-        @test typeof(q) == File{format"DOUBLE_1"}
+        @test typeof(q) <: File{format"DOUBLE_1"}
         rm(fn)
 
 
         add_format(format"MAGIC", "this so magic", ".mmm")
         q = query( "some_non_existant_file.mmm")
-        @test typeof(q) == File{format"MAGIC"}
+        @test typeof(q) <: File{format"MAGIC"}
 
         add_format(format"DOUBLE_MAGIC", (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00]), ".dd2")
 
@@ -192,7 +192,7 @@ try
             write(file, randstring(19))
         end
         q = query(fn)
-        @test typeof(q) == File{format"DOUBLE_MAGIC"}
+        @test typeof(q) <: File{format"DOUBLE_MAGIC"}
         io = open(q)
         skipmagic(io)
         @test position(io) == 4
@@ -204,7 +204,7 @@ try
             write(file, randstring(19))
         end
         q = query(fn)
-        @test typeof(q) == File{format"DOUBLE_MAGIC"}
+        @test typeof(q) <: File{format"DOUBLE_MAGIC"}
         io = open(q)
         @test file_extension(q) == ".dd2"
         skipmagic(io)
@@ -272,7 +272,7 @@ file_path = Path(file_dir)
 @testset "Querying with $(typeof(fp))" for fp in (file_dir, file_path)
     @testset "bedGraph" begin
         q = query(joinpath(file_dir, "file.bedgraph"))
-        @test typeof(q) == File{format"bedGraph"}
+        @test typeof(q) <: File{format"bedGraph"}
         open(q) do io
             @test position(io) == 0
             skipmagic(io)
@@ -285,9 +285,9 @@ file_path = Path(file_dir)
     end
     @testset "STL detection" begin
         q = query(joinpath(file_dir, "ascii.stl"))
-        @test typeof(q) == File{format"STL_ASCII"}
+        @test typeof(q) <: File{format"STL_ASCII"}
         q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
-        @test typeof(q) == File{format"STL_BINARY"}
+        @test typeof(q) <: File{format"STL_BINARY"}
         open(q) do io
             @test position(io) == 0
             skipmagic(io)
@@ -296,16 +296,16 @@ file_path = Path(file_dir)
     end
     @testset "PLY detection" begin
         q = query(joinpath(file_dir, "ascii.ply"))
-        @test typeof(q) == File{format"PLY_ASCII"}
+        @test typeof(q) <: File{format"PLY_ASCII"}
         q = query(joinpath(file_dir, "binary.ply"))
-        @test typeof(q) == File{format"PLY_BINARY"}
+        @test typeof(q) <: File{format"PLY_BINARY"}
 
     end
     @testset "Multiple Magic bytes" begin
         q = query(joinpath(file_dir, "magic1.tiff"))
-        @test typeof(q) == File{format"TIFF"}
+        @test typeof(q) <: File{format"TIFF"}
         q = query(joinpath(file_dir, "magic2.tiff"))
-        @test typeof(q) == File{format"TIFF"}
+        @test typeof(q) <: File{format"TIFF"}
         open(q) do io
             @test position(io) == 0
             skipmagic(io)
@@ -323,11 +323,11 @@ file_path = Path(file_dir)
             @test !(FileIO.detectavi(s))
         end
         q = query(joinpath(file_dir, "bees.avi"))
-        @test typeof(q) == File{format"AVI"}
+        @test typeof(q) <: File{format"AVI"}
     end
     @testset "RDA detection" begin
         q = query(joinpath(file_dir, "minimal_ascii.rda"))
-        @test typeof(q) == File{format"RData"}
+        @test typeof(q) <: File{format"RData"}
         open(q) do io
             @test position(io) == 0
             @test FileIO.detect_rdata(io)
@@ -337,7 +337,7 @@ file_path = Path(file_dir)
     end
     @testset "RDS detection" begin
         q = query(joinpath(file_dir, "minimal_ascii.rds"))
-        @test typeof(q) == File{format"RDataSingle"}
+        @test typeof(q) <: File{format"RDataSingle"}
         open(q) do io
             @test position(io) == 0
             @test FileIO.detect_rdata_single(io)

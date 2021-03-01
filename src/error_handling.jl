@@ -54,6 +54,12 @@ end
 handle_current_error(e::NotInstalledError) = @warn string("lib ", e.library, " not installed, trying next library")
 
 
+struct SpecError <: Exception
+    mod::Module
+    call::Symbol
+end
+Base.showerror(io::IO, e::SpecError) = print(io, e.mod, " is missing $(e.call) and fileio_$(e.call)")
+
 """
 Handles a list of thrown errors after no IO library was found working
 """

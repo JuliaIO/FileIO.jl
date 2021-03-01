@@ -1,6 +1,7 @@
 using FileIO
 using FilePathsBase
 using Test
+using UUIDs
 
 Threads.nthreads() <= 1 && @info "Threads.nthreads() = $(Threads.nthreads()), multithread tests will be disabled"
 
