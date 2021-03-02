@@ -27,6 +27,8 @@ end
 
 Declare that format `fmt` can be loaded with package `:Package`.
 Specifiers include `OSX`, `Unix`, `Windows` and `Linux` to restrict usage to particular operating systems.
+
+See also [`add_format`](@ref) which can combine package support with the format declaration.
 """
 add_loader
 
@@ -36,17 +38,19 @@ add_loader
 
 Declare that format `fmt` can be saved with package `:Package`.
 Specifiers include `OSX`, `Unix`, `Windows` and `Linux` to restrict usage to particular operating systems.
+
+See also [`add_format`](@ref) which can combine package support with the format declaration.
 """
 add_saver
 
 """
 - `load(filename)` loads the contents of a formatted file, trying to infer
-the format from `filename` and/or magic bytes in the file.
+  the format from `filename` and/or magic bytes in the file (see [`query`](@ref)).
 - `load(strm)` loads from an `IOStream` or similar object. In this case,
-there is no filename extension, so we rely on the magic bytes for format
-identification.
-- `load(File{format"PNG"}(filename))` specifies the format directly, and bypasses inference.
-- `load(Stream{format"PNG"}(io))` specifies the format directly, and bypasses inference.
+  there is no filename extension, so we rely on the magic bytes for format
+  identification.
+- `load(File{format"PNG"}(filename))` specifies the format directly, and bypasses the format [`query`](@ref).
+- `load(Stream{format"PNG"}(io))` specifies the format directly, and bypasses the format [`query`](@ref).
 - `load(f; options...)` passes keyword arguments on to the loader.
 """
 load
@@ -58,25 +62,27 @@ higher-level streams should return a formatted object, like an image or chunk of
 video or audio.
 
 - `loadstreaming(filename)` loads the contents of a formatted file, trying to infer
-the format from `filename` and/or magic bytes in the file. It returns a streaming
-type that can be read from in chunks, rather than loading the whole contents all
-at once
+  the format from `filename` and/or magic bytes in the file. It returns a streaming
+  type that can be read from in chunks, rather than loading the whole contents all
+  at once.
 - `loadstreaming(strm)` loads the stream from an `IOStream` or similar object.
-In this case, there is no filename extension, so we rely on the magic bytes
-for format identification.
+  In this case, there is no filename extension, so we rely on the magic bytes
+  for format identification.
 - `loadstreaming(File{format"WAV"}(filename))` specifies the format directly, and
-bypasses inference.
+  bypasses the format [`query`](@ref).
 - `loadstreaming(Stream{format"WAV"}(io))` specifies the format directly, and
-bypasses inference.
+  bypasses the format [`query`](@ref).
 - `loadstreaming(f; options...)` passes keyword arguments on to the loader.
 """
 loadstreaming
 
 """
 - `save(filename, data...)` saves the contents of a formatted file,
-trying to infer the format from `filename`.
-- `save(Stream{format"PNG"}(io), data...)` specifies the format directly, and bypasses inference.
-- `save(File{format"PNG"}(filename), data...)` specifies the format directly, and bypasses inference.
+  trying to infer the format from `filename`.
+- `save(Stream{format"PNG"}(io), data...)` specifies the format directly, and
+  bypasses the format [`query`](@ref).
+- `save(File{format"PNG"}(filename), data...)` specifies the format directly, and
+  bypasses the format [`query`](@ref).
 - `save(f, data...; options...)` passes keyword arguments on to the saver.
 """
 save
@@ -87,11 +93,11 @@ be written in chunks, rather than all at once. These higher-level streams should
 accept formatted objects, like an image or chunk of video or audio.
 
 - `savestreaming(filename, data...)` saves the contents of a formatted file,
-trying to infer the format from `filename`.
+  trying to infer the format from `filename`.
 - `savestreaming(File{format"WAV"}(filename))` specifies the format directly, and
-bypasses inference.
+  bypasses the format [`query`](@ref).
 - `savestreaming(Stream{format"WAV"}(io))` specifies the format directly, and
-bypasses inference.
+  bypasses the format [`query`](@ref).
 - `savestreaming(f, data...; options...)` passes keyword arguments on to the saver.
 """
 savestreaming

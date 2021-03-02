@@ -28,7 +28,7 @@ formatname(::Formatted{F}) where F<:DataFormat = formatname(F)
 
 """
 `File{fmt}(filename)` indicates that `filename` is a file of known
-DataFormat `fmt`.  For example, `File{format"PNG"}(filename)` would indicate a PNG
+[`DataFormat`](@ref) `fmt`.  For example, `File{format"PNG"}(filename)` would indicate a PNG
 file.
 """
 struct File{F<:DataFormat, Name} <: Formatted{F}
@@ -42,22 +42,23 @@ File{F}(file) where F<:DataFormat = File{F,typeof(file)}(file)
 # The docs are separated from the definition because of https://github.com/JuliaLang/julia/issues/34122
 filename(@nospecialize(f::File)) = f.filename
 """
-`filename(file)` returns the filename associated with `File` `file`.
+`filename(file)` returns the filename associated with [`File`](@ref) `file`.
 """
 filename(::File)
 
 file_extension(@nospecialize(f::File)) = splitext(filename(f))[2]
 """
-`file_extension(file)` returns the file extension associated with `File` `file`.
+`file_extension(file)` returns the file extension associated with [`File`](@ref) `file`.
 """
 file_extension(::File)
 
 ## Stream:
 
 """
-`Stream{fmt}(io, [filename])` indicates that the stream `io` is
-written in known format `fmt`.  For example, `Stream{format"PNG"}(io)` would
-indicate PNG format.  If known, the optional `filename` argument can
+`Stream{fmt}(io, filename=nothing)` indicates that the stream `io` is
+written in known format [`DataFormat`](@ref) `fmt`.
+For example, `Stream{format"PNG"}(io)` would indicate PNG format.
+If known, the optional `filename` argument can
 be used to improve error messages, etc.
 """
 struct Stream{F <: DataFormat, IOtype <: IO, Name} <: Formatted{F}
@@ -76,13 +77,13 @@ Stream{F}(io::IO, args...) where {F<:DataFormat} = Stream{F, typeof(io)}(io, arg
 Stream(file::File{F}, io::IO) where {F<:DataFormat} = Stream{F}(io, filename(file))
 
 stream(@nospecialize(s::Stream)) = s.io
-"`stream(s)` returns the stream associated with `Stream` `s`"
+"`stream(s)` returns the stream associated with [`Stream`](@ref) `s`"
 stream(::Stream)
 
 filename(@nospecialize(s::Stream)) = s.filename
 """
 `filename(stream)` returns a string of the filename
-associated with `Stream` `stream`, or nothing if there is no file associated.
+associated with [`Stream`](@ref) `stream`, or nothing if there is no file associated.
 """
 filename(::Stream)
 
@@ -92,7 +93,7 @@ function file_extension(@nospecialize(f::Stream))
     splitext(fname)[2]
 end
 """
-`file_extension(file)` returns a nullable-string for the file extension associated with `Stream` `stream`.
+`file_extension(file)` returns a nullable-string for the file extension associated with [`Stream`](@ref) `stream`.
 """
 file_extension(::Stream)
 
