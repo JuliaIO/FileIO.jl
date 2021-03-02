@@ -146,6 +146,9 @@ add_format(format"2DM", "MESH2D", ".2dm", [:MeshIO])
 add_format(format"OFF", "OFF", ".off", [:MeshIO])
 add_format(format"MSH", (), ".msh", [:MeshIO])
 
+# Bundler SfM format
+add_format(format"OUT", "# Bundle file v0.3\n", ".out", [:BundlerIO])
+
 # GSLIB/SGeMS format (http://gslib.com)
 add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO])
 
