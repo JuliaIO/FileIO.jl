@@ -21,8 +21,9 @@ sym2saver = copy(FileIO.sym2saver)
 try
     empty!(FileIO.sym2loader)
     empty!(FileIO.sym2saver)
-    file_dir = joinpath(dirname(@__FILE__), "files")
-    file_path = Path(file_dir)
+    # use `local` to suppress soft scope warning
+    local file_dir = joinpath(dirname(@__FILE__), "files")
+    local file_path = Path(file_dir)
 
     @testset "Load $(typeof(fp))" for fp in (file_dir, file_path)
 

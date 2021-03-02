@@ -350,17 +350,13 @@ function detect_gadget2(io)
     pos = position(io)
     seekend(io)
     len = position(io)
-    len > 264 && return false # at least 256 Header + 2 * Int32
+    len > 264 || return false # at least 256 Header + 2 * Int32
     seek(io, pos) # Return to start
     temp1 = read(io, Int32)
-    header = read(io, 256)
+    seek(io, sizeof(Int32)+256)
     temp2 = read(io, Int32)
     seek(io, pos)
-    if temp1 == temp2
-        return true
-    else
-        return false
-    end
+    return temp1 == temp2
 end
 add_format(format"Gadget2", detect_gadget2, [".gadget2", ".Gadget2", ".GADGET2"], [:AstroIO])
 
