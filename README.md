@@ -1,7 +1,6 @@
 # FileIO
 
-[![Build Status](https://travis-ci.org/JuliaIO/FileIO.jl.svg?branch=master)](https://travis-ci.org/JuliaIO/FileIO.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/j02repoyo75mtyjn/branch/master?svg=true)](https://ci.appveyor.com/project/SimonDanisch/fileio-jl-t5dw5/branch/master)
+[![Build status](https://github.com/JuliaIO/FileIO.jl/actions/workflows/test.yml/badge.svg)](https://github.com/JuliaIO/FileIO.jl/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/JuliaIO/FileIO.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaIO/FileIO.jl?branch=master)
 
 FileIO aims to provide a common framework for detecting file formats
@@ -174,7 +173,7 @@ Consequently, **packages should define "private" `load` and `save` methods (also
 
 If you run into a naming conflict with the `load` and `save` functions
 (for example, you already have another function in your package that has
-one of these names), you can instead name your loaders `fileio_load`, 
+one of these names), you can instead name your loaders `fileio_load`,
 `fileio_save` etc. Note that you cannot mix and match these styles: either
 all your loaders have to be named `load`, or all of them should be called
 `fileio_load`, but you cannot use both conventions in one module.

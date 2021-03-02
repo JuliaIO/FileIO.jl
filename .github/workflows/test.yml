@@ -1,6 +1,11 @@
 name: Run tests
 
-on: [push]
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags: '*'
 
 jobs:
   test:
@@ -34,3 +39,6 @@ jobs:
         env:
           JULIA_NUM_THREADS: 2
       - uses: julia-actions/julia-processcoverage@v1
+      - uses: codecov/codecov-action@v1
+        with:
+          file: lcov.info
