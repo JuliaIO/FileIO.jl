@@ -347,6 +347,17 @@ file_path = Path(file_dir)
     end
 end
 
+@testset "Query from IOBuffer" begin
+    streamformat(::Stream{T, U}) where {T, U} = T
+    for name ∈ ["magic1.tiff", "magic2.tiff"]
+        pth = joinpath(file_dir, "magic2.tiff")
+        open(pth) do io
+            buf=IOBuffer(read(io))
+            @test streamformat(query(buf)) == DataFormat{:TIFF}
+        end
+    end
+end
+
 @testset "Format with function for magic bytes" begin
     add_format(format"FUNCTION_FOR_MAGIC_BYTES", x -> 0x00, ".wav", [:WAV])
     del_format(format"FUNCTION_FOR_MAGIC_BYTES")

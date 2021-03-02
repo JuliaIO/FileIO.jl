@@ -260,10 +260,10 @@ function detecttiff(io)
     return any(map(x->all(magic .== x), tiff_magic))
 end
 # normal TIFF
-detect_noometiff(io) = detecttiff(io) && !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+detect_noometiff(io) = detecttiff(io) && ((:name ∉ propertynames(io)) || !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>")))
 add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [:QuartzImageIO, OSX], [:ImageMagick])
 # OME-TIFF
-detect_ometiff(io) = detecttiff(io) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
+detect_ometiff(io) = detecttiff(io) && (:name ∈ propertynames(io)) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF])
 
 # custom skipmagic functions for function-based tiff magic detection
