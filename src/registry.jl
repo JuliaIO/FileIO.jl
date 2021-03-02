@@ -57,18 +57,18 @@ add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 add_format(format"Parquet", "PAR1", [".parquet"], [:ParquetFiles => UUID("46a55296-af5a-53b0-aaa0-97023b66127f"), LOAD])
 
 # Image formats
-add_format(format"PBMBinary", b"P4", ".pbm", [idImageIO], [idNetpbm], [idImageMagick])
-add_format(format"PGMBinary", b"P5", ".pgm", [idImageIO], [idNetpbm])
-add_format(format"PPMBinary", b"P6", ".ppm", [idImageIO], [idNetpbm])
-add_format(format"PBMText",   b"P1", ".pbm", [idImageIO], [idNetpbm], [idImageMagick, LOAD])
-add_format(format"PGMText",   b"P2", ".pgm", [idImageIO], [idNetpbm], [idImageMagick, LOAD])
-add_format(format"PPMText",   b"P3", ".ppm", [idImageIO], [idNetpbm], [idImageMagick, LOAD])
+add_format(format"PBMBinary", "P4", ".pbm", [idImageIO], [idNetpbm], [idImageMagick])
+add_format(format"PGMBinary", "P5", ".pgm", [idImageIO], [idNetpbm])
+add_format(format"PPMBinary", "P6", ".ppm", [idImageIO], [idNetpbm])
+add_format(format"PBMText",   "P1", ".pbm", [idImageIO], [idNetpbm], [idImageMagick, LOAD])
+add_format(format"PGMText",   "P2", ".pgm", [idImageIO], [idNetpbm], [idImageMagick, LOAD])
+add_format(format"PPMText",   "P3", ".ppm", [idImageIO], [idNetpbm], [idImageMagick, LOAD])
 
 add_format(format"NRRD", "NRRD", [".nrrd", ".nhdr"], [:NRRD => UUID("9bb6cfbd-7763-5393-b1b5-1c8e09872146")])
 
 add_format(format"AndorSIF", "Andor Technology Multi-Channel File", ".sif", [:AndorSIF => UUID("d04cd5f8-5917-4006-ac6f-d139328806a7"), LOAD])
 
-add_format(format"FLO", b"PIEH", ".flo", [:OpticalFlowUtils => UUID("ab0dad50-ab19-448c-b796-13553ec8b2d3")])
+add_format(format"FLO", "PIEH", ".flo", [:OpticalFlowUtils => UUID("ab0dad50-ab19-448c-b796-13553ec8b2d3")])
 
 add_format(format"CRW", UInt8[0x49,0x49,0x1a,0x00,0x00,0x00,0x48,0x45], ".crw", [idImageMagick])
 add_format(format"CUR", UInt8[0x00,0x00,0x02,0x00],                     ".cur", [idImageMagick])
