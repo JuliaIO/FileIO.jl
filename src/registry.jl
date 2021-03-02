@@ -343,10 +343,26 @@ end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [:MeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [:MeshIO])
 
+# Astro Data
 add_format(format"FITS",
            # See https://www.loc.gov/preservation/digital/formats/fdd/fdd000317.shtml#sign
            [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54],
            [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS"], [:FITSIO])
+
+function detect_gadget2(io)
+    pos = position(io)
+    seekend(io)
+    len = position(io)
+    len > 264 || return false # at least 256 Header + 2 * Int32
+    seek(io, pos) # Return to start
+    temp1 = read(io, Int32)
+    seek(io, sizeof(Int32)+256)
+    temp2 = read(io, Int32)
+    seek(io, pos)
+    return temp1 == temp2
+end
+add_format(format"Gadget2", detect_gadget2, [".gadget2", ".Gadget2", ".GADGET2"], [:AstroIO])
+
 
 add_format(format"RawArray", [0x61,0x72,0x61,0x77,0x72,0x72,0x79,0x61], ".ra", [:RawArray])
 
