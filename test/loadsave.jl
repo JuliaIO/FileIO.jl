@@ -4,56 +4,59 @@ using Test
 # Stub readers---these might bork any existing readers, so don't
 # run these tests while doing other things!
 module TestLoadSave
-import FileIO: File, @format_str
-load(file::File{format"PBMText"})   = "PBMText"
-load(file::File{format"PBMBinary"}) = "PBMBinary"
-load(file::File{format"JLD"})       = "JLD"
-load(file::File{format"GZIP"})      = "GZIP"
+    import FileIO: File, @format_str
+    load(file::File{format"PBMText"})   = "PBMText"
+    load(file::File{format"PBMBinary"}) = "PBMBinary"
+    load(file::File{format"JLD"})       = "JLD"
+    load(file::File{format"GZIP"})      = "GZIP"
 end
 module TestLoadSave2
-import FileIO: File, @format_str
-fileio_load(file::File{format"HDF5"})      = "HDF5"
+    import FileIO: File, @format_str
+    fileio_load(file::File{format"HDF5"})      = "HDF5"
 end
 
-sym2loader = copy(FileIO.sym2loader)
-sym2saver = copy(FileIO.sym2saver)
+@testset "FakeIO" begin
+    sym2loader = copy(FileIO.sym2loader)
+    sym2saver = copy(FileIO.sym2saver)
 
-try
-    empty!(FileIO.sym2loader)
-    empty!(FileIO.sym2saver)
-    # use `local` to suppress soft scope warning
-    local file_dir = joinpath(dirname(@__FILE__), "files")
-    local file_path = Path(file_dir)
+    try
+        empty!(FileIO.sym2loader)
+        empty!(FileIO.sym2saver)
+        file_dir = joinpath(dirname(@__FILE__), "files")
+        file_path = Path(file_dir)
 
-    @testset "Load $(typeof(fp))" for fp in (file_dir, file_path)
+        @testset "Load $(typeof(fp))" for fp in (file_dir, file_path)
 
-        add_loader(format"PBMText", TestLoadSave)
-        add_loader(format"PBMBinary", TestLoadSave)
-        add_loader(format"HDF5", TestLoadSave2)
-        add_loader(format"JLD", TestLoadSave)
-        add_loader(format"GZIP", TestLoadSave)
+            add_loader(format"PBMText", TestLoadSave)
+            add_loader(format"PBMBinary", TestLoadSave)
+            add_loader(format"HDF5", TestLoadSave2)
+            add_loader(format"JLD", TestLoadSave)
+            add_loader(format"GZIP", TestLoadSave)
 
-        @test load(joinpath(fp,"file1.pbm")) == "PBMText"
-        @test load(joinpath(fp,"file2.pbm")) == "PBMBinary"
+            @test load(joinpath(fp,"file1.pbm")) == "PBMText"
+            @test load(joinpath(fp,"file2.pbm")) == "PBMBinary"
 
-        # Regular HDF5 file with magic bytes starting at position 0
-        @test load(joinpath(fp,"file1.h5")) == "HDF5"
-        # This one is actually a JLD file saved with an .h5 extension,
-        # and the JLD magic bytes edited to prevent it from being recognized
-        # as JLD.
-        # JLD files are also HDF5 files, so this should be recognized as
-        # HDF5. However, what makes this more interesting is that the
-        # magic bytes start at position 512.
-        @test load(joinpath(fp,"file2.h5")) == "HDF5"
-        # JLD file saved with .jld extension
-        @test load(joinpath(fp,"file.jld")) == "JLD"
-        # GZIP file saved with .gz extension
-        @test load(joinpath(fp,"file.csv.gz")) == "GZIP"
-        @test_throws Exception load("missing.fmt")
+            # Regular HDF5 file with magic bytes starting at position 0
+            @test load(joinpath(fp,"file1.h5")) == "HDF5"
+            # This one is actually a JLD file saved with an .h5 extension,
+            # and the JLD magic bytes edited to prevent it from being recognized
+            # as JLD.
+            # JLD files are also HDF5 files, so this should be recognized as
+            # HDF5. However, what makes this more interesting is that the
+            # magic bytes start at position 512.
+            @test load(joinpath(fp,"file2.h5")) == "HDF5"
+            # JLD file saved with .jld extension
+            @test load(joinpath(fp,"file.jld")) == "JLD"
+            # GZIP file saved with .gz extension
+            @test load(joinpath(fp,"file.csv.gz")) == "GZIP"
+            @test_throws Exception load("missing.fmt")
+        end
+    finally
+        empty!(FileIO.sym2loader)
+        empty!(FileIO.sym2saver)
+        merge!(FileIO.sym2loader, sym2loader)
+        merge!(FileIO.sym2saver, sym2saver)
     end
-finally
-    merge!(FileIO.sym2loader, sym2loader)
-    merge!(FileIO.sym2saver, sym2saver)
 end
 
 # A tiny but complete example
@@ -65,115 +68,115 @@ add_format(format"DUMMY", b"DUMMY", ".dmy")
 
 module Dummy
 
-using FileIO
+    using FileIO
 
-mutable struct DummyReader{IOtype}
-    stream::IOtype
-    ownstream::Bool
-    bytesleft::Int64
-end
-
-function DummyReader(stream, ownstream)
-    read(stream, 5) == magic(format"DUMMY") || error("wrong magic bytes")
-    DummyReader(stream, ownstream, read(stream, Int64))
-end
-
-function Base.read(stream::DummyReader, n=stream.bytesleft)
-    toread = min(n, stream.bytesleft)
-    buf = read(stream.stream, toread)
-    stream.bytesleft -= length(buf)
-    buf
-end
-
-Base.eof(stream::DummyReader) = stream.bytesleft == 0 || eof(stream.stream)
-Base.close(stream::DummyReader) = stream.ownstream && close(stream.stream)
-
-mutable struct DummyWriter{IOtype}
-    stream::IOtype
-    ownstream::Bool
-    headerpos::Int64
-    byteswritten::Int
-end
-
-function DummyWriter(stream, ownstream)
-    write(stream, magic(format"DUMMY"))  # Write the magic bytes
-    # store the position where we'll need to write the length
-    pos = position(stream)
-    # write a dummy length value
-    write(stream, 0xffffffffffffffff)
-    DummyWriter(stream, ownstream, pos, 0)
-end
-
-function Base.write(stream::DummyWriter, data)
-    udata = convert(Vector{UInt8}, data)
-    n = write(stream.stream, udata)
-    stream.byteswritten += n
-
-    n
-end
-
-function Base.close(stream::DummyWriter)
-    here = position(stream.stream)
-    # go back and write the header
-    seek(stream.stream, stream.headerpos)
-    write(stream.stream, convert(Int64, stream.byteswritten))
-    seek(stream.stream, here)
-    stream.ownstream && close(stream.stream)
-
-    nothing
-end
-
-loadstreaming(s::Stream{format"DUMMY"}) = DummyReader(s, false)
-loadstreaming(file::File{format"DUMMY"}) = DummyReader(open(file), true)
-savestreaming(s::Stream{format"DUMMY"}) = DummyWriter(s, false)
-savestreaming(file::File{format"DUMMY"}) = DummyWriter(open(file, "w"), true)
-
-# we could implement `load` and `save` in terms of their streaming versions
-function load(file::File{format"DUMMY"}; extra=UInt8[])
-    open(file) do s
-        load(s; extra=extra)
+    mutable struct DummyReader{IOtype}
+        stream::IOtype
+        ownstream::Bool
+        bytesleft::Int64
     end
-end
 
-function metadata(file::File{format"DUMMY"})
-    s = open(file)
-    skipmagic(s)
-    n = read(s, Int64)
-    close(s)
-    return n
-end
-
-function load(s::Stream{format"DUMMY"}; extra=UInt8[])
-    skipmagic(s)
-    n = read(s, Int64)
-    out = Vector{UInt8}(undef, n)
-    read!(s, out)
-    # verify that the extradata is as expected. This is just to test that
-    # the keyword arguments are handled properly in loading and saving
-    extradata = read(s, length(extra))
-    if extradata != extra
-        throw(ErrorException("Got extra data $extradata instead of $extra"))
+    function DummyReader(stream, ownstream)
+        read(stream, 5) == magic(format"DUMMY") || error("wrong magic bytes")
+        DummyReader(stream, ownstream, read(stream, Int64))
     end
-    close(s)
-    out
-end
 
-function save(file::File{format"DUMMY"}, data; extra=UInt8[])
-    open(file, "w") do s
-        save(s, data; extra=extra)
+    function Base.read(stream::DummyReader, n=stream.bytesleft)
+        toread = min(n, stream.bytesleft)
+        buf = read(stream.stream, toread)
+        stream.bytesleft -= length(buf)
+        buf
     end
-end
 
-function save(s::Stream{format"DUMMY"}, data; extra=UInt8[])
-    write(s, magic(format"DUMMY"))  # Write the magic bytes
-    write(s, convert(Int64, length(data)))
-    udata = convert(Vector{UInt8}, data)
-    write(s, udata)
-    write(s, extra)
-end
+    Base.eof(stream::DummyReader) = stream.bytesleft == 0 || eof(stream.stream)
+    Base.close(stream::DummyReader) = stream.ownstream && close(stream.stream)
 
-add_loader(format"DUMMY", Dummy)
-add_saver(format"DUMMY", Dummy)
+    mutable struct DummyWriter{IOtype}
+        stream::IOtype
+        ownstream::Bool
+        headerpos::Int64
+        byteswritten::Int
+    end
+
+    function DummyWriter(stream, ownstream)
+        write(stream, magic(format"DUMMY"))  # Write the magic bytes
+        # store the position where we'll need to write the length
+        pos = position(stream)
+        # write a dummy length value
+        write(stream, 0xffffffffffffffff)
+        DummyWriter(stream, ownstream, pos, 0)
+    end
+
+    function Base.write(stream::DummyWriter, data)
+        udata = convert(Vector{UInt8}, data)
+        n = write(stream.stream, udata)
+        stream.byteswritten += n
+
+        n
+    end
+
+    function Base.close(stream::DummyWriter)
+        here = position(stream.stream)
+        # go back and write the header
+        seek(stream.stream, stream.headerpos)
+        write(stream.stream, convert(Int64, stream.byteswritten))
+        seek(stream.stream, here)
+        stream.ownstream && close(stream.stream)
+
+        nothing
+    end
+
+    loadstreaming(s::Stream{format"DUMMY"}) = DummyReader(s, false)
+    loadstreaming(file::File{format"DUMMY"}) = DummyReader(open(file), true)
+    savestreaming(s::Stream{format"DUMMY"}) = DummyWriter(s, false)
+    savestreaming(file::File{format"DUMMY"}) = DummyWriter(open(file, "w"), true)
+
+    # we could implement `load` and `save` in terms of their streaming versions
+    function load(file::File{format"DUMMY"}; extra=UInt8[])
+        open(file) do s
+            load(s; extra=extra)
+        end
+    end
+
+    function metadata(file::File{format"DUMMY"})
+        s = open(file)
+        skipmagic(s)
+        n = read(s, Int64)
+        close(s)
+        return n
+    end
+
+    function load(s::Stream{format"DUMMY"}; extra=UInt8[])
+        skipmagic(s)
+        n = read(s, Int64)
+        out = Vector{UInt8}(undef, n)
+        read!(s, out)
+        # verify that the extradata is as expected. This is just to test that
+        # the keyword arguments are handled properly in loading and saving
+        extradata = read(s, length(extra))
+        if extradata != extra
+            throw(ErrorException("Got extra data $extradata instead of $extra"))
+        end
+        close(s)
+        out
+    end
+
+    function save(file::File{format"DUMMY"}, data; extra=UInt8[])
+        open(file, "w") do s
+            save(s, data; extra=extra)
+        end
+    end
+
+    function save(s::Stream{format"DUMMY"}, data; extra=UInt8[])
+        write(s, magic(format"DUMMY"))  # Write the magic bytes
+        write(s, convert(Int64, length(data)))
+        udata = convert(Vector{UInt8}, data)
+        write(s, udata)
+        write(s, extra)
+    end
+
+    add_loader(format"DUMMY", Dummy)
+    add_saver(format"DUMMY", Dummy)
 
 end # module Dummy
 
@@ -318,27 +321,27 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
-using FileIO: File, @format_str, Stream, stream, skipmagic
+    using FileIO: File, @format_str, Stream, stream, skipmagic
 
-load(f::File{format"AmbigExt1"}) = open(f) do io
-    skipmagic(io)
-    read(stream(io), String)
-end
-load(f::File{format"AmbigExt2"}) = open(f) do io
-    skipmagic(io)
-    read(stream(io), String)
-end
+    load(f::File{format"AmbigExt1"}) = open(f) do io
+        skipmagic(io)
+        read(stream(io), String)
+    end
+    load(f::File{format"AmbigExt2"}) = open(f) do io
+        skipmagic(io)
+        read(stream(io), String)
+    end
 
-fileio_save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
-    s = stream(io)
-    print(s, "ambigext1")
-    print(s, testdata)
-end
-fileio_save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
-    s = stream(io)
-    print(s, "ambigext2")
-    print(s, testdata)
-end
+    fileio_save(f::File{format"AmbigExt1"}, testdata) = open(f, "w") do io
+        s = stream(io)
+        print(s, "ambigext1")
+        print(s, testdata)
+    end
+    fileio_save(f::File{format"AmbigExt2"}, testdata) = open(f, "w") do io
+        s = stream(io)
+        print(s, "ambigext2")
+        print(s, testdata)
+    end
 end
 
 @testset "Ambiguous extension" begin
@@ -372,9 +375,9 @@ end
 end
 
 module BadOverride
-using FileIO
-FileIO.load(::File{format"OVERRIDE"}) = 22
-add_format(format"OVERRIDE", "OVRD0101", ".ovr", [BadOverride])
+    using FileIO
+    FileIO.load(::File{format"OVERRIDE"}) = 22
+    add_format(format"OVERRIDE", "OVRD0101", ".ovr", [BadOverride])
 end
 
 @testset "Warn FileIO overrides" begin

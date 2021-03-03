@@ -1,9 +1,9 @@
 println("these tests will print warnings: ")
 
 module PathError
-import FileIO: File, @format_str
-save(file::File{format"PATHERROR"}, data) = nothing
-load(file::File{format"PATHERROR"}) = nothing
+    import FileIO: File, @format_str
+    save(file::File{format"PATHERROR"}, data) = nothing
+    load(file::File{format"PATHERROR"}) = nothing
 end
 add_format(format"PATHERROR", (), ".patherror", [PathError])
 
@@ -23,7 +23,8 @@ add_format(format"PATHERROR", (), ".patherror", [PathError])
 end
 
 @testset "Not installed" begin
-    @test_logs (:warn, r"supply `pkg` as a Module or `name=>uuid`") @test_throws ArgumentError add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
+    # The logging part of this test only works when running under Pkg.test (TODO: fix this)
+    @test_logs (:warn, r"supply `pkg` as a Module or `name=>uuid`") @test_throws(ArgumentError, add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled]))
     # Give it a fake UUID
     add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled=>UUID("79e393ae-7a7b-11eb-1530-bf4d98024096")])
     @test_throws ArgumentError save("test.not_installed", nothing)
@@ -54,7 +55,7 @@ end
 
 # Missing load/save functions
 module BrokenIO
-using FileIO
+    using FileIO
 end
 add_format(format"BROKEN", (), ".brok", [BrokenIO])
 
@@ -68,12 +69,12 @@ add_format(format"BROKEN", (), ".brok", [BrokenIO])
 end
 
 module MultiError1
-import FileIO: @format_str, File
-load(file::File{format"MultiError"}) = error("1")
+    import FileIO: @format_str, File
+    load(file::File{format"MultiError"}) = error("1")
 end
 module MultiError2
-import FileIO: @format_str, File, magic
-load(file::File{format"MultiError"}) = error("2")
+    import FileIO: @format_str, File, magic
+    load(file::File{format"MultiError"}) = error("2")
 end
 @testset "multiple errors" begin
     println("this test will print warnings: ")
