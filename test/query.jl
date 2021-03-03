@@ -87,6 +87,7 @@ try
         @test FileIO.ext2sym[".JNK"] == :JUNK
         @test FileIO.magic_list == [Pair([0x4a,0x55,0x4e,0x4b],:JUNK)]
 
+        add_format(format"OTHER", [0x01, 0x02], ".othr")
     end
 
     @testset "streams" begin
@@ -94,11 +95,13 @@ try
         s = Stream(format"JUNK", io)
         @test typeof(s) <: Stream{DataFormat{:JUNK},IOBuffer}
         @test filename(s) == nothing
-        @test_throws Exception FileIO.file!(s)
+        @test_throws ErrorException("filename unknown") FileIO.file!(s)
         s = Stream(format"JUNK", io, "junk.jnk")
         @test filename(s) == "junk.jnk"
         s = Stream(format"JUNK", io, "junk2.jnk")
         @test filename(s) == "junk2.jnk"
+        s = Stream(format"JUNK", io, "somefile.jnk")
+        @test FileIO.file!(s) isa File{format"JUNK"}
     end
 
     @testset "query" begin
@@ -123,6 +126,20 @@ try
         @test typeof(q) <: Stream{format"JUNK",typeof(io)}
         @test !(unknown(q))
         @test file_extension(q) == nothing
+        # unseekable IO
+        seek(io, 0)
+        io.seekable = false
+        @test !FileIO.seekable(io)
+        q = query(io)
+        @test typeof(q) <: Stream{format"JUNK",typeof(io)}
+        io.seekable = true
+        # too short to match
+        io2 = IOBuffer()
+        write(io2, "JU")
+        seek(io2, 0)
+        io2.seekable = false
+        q = query(io2)
+        @test unknown(q)
 
         # File with correct extension
         str = String(take!(io))
@@ -133,6 +150,17 @@ try
         q = query(fn)
         @test typeof(q) <: File{format"JUNK"}
         @test file_extension(q) == ".jnk"
+        # for good measure, test some constructors & other query calls
+        @test query(q) == q
+        @test File{format"JUNK"}(q) == q
+        @test_throws ArgumentError("cannot change the format of $q to OTHER") File{format"OTHER"}(q)
+        open(fn) do io
+            @test query(io) isa Stream{format"JUNK", typeof(io)}
+            @test query(io, q) isa Stream{format"JUNK", typeof(io)}
+            @test Stream(q, io) isa Stream{format"JUNK", typeof(io)}
+            @test Stream{format"JUNK"}(q, io) isa Stream{format"JUNK", typeof(io)}
+            @test_throws ArgumentError Stream{format"OTHER"}(q, io)
+        end
 
         rm(fn)
 
@@ -144,6 +172,15 @@ try
         q = query(fn)
         @test typeof(q) <: File{format"JUNK"}
         @test file_extension(q) == ".csv"
+        rm(fn)
+        # erroneous extension with a file that has magic bytes
+        fn = string(tempname(), ".othr")
+        open(fn, "w") do file
+            write(file, str)
+        end
+        q = query(fn)
+        @test typeof(q) <: File{format"JUNK"}
+        @test query(fn; checkfile=false) isa File{format"OTHER"}
         rm(fn)
 
         # Format with no magic bytes
@@ -179,6 +216,15 @@ try
         @test typeof(q) <: File{format"DOUBLE_1"}
         rm(fn)
 
+        # Busted detection function
+        busted(io) = error("whoops")
+        add_format(format"BUSTED", busted, ".bstd")
+        fn = string(tempname(), ".bstd")
+        open(fn, "w") do file
+            write(file, "JUNK stuff")
+        end
+        @test (@test_logs (:error,r"There was an error in magic function .*busted") query(fn)) isa File{format"JUNK"}
+        del_format(format"BUSTED")
 
         add_format(format"MAGIC", "this so magic", ".mmm")
         q = query( "some_non_existant_file.mmm")
@@ -214,7 +260,10 @@ try
             write(file, randstring(19)) # corrupt magic bytes
         end
         open(fn, "r") do file
-            @test_throws Exception skipmagic(file)
+            @test_throws ErrorException("tried to skip magic bytes of an IO that does not contain the magic bytes of the format. IO: $file") skipmagic(Stream{format"DOUBLE_MAGIC"}(file, fn))
+        end
+        open(fn, "r") do file
+            @test_throws ErrorException("tried to skip magic bytes of an IO that does not contain the magic bytes of the format. IO: $file") skipmagic(file, format"DOUBLE_MAGIC")
         end
         rm(fn)
         lene0 = length(FileIO.ext2sym)

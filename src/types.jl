@@ -35,7 +35,7 @@ struct File{F<:DataFormat, Name} <: Formatted{F}
     filename::Name
 end
 File{F}(file::File{F}) where F<:DataFormat = file
-File{DataFormat{sym}}(@nospecialize(file::Formatted)) where sym = error("cannot change the format of $file to $sym")
+File{DataFormat{sym}}(@nospecialize(file::Formatted)) where sym = throw(ArgumentError("cannot change the format of $file to $sym"))
 File{F}(file::AbstractString) where F<:DataFormat = File{F,String}(String(file)) # canonicalize to limit type-diversity
 File{F}(file) where F<:DataFormat = File{F,typeof(file)}(file)
 
@@ -71,9 +71,11 @@ Stream{F,IOtype}(io::IO, filename)                 where {F<:DataFormat,IOtype} 
 Stream{F,IOtype}(io::IO)                           where {F<:DataFormat,IOtype} = Stream{F, IOtype}(io, nothing)
 
 Stream{F,IOtype}(file::Formatted{F}, io::IO) where {F<:DataFormat,IOtype} = Stream{F,IOtype}(io, filename(file))
-Stream{F,IOtype}(@nospecialize(file::Formatted), io::IO) where {F<:DataFormat,IOtype} = error("cannot change the format of $file to $(formatname(F)::Symbol)")
+Stream{F,IOtype}(@nospecialize(file::Formatted), io::IO) where {F<:DataFormat,IOtype} =
+    throw(ArgumentError("cannot change the format of $file to $(formatname(F)::Symbol)"))
 
 Stream{F}(io::IO, args...) where {F<:DataFormat} = Stream{F, typeof(io)}(io, args...)
+Stream{F}(file::File, io::IO) where {F<:DataFormat} = Stream{F, typeof(io)}(file, io)
 Stream(file::File{F}, io::IO) where {F<:DataFormat} = Stream{F}(io, filename(file))
 
 stream(@nospecialize(s::Stream)) = s.io

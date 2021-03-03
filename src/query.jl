@@ -76,7 +76,7 @@ function query(filename; checkfile::Bool=true)
     sym = querysym(filename; checkfile=checkfile)
     return File{DataFormat{sym}}(filename)
 end
-query(@nospecialize(f::Formatted); checkfile::Bool=true) = f
+query(@nospecialize(f::Formatted)) = f
 
 # This is recommended for internal use because it returns Symbol (or errors)
 function querysym(filename; checkfile::Bool=true)
@@ -142,9 +142,8 @@ function match(io, @nospecialize(magic::Function))
     try
         magic(io)
     catch e
-        println("There was an error in magic function $magic")
-        println("Please open an issue at FileIO.jl. Error:")
-        println(e)
+        @error("""There was an error in magic function $magic.
+                  Please open an issue at FileIO.jl.""", exception=(e, catch_backtrace()))
         false
     end
 end
@@ -205,30 +204,7 @@ function query(io::IO, filename = nothing)
     sym = querysym(io)
     return Stream{DataFormat{sym}}(io, filename)
 end
-query(io::IO, @nospecialize(filename::Formatted)) = error("no need to query when format is known")
-
-# TODO?: update to querysym?
-function query(io::IO, filename::String, sym::Vector{Symbol})
-    pos = position(io)
-    if seekable(io)
-        for (f, fmtsym) in magic_func
-            fmtsym in sym || continue
-            seek(io, pos)
-            try
-                if f(io)
-                    return Stream{DataFormat{fmtsym},typeof(io)}(seek(io, pos), filename)
-                end
-            catch e
-                println("There was an error in magic function $f")
-                println("Please open an issue at FileIO.jl. Error:")
-                println(e)
-            end
-        end
-        seek(io, pos)
-    end
-    close(io)    # FIXME?
-    nothing
-end
+query(io::IO, @nospecialize(file::Formatted)) = Stream{DataFormat{formatname(file)::Symbol}}(io, filename(file))
 
 seekable(io::IOBuffer) = io.seekable
 seekable(::IOStream) = true
