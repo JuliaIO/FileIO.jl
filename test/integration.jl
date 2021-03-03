@@ -5,8 +5,8 @@ using Pkg
 using Test
 
 @testset "Integration" begin
-    if haskey(ENV, "CI")
-        Pkg.add(Base.VERSION >= v"1.3" ? "ImageIO" : "ImageMagick")
+    if haskey(ENV, "CI") && Base.VERSION >= v"1.3"
+        Pkg.add("ImageIO")
         img = rand(RGB{N0f8}, 50, 50)
         io = IOBuffer()
         save(Stream{format"PNG"}(io), img)
