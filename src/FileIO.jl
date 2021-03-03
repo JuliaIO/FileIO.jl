@@ -26,6 +26,7 @@ import Base.showerror
 using Base: RefValue, PkgId
 using Pkg
 using UUIDs
+using Requires
 
 include("types.jl")
 include("registry_setup.jl")
@@ -62,6 +63,12 @@ include("registry.jl")
 - `add_saver(fmt, :Package)`: indicate that `Package` supports saving files of type `fmt`
 """
 FileIO
+
+function __init__()
+    @require HTTP="cd3eb016-35fb-5094-929b-558a96fad6f3" begin
+        load(uri::HTTP.URI) = load(IOBuffer(HTTP.get(uri).body))
+    end
+end
 
 if VERSION >= v"1.4.2" # https://github.com/JuliaLang/julia/pull/35378
     include("precompile.jl")
