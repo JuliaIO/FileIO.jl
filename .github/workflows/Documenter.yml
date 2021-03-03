@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      # - uses: julia-actions/setup-julia@v1
-      #   with:
-      #     version: nightly               # change this to 1.6 once's that's official
-      #     show-versioninfo: true         # this causes versioninfo to be printed to the action log
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: nightly               # change this to 1.6 once's that's official
+          show-versioninfo: true         # this causes versioninfo to be printed to the action log
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-docdeploy@latest
         env:
