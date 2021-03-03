@@ -27,7 +27,7 @@ end
     @test_logs (:warn, r"supply `pkg` as a Module or `name=>uuid`") @test_throws(ArgumentError, add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled]))
     # Give it a fake UUID
     add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled=>UUID("79e393ae-7a7b-11eb-1530-bf4d98024096")])
-    @test_throws ArgumentError save("test.not_installed", nothing)
+    @test_throws CapturedException save("test.not_installed", nothing)
 
     # Core.eval(Base, :(is_interactive = true)) # for interactive error handling
     # add_format(format"NotInstalled", (), ".not_installed", [:NotInstalled])
@@ -62,8 +62,14 @@ add_format(format"BROKEN", (), ".brok", [BrokenIO])
 @testset "Absent implementation" begin
     stderr_copy = stderr
     rserr, wrerr = redirect_stderr()
-    @test_throws FileIO.LoaderError load(Stream{format"BROKEN"}(stdin))
-    @test_throws FileIO.WriterError save(Stream{format"BROKEN"}(stdout), nothing)
+    ex = try load(Stream{format"BROKEN"}(stdin)) catch e e end
+    @test isa(ex, CapturedException)
+    @test isa(ex.ex, FileIO.LoaderError)
+    @test isa(ex.ex.ex, FileIO.SpecError)
+    ex = try save(Stream{format"BROKEN"}(stdout), nothing) catch e e end
+    @test isa(ex, CapturedException)
+    @test isa(ex.ex, FileIO.WriterError)
+    @test isa(ex.ex.ex, FileIO.SpecError)
     redirect_stderr(stderr_copy)
     close(rserr);close(wrerr)
 end
@@ -89,6 +95,7 @@ end
     open(tmpfile, "w") do io
         println(io, "dummy content")
     end
-    ret = @test_throws ErrorException load(tmpfile)
-    #@test ret.value.msg == "1" # this is 0.5 only
+    ex = try load(tmpfile) catch e e end
+    @test isa(ex, CapturedException)
+    @test isa(ex.ex, ErrorException)
 end

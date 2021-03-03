@@ -190,7 +190,7 @@ const fileiofuncs = Dict{Symbol,Function}(:load => load,
 
 function action(call::Symbol, libraries::Vector{ActionSource}, @nospecialize(file::Formatted), args...; options...)
     issave = call ∈ (:save, :savestreaming)
-    failures = Tuple{Any,ActionSource}[]
+    failures = Tuple{Any,ActionSource,Vector}[]
     pkgfuncname = Symbol("fileio_", call)
     local mod
     for library in libraries
@@ -213,9 +213,9 @@ function action(call::Symbol, libraries::Vector{ActionSource}, @nospecialize(fil
         catch e
             if isa(e, MethodError) || isa(e, SpecError)
                 str = "neither $call nor $pkgfuncname is defined"
-                e = issave ? WriterError(string(mod), str) : LoaderError(string(mod), str)
+                e = issave ? WriterError(string(mod), str, e) : LoaderError(string(mod), str, e)
             end
-            push!(failures, (e, library))
+            push!(failures, (e, library, catch_backtrace()))
         end
     end
     handle_exceptions(failures, "$call $(repr(file))")
