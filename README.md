@@ -1,7 +1,7 @@
 # FileIO
 
 [![Build status](https://github.com/JuliaIO/FileIO.jl/actions/workflows/test.yml/badge.svg)](https://github.com/JuliaIO/FileIO.jl/actions/workflows/test.yml)
-[![Coverage Status](https://coveralls.io/repos/JuliaIO/FileIO.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaIO/FileIO.jl?branch=master)
+[![codecov](https://codecov.io/gh/JuliaIO/FileIO.jl/branch/master/graph/badge.svg?token=I0NjrZpJKh)](https://codecov.io/gh/JuliaIO/FileIO.jl)
 
 FileIO aims to provide a common framework for detecting file formats
 and dispatching to appropriate readers/writers.  The two core

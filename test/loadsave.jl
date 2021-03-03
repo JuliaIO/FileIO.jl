@@ -8,7 +8,7 @@ import FileIO: File, @format_str
 load(file::File{format"PBMText"})   = "PBMText"
 load(file::File{format"PBMBinary"}) = "PBMBinary"
 load(file::File{format"JLD"})       = "JLD"
-load(file::File{format"GZIP"})       = "GZIP"
+load(file::File{format"GZIP"})      = "GZIP"
 end
 module TestLoadSave2
 import FileIO: File, @format_str
@@ -27,11 +27,11 @@ try
 
     @testset "Load $(typeof(fp))" for fp in (file_dir, file_path)
 
-        add_loader(format"PBMText", :TestLoadSave)
-        add_loader(format"PBMBinary", :TestLoadSave)
-        add_loader(format"HDF5", :TestLoadSave2)
-        add_loader(format"JLD", :TestLoadSave)
-        add_loader(format"GZIP", :TestLoadSave)
+        add_loader(format"PBMText", TestLoadSave)
+        add_loader(format"PBMBinary", TestLoadSave)
+        add_loader(format"HDF5", TestLoadSave2)
+        add_loader(format"JLD", TestLoadSave)
+        add_loader(format"GZIP", TestLoadSave)
 
         @test load(joinpath(fp,"file1.pbm")) == "PBMText"
         @test load(joinpath(fp,"file2.pbm")) == "PBMBinary"
@@ -172,8 +172,8 @@ function save(s::Stream{format"DUMMY"}, data; extra=UInt8[])
     write(s, extra)
 end
 
-add_loader(format"DUMMY", :Dummy)
-add_saver(format"DUMMY", :Dummy)
+add_loader(format"DUMMY", Dummy)
+add_saver(format"DUMMY", Dummy)
 
 end # module Dummy
 
@@ -189,7 +189,7 @@ end # module Dummy
         f = query(fnrel)
         @test isabspath(filename(f))
         @test endswith(filename(f),fn) # TravisOSX prepends "/private"
-        f = File(format"DUMMY", fnrel)
+        f = File{format"DUMMY"}(fnrel)
         @test !(isabspath(filename(f)))
         open(f) do s
             @test isabspath(filename(s))
@@ -206,7 +206,7 @@ end # module Dummy
         f = query(fnrel)
         @test isabspath(filename(f))
         @test endswith(filename(f),fn2) # TravisOSX prepends "/private"
-        f = File(format"DUMMY", fnrel)
+        f = File{format"DUMMY"}(fnrel)
         @test !(isabspath(filename(f)))
         open(f) do s
             @test isabspath(filename(s))
@@ -318,7 +318,7 @@ del_format(format"DUMMY")
 # PPM/PBM can be either binary or text. Test that the defaults work,
 # and that we can force a choice.
 module AmbigExt
-import FileIO: File, @format_str, Stream, stream, skipmagic
+using FileIO: File, @format_str, Stream, stream, skipmagic
 
 load(f::File{format"AmbigExt1"}) = open(f) do io
     skipmagic(io)
@@ -342,8 +342,8 @@ end
 end
 
 @testset "Ambiguous extension" begin
-    add_format(format"AmbigExt1", "ambigext1", ".aext", [:AmbigExt])
-    add_format(format"AmbigExt2", "ambigext2", ".aext", [:AmbigExt])
+    add_format(format"AmbigExt1", "ambigext1", ".aext", [AmbigExt])
+    add_format(format"AmbigExt2", "ambigext2", ".aext", [AmbigExt])
     A = "this is a test"
     fn = string(tempname(), ".aext")
     # Test the forced version first: we wouldn't want some method in Netpbm
@@ -354,13 +354,13 @@ end
 
     B = load(fn)
     @test B == A
-    @test typeof(query(fn)) == File{format"AmbigExt2"}
+    @test typeof(query(fn)) <: File{format"AmbigExt2"}
     rm(fn)
 
     save(fn, A)
     B = load(fn)
     @test B == A
-    @test typeof(query(fn)) == File{format"AmbigExt1"}
+    @test typeof(query(fn)) <: File{format"AmbigExt1"}
 
     rm(fn)
     del_format(format"AmbigExt1")
@@ -368,5 +368,20 @@ end
 end
 
 @testset "Absent file" begin
-    @test_throws SystemError load("nonexistent.oops")
+    @test_throws Union{ArgumentError,SystemError} load("nonexistent.oops")
+end
+
+module BadOverride
+using FileIO
+FileIO.load(::File{format"OVERRIDE"}) = 22
+add_format(format"OVERRIDE", "OVRD0101", ".ovr", [BadOverride])
+end
+
+@testset "Warn FileIO overrides" begin
+    fn = string(tempname(), ".ovr")
+    open(fn, "w") do io
+        write(io, magic(:OVERRIDE))
+        print(io, "\nDone")
+    end
+    @test (@test_logs (:warn, r"incorrectly extends FileIO functions \(see FileIO documentation\)") load(fn)) == 22
 end
