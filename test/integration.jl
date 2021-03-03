@@ -15,8 +15,8 @@ using Test
         io2 = IOBuffer(buf)
         img2 = load(io2)
         @test img2 == img
-    end
 
-    uri = HTTP.URI("https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/135px-Wikipedia-logo-v2-en.svg.png")
-    @test isa(load(uri), Matrix)
+        uri = HTTP.URI("https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/135px-Wikipedia-logo-v2-en.svg.png")
+        @test isa(load(uri), Matrix)
+    end
 end
