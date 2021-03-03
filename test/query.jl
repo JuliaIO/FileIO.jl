@@ -92,15 +92,15 @@ try
 
     @testset "streams" begin
         io = IOBuffer()
-        s = Stream(format"JUNK", io)
+        s = Stream{format"JUNK"}(io)
         @test typeof(s) <: Stream{DataFormat{:JUNK},IOBuffer}
         @test filename(s) == nothing
         @test_throws ErrorException("filename unknown") FileIO.file!(s)
-        s = Stream(format"JUNK", io, "junk.jnk")
+        s = Stream{format"JUNK"}(io, "junk.jnk")
         @test filename(s) == "junk.jnk"
-        s = Stream(format"JUNK", io, "junk2.jnk")
+        s = Stream{format"JUNK"}(io, "junk2.jnk")
         @test filename(s) == "junk2.jnk"
-        s = Stream(format"JUNK", io, "somefile.jnk")
+        s = Stream{format"JUNK"}(io, "somefile.jnk")
         @test FileIO.file!(s) isa File{format"JUNK"}
     end
 
@@ -284,8 +284,8 @@ try
             format"MultiLib",
             UInt8[0x42,0x4d],
             ".mlb",
-            [:LoadTest1, FileIO.LOAD, OSKey],
-            [:LoadTest2]
+            [LoadTest1, FileIO.LOAD, OSKey],
+            [LoadTest2]
         )
         @test lensave0 + 1 == length(FileIO.sym2saver)
         @test lenload0 + 1 == length(FileIO.sym2loader)
@@ -408,6 +408,6 @@ end
 end
 
 @testset "Format with function for magic bytes" begin
-    add_format(format"FUNCTION_FOR_MAGIC_BYTES", x -> 0x00, ".wav", [:WAV])
+    add_format(format"FUNCTION_FOR_MAGIC_BYTES", io -> true, ".wav", [LoadTest1])
     del_format(format"FUNCTION_FOR_MAGIC_BYTES")
 end

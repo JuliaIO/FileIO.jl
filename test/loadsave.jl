@@ -27,11 +27,11 @@ try
 
     @testset "Load $(typeof(fp))" for fp in (file_dir, file_path)
 
-        add_loader(format"PBMText", :TestLoadSave)
-        add_loader(format"PBMBinary", :TestLoadSave)
-        add_loader(format"HDF5", :TestLoadSave2)
-        add_loader(format"JLD", :TestLoadSave)
-        add_loader(format"GZIP", :TestLoadSave)
+        add_loader(format"PBMText", TestLoadSave)
+        add_loader(format"PBMBinary", TestLoadSave)
+        add_loader(format"HDF5", TestLoadSave2)
+        add_loader(format"JLD", TestLoadSave)
+        add_loader(format"GZIP", TestLoadSave)
 
         @test load(joinpath(fp,"file1.pbm")) == "PBMText"
         @test load(joinpath(fp,"file2.pbm")) == "PBMBinary"
@@ -172,8 +172,8 @@ function save(s::Stream{format"DUMMY"}, data; extra=UInt8[])
     write(s, extra)
 end
 
-add_loader(format"DUMMY", :Dummy)
-add_saver(format"DUMMY", :Dummy)
+add_loader(format"DUMMY", Dummy)
+add_saver(format"DUMMY", Dummy)
 
 end # module Dummy
 
@@ -189,7 +189,7 @@ end # module Dummy
         f = query(fnrel)
         @test isabspath(filename(f))
         @test endswith(filename(f),fn) # TravisOSX prepends "/private"
-        f = File(format"DUMMY", fnrel)
+        f = File{format"DUMMY"}(fnrel)
         @test !(isabspath(filename(f)))
         open(f) do s
             @test isabspath(filename(s))
@@ -206,7 +206,7 @@ end # module Dummy
         f = query(fnrel)
         @test isabspath(filename(f))
         @test endswith(filename(f),fn2) # TravisOSX prepends "/private"
-        f = File(format"DUMMY", fnrel)
+        f = File{format"DUMMY"}(fnrel)
         @test !(isabspath(filename(f)))
         open(f) do s
             @test isabspath(filename(s))
@@ -342,8 +342,8 @@ end
 end
 
 @testset "Ambiguous extension" begin
-    add_format(format"AmbigExt1", "ambigext1", ".aext", [:AmbigExt])
-    add_format(format"AmbigExt2", "ambigext2", ".aext", [:AmbigExt])
+    add_format(format"AmbigExt1", "ambigext1", ".aext", [AmbigExt])
+    add_format(format"AmbigExt2", "ambigext2", ".aext", [AmbigExt])
     A = "this is a test"
     fn = string(tempname(), ".aext")
     # Test the forced version first: we wouldn't want some method in Netpbm
