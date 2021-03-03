@@ -163,6 +163,7 @@ end
 
 function checkpath_load(file)
     file === nothing && return nothing   # likely stream io
+    isa(file, IO) && return nothing
     !isfile(file) && throw(ArgumentError("No file exists at given path: $file"))
     return nothing
 end
