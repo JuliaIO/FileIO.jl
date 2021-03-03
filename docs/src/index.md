@@ -30,7 +30,17 @@ obj = load(filename)
 to read data from a formatted file. FileIO will attempt to find
 an installed package capable of reading `filename`; if no such
 package is found, it will suggest an appropriate package for you
-to add.
+to add. It doesn't even have to be a file; you can download the Julia logo
+with
+
+```jldoctest
+julia> using FileIO, HTTP
+
+julia> img = load(HTTP.URI("https://github.com/JuliaLang/julia-logo-graphics/raw/master/images/julia-logo-color.png"));
+
+julia> typeof(img)
+Matrix{RGBA{N0f8}} (alias for Array{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8, 8}}, 2})
+```
 
 Likewise, saving might be as simple as
 
