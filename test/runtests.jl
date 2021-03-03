@@ -16,4 +16,5 @@ end
     include("loadsave.jl")
     include("error_handling.jl")
     include("test_mimesave.jl")
+    include("integration.jl")
 end
