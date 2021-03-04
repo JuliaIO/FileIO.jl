@@ -6,9 +6,10 @@ LoaderError("ImageMagick", "Foo not available")
 struct LoaderError <: Exception
     library::String
     msg::String
+    ex
 end
 Base.showerror(io::IO, e::LoaderError) = println(io, e.library, " load error: ",
-                                                 e.msg, "\n  Will try next loader.")
+                                                 e.msg, "\n  due to ", e.ex, "\n  Will try next loader.")
 
 """
 `WriterError` should be thrown when writer library code fails, and other libraries should
@@ -18,10 +19,11 @@ WriterError("ImageMagick", "Foo not available")
 struct WriterError <: Exception
     library::String
     msg::String
+    ex
 end
 Base.showerror(io::IO, e::WriterError) = println(
     io, e.library, " writer error: ",
-    e.msg, "\n  Will try next writer."
+    e.msg, "\n  due to ", e.ex, "\n  Will try next loader."
 )
 
 
@@ -41,7 +43,7 @@ function handle_exceptions(exceptions::Vector, action)
     if multiple
         println("All errors:")
         println("===========================================")
-        for (err, file) in exceptions
+        for (err, file, bt) in exceptions
             showerror(stdout, err)
             println("\n===========================================")
         end
@@ -56,4 +58,4 @@ function handle_exceptions(exceptions::Vector, action)
     end
 end
 
-handle_error(e, q) = throw(e)
+handle_error(e, q, bt) = throw(CapturedException(e, stacktrace(bt)))
