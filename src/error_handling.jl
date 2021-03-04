@@ -24,35 +24,12 @@ Base.showerror(io::IO, e::WriterError) = println(
     e.msg, "\n  Will try next writer."
 )
 
-"""
-`NotInstalledError` should be thrown when a library is currently not installed.
-"""
-struct NotInstalledError <: Exception
-    library::Symbol
-    message::String
+
+struct SpecError <: Exception
+    mod::Module
+    call::Symbol
 end
-Base.showerror(io::IO, e::NotInstalledError) = println(io, e.library, " is not installed.")
-
-"""
-`UnknownFormat` gets thrown when FileIO can't recognize the format of a file.
-"""
-struct UnknownFormat{T <: Formatted} <: Exception
-    format::T
-end
-Base.showerror(io::IO, e::UnknownFormat) = println(io, e.format, " couldn't be recognized by FileIO.")
-
-
-"""
-Handles error as soon as they get thrown while doing IO
-"""
-function handle_current_error(e, library, islast::Bool)
-    bt = catch_backtrace()
-    bts = sprint(io->Base.show_backtrace(io, bt))
-    message = islast ? "" : "\nTrying next loading library! Please report this issue on the Github page for $library"
-    @warn string(e, bts, message)
-end
-handle_current_error(e::NotInstalledError) = @warn string("lib ", e.library, " not installed, trying next library")
-
+Base.showerror(io::IO, e::SpecError) = print(io, e.mod, " is missing $(e.call) and fileio_$(e.call)")
 
 """
 Handles a list of thrown errors after no IO library was found working
@@ -80,8 +57,3 @@ function handle_exceptions(exceptions::Vector, action)
 end
 
 handle_error(e, q) = throw(e)
-
-function handle_error(e::NotInstalledError, q)
-    println("Library \"", e.library, "\" is not installed but is recommended as a library to load format: \"", file_extension(q), "\"")
-    rethrow(e)
-end

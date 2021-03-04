@@ -1,6 +1,7 @@
 using FileIO
 using FilePathsBase
 using Test
+using UUIDs
 
 Threads.nthreads() <= 1 && @info "Threads.nthreads() = $(Threads.nthreads()), multithread tests will be disabled"
 
@@ -15,4 +16,5 @@ end
     include("loadsave.jl")
     include("error_handling.jl")
     include("test_mimesave.jl")
+    include("integration.jl")
 end

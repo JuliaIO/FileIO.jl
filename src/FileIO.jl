@@ -23,8 +23,10 @@ export DataFormat,
        metadata
 
 import Base.showerror
-using Base: RefValue
+using Base: RefValue, PkgId
 using Pkg
+using UUIDs
+using Requires
 
 include("types.jl")
 include("registry_setup.jl")
@@ -42,7 +44,7 @@ include("registry.jl")
 - `File{fmt}` and `Stream{fmt}`: types of objects that declare that a resource has a particular format `fmt`
 
 - `load([filename|stream])`: read data in formatted file, inferring the format
-- `load(File(format"PNG",filename))`: specify the format manually
+- `load(File{format"PNG"}(filename))`: specify the format manually
 - `loadstreaming([filename|stream])`: similar to `load`, except that it returns an object that can be read from
 - `save(filename, data...)` for similar operations involving saving data
 - `savestreaming([filename|stream])`: similar to `save`, except that it returns an object that can be written to
@@ -56,15 +58,23 @@ include("registry.jl")
 - `magic(fmt)` returns the magic bytes for format `fmt`
 - `info(fmt)` returns `(magic, extensions)` for format `fmt`
 
-- `add_format(fmt, magic, extension)`: register a new format
+- `add_format(fmt, magic, extension, libraries...)`: register a new format
 - `add_loader(fmt, :Package)`: indicate that `Package` supports loading files of type `fmt`
 - `add_saver(fmt, :Package)`: indicate that `Package` supports saving files of type `fmt`
 """
 FileIO
 
+function __init__()
+    @require HTTP="cd3eb016-35fb-5094-929b-558a96fad6f3" begin
+        load(uri::HTTP.URI) = load(IOBuffer(HTTP.get(uri).body))
+    end
+end
+
 if VERSION >= v"1.4.2" # https://github.com/JuliaLang/julia/pull/35378
     include("precompile.jl")
     _precompile_()
 end
+
+include("deprecated.jl")
 
 end
