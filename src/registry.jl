@@ -22,14 +22,45 @@ add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz => UUID("2ec943e9-cfe8-584d
 add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
 
+function detect_compressed(io, len=getlength(io); formats=["GZIP", "BZIP2", "XZ", "LZ4"])
+    seekstart(io)
+    len < 2 && return false
+    b1 = read(io, UInt8)
+    b2 = read(io, UInt8)
+    if "GZIP" ∈ formats
+        b1 == 0x1f && b2 == 0x8b && return true
+    end
+    len < 3 && return false
+    b3 = read(io, UInt8)
+    if "BZIP2" ∈ formats
+        b1 == 0x42 && b2 == 0x5A && b3 == 68 && return true
+    end
+    len < 4 && return false
+    b4 = read(io, UInt8)
+    if "LZ4" ∈ formats
+        b1 == 0x04 && b2 == 0x22 && b3 == 0x4D && b4 == 0x18 && return true
+    end
+    len < 5 && return false
+    b5 = read(io, UInt8)
+    len < 6 && return false
+    b6 = read(io, UInt8)
+    if "XZ" ∈ formats
+        b1 == 0xFD && b2 == 0x37 && b3 == 0x7A && b4 == 0x58 && b5 == 0x5A && b6 == 0x00 && return true
+    end
+    return false
+end
+
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
-    read(io, UInt8) == UInt8('R') &&
-    read(io, UInt8) == UInt8('D') &&
-    read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
-    read(io, UInt8) in (UInt8('2'), UInt8('3')) &&
-    (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
+    b = read(io, UInt8)
+    if b == UInt8('R')
+        return read(io, UInt8) == UInt8('D') &&
+               read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
+               read(io, UInt8) in (UInt8('2'), UInt8('3')) &&
+               (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
+    end
+    return detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
 end
 
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [idRData, LOAD])
@@ -38,6 +69,9 @@ function detect_rdata_single(io)
     seekstart(io)
     res = read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
         (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
+    if !res
+        res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
+    end
     seekstart(io)
     return res
 end

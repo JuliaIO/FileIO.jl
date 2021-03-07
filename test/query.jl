@@ -384,6 +384,9 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 # 6 for /r/n  and 5 for /n
                 @test (position(io) in (5, 6))
             end
+            # A GZipped file
+            q = query(joinpath(file_dir, "iris.rda"))
+            @test typeof(q) <: File{format"RData"}
         end
         @testset "RDS detection" begin
             q = query(joinpath(file_dir, "minimal_ascii.rds"))
