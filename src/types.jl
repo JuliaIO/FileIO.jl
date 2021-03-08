@@ -30,6 +30,10 @@ formatname(::Formatted{F}) where F<:DataFormat = formatname(F)
 `File{fmt}(filename)` indicates that `filename` is a file of known
 [`DataFormat`](@ref) `fmt`.  For example, `File{format"PNG"}(filename)` would indicate a PNG
 file.
+
+!!! compat
+    `File{fmt}(filename)` requires FileIO 1.6 or higher. The deprecated syntax `File(fmt, filename)` works
+    on all FileIO 1.x releases.
 """
 struct File{F<:DataFormat, Name} <: Formatted{F}
     filename::Name
@@ -60,6 +64,10 @@ written in known format [`DataFormat`](@ref) `fmt`.
 For example, `Stream{format"PNG"}(io)` would indicate PNG format.
 If known, the optional `filename` argument can
 be used to improve error messages, etc.
+
+!!! compat
+    `Stream{fmt}(io, ...)` requires FileIO 1.6 or higher. The deprecated syntax `Stream(fmt, io, ...)` works
+    on all FileIO 1.x releases.
 """
 struct Stream{F <: DataFormat, IOtype <: IO, Name} <: Formatted{F}
     io::IOtype
