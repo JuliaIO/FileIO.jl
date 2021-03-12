@@ -375,6 +375,11 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             q = query(joinpath(file_dir, "bees.avi"))
             @test typeof(q) <: File{format"AVI"}
         end
+        @testset "WAV detection" begin
+            open(joinpath(file_dir, "sin.wav")) do s
+                @test FileIO.detectwav(s)
+            end
+        end
         @testset "RDA detection" begin
             q = query(joinpath(file_dir, "minimal_ascii.rda"))
             @test typeof(q) <: File{format"RData"}
