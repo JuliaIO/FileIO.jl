@@ -204,7 +204,7 @@ function detectwav(io)
     buf == b"RIFF" || return false
     seek(io, 8)
     read!(io, buf)
-    submagic == b"WAVE"
+    buf == b"WAVE"
 end
 add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78f-408fbbb8ef88")])
 add_format(format"FLAC","fLaC",".flac",[:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")])
