@@ -145,7 +145,7 @@ end
 # return a save function, so you can do `thing_to_save |> save("filename.ext")`
 function save(file; options...)
     sym = querysym(file; checkfile=false)
-    libraries = applicable_loaders(sym)
+    libraries = applicable_savers(sym)
     return data -> action(:save, libraries, sym, file, data; options...)
 end
 
