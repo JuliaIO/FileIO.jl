@@ -45,6 +45,17 @@ using Test
                 isfile(output_filename * filetype) && rm(output_filename * filetype)
             end
 
+            # Functional form
+            data |> save(output_filename * filetype)
+            try
+                content_original = read(joinpath(@__DIR__, "files", "mimesavetest$filetype"))
+                content_new = read(output_filename * filetype)
+
+                @test content_new == content_original
+            finally
+                rm(output_filename * filetype)
+            end
+
         end
     end
 
