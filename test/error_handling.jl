@@ -121,4 +121,33 @@ end
     ex = try load(tmpfile) catch e e end
     @test isa(ex, CapturedException)
     @test isa(ex.ex, ErrorException)
+    rm(dirname(tmpfile), recursive=true)
+end
+
+@testset "stacktrace trimming" begin
+    sfs = try
+        error("whoops")
+    catch err
+        stacktrace(catch_backtrace())
+    end
+    n = length(sfs)
+    FileIO.trim!(sfs)
+    @test length(sfs) < 5 < n
+end
+
+module BustedME
+using FileIO
+load(file, args...) = foo()
+add_format(format"BUSTEDME", "BUSTEDME", ".bus", [BustedME])
+end
+@testset "error accuracy" begin
+    tmpfile = joinpath(mktempdir(), "test.bus")
+    open(tmpfile, "w") do io
+        write(io, magic(format"BUSTEDME"))
+        println(io, "dummy content")
+    end
+    ex = try load(tmpfile) catch e e end
+    @test isa(ex, CapturedException)
+    @test isa(ex.ex, UndefVarError)
+    rm(dirname(tmpfile), recursive=true)
 end
