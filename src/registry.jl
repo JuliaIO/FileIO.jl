@@ -33,7 +33,7 @@ function detect_compressed(io, len=getlength(io); formats=["GZIP", "BZIP2", "XZ"
     len < 3 && return false
     b3 = read(io, UInt8)
     if "BZIP2" ∈ formats
-        b1 == 0x42 && b2 == 0x5A && b3 == 68 && return true
+        b1 == 0x42 && b2 == 0x5A && b3 == 0x68 && return true
     end
     len < 4 && return false
     b4 = read(io, UInt8)
