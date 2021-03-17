@@ -318,6 +318,26 @@ end
     end
 end
 
+@testset "detect $(format !== nothing ? format : "no") compression" for (ext, format) in [(nothing, nothing), (".gz", "GZIP"), (".bz2", "BZIP2"),
+                                                            (".lz4", "LZ4"), (".xz", "XZ")]
+    fname = joinpath(@__DIR__, "files", "dummy.txt")
+    if ext !== nothing
+        fname *= ext
+    end
+    open(fname) do io
+        @test FileIO.detect_compressor(io, formats=[format]) == format # test with specific format only
+    end
+    open(fname) do io
+        @test FileIO.detect_compressor(io, formats=[]) === nothing # test with no formats
+    end
+    open(fname) do io
+        @test FileIO.detect_compressor(io) == format # test with all formats
+    end
+    open(fname) do io
+        @test FileIO.detect_compressed(io) == (format !== nothing)
+    end
+end
+
 let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
     @testset "Querying with $(typeof(fp))" for fp in (file_dir, file_path)
         @testset "bedGraph" begin

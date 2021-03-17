@@ -1,0 +1,1 @@
+This is a dummy file for FileIO.detect_compressor() test
