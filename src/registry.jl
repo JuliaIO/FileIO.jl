@@ -22,33 +22,35 @@ add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz => UUID("2ec943e9-cfe8-584d
 add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
 
-function detect_compressed(io, len=getlength(io); formats=["GZIP", "BZIP2", "XZ", "LZ4"])
+function detect_compressor(io, len=getlength(io); formats=["GZIP", "BZIP2", "XZ", "LZ4"])
     seekstart(io)
-    len < 2 && return false
+    len < 2 && return nothing
     b1 = read(io, UInt8)
     b2 = read(io, UInt8)
     if "GZIP" ∈ formats
-        b1 == 0x1f && b2 == 0x8b && return true
+        b1 == 0x1f && b2 == 0x8b && return "GZIP"
     end
-    len < 3 && return false
+    len < 3 && return nothing
     b3 = read(io, UInt8)
     if "BZIP2" ∈ formats
-        b1 == 0x42 && b2 == 0x5A && b3 == 68 && return true
+        b1 == 0x42 && b2 == 0x5A && b3 == 0x68 && return "BZIP2"
     end
-    len < 4 && return false
+    len < 4 && return nothing
     b4 = read(io, UInt8)
     if "LZ4" ∈ formats
-        b1 == 0x04 && b2 == 0x22 && b3 == 0x4D && b4 == 0x18 && return true
+        b1 == 0x04 && b2 == 0x22 && b3 == 0x4D && b4 == 0x18 && return "LZ4"
     end
-    len < 5 && return false
+    len < 5 && return nothing
     b5 = read(io, UInt8)
-    len < 6 && return false
+    len < 6 && return nothing
     b6 = read(io, UInt8)
     if "XZ" ∈ formats
-        b1 == 0xFD && b2 == 0x37 && b3 == 0x7A && b4 == 0x58 && b5 == 0x5A && b6 == 0x00 && return true
+        b1 == 0xFD && b2 == 0x37 && b3 == 0x7A && b4 == 0x58 && b5 == 0x5A && b6 == 0x00 && return "XZ"
     end
-    return false
+    return nothing
 end
+
+detect_compressed(io, len=getlength(io); kwargs...) = detect_compressor(io, len; kwargs...) !== nothing
 
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
