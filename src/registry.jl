@@ -10,6 +10,7 @@ const idQuartzImageIO = :QuartzImageIO => UUID("dca85d43-d64c-5e67-8c65-017450d5
 const idRData = :RData => UUID("df47a6cb-8c03-5eed-afd8-b6050d6c41da")
 const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
+const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
 
 ### Simple cases
 
@@ -174,6 +175,23 @@ add_format(
     [MimeWriter, SAVE]
 )
 
+# Video formats
+
+# AVI is a subtype of RIFF, as is WAV
+function detect_avi(io)
+    getlength(io) >= 12 || return false
+    magic = read!(io, Vector{UInt8}(undef, 4))
+    magic == b"RIFF" || return false
+    seek(io, 8)
+    submagic = read!(io, Vector{UInt8}(undef, 4))
+
+    submagic == b"AVI "
+end
+add_format(format"AVI", detect_avi, ".avi", [idImageMagick], [idVideoIO])
+add_format(format"MP4", UInt8[0x00,0x00,0x00,0x18,0x66,0x74,0x79,0x70], ".mp4", [idVideoIO])
+add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO])
+add_format(format"MATROSKA", UInt8[0x1A,0x45,0xDF,0xA3], [".mkv",".mks",".webm"], [idVideoIO])
+
 #=
 add_format(format"NPY", UInt8[0x93, 'N', 'U', 'M', 'P', 'Y'], ".npy")
 add_loader(format"NPZ", :NPZ)
@@ -315,18 +333,6 @@ add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID
 # custom skipmagic functions for function-based tiff magic detection
 skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
 skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
-
-# AVI is a subtype of RIFF, as is WAV
-function detectavi(io)
-    getlength(io) >= 12 || return false
-    magic = read!(io, Vector{UInt8}(undef, 4))
-    magic == b"RIFF" || return false
-    seek(io, 8)
-    submagic = read!(io, Vector{UInt8}(undef, 4))
-
-    submagic == b"AVI "
-end
-add_format(format"AVI", detectavi, ".avi", [idImageMagick])
 
 # HDF5: the complication is that the magic bytes may start at
 # 0, 512, 1024, 2048, or any multiple of 2 thereafter

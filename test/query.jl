@@ -384,16 +384,31 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         end
         @testset "AVI Detection" begin
             open(joinpath(file_dir, "bees.avi")) do s
-                @test FileIO.detectavi(s)
+                @test FileIO.detect_avi(s)
             end
             open(joinpath(file_dir, "sin.wav")) do s
-                @test !(FileIO.detectavi(s))
+                @test !(FileIO.detect_avi(s))
             end
             open(joinpath(file_dir, "magic1.tiff")) do s
-                @test !(FileIO.detectavi(s))
+                @test !(FileIO.detect_avi(s))
             end
             q = query(joinpath(file_dir, "bees.avi"))
             @test typeof(q) <: File{format"AVI"}
+        end
+        @testset "MP4 detection" begin
+            f = download("https://archive.org/download/LadybirdOpeningWingsCCBYNatureClip/Ladybird%20opening%20wings%20CC-BY%20NatureClip.mp4")
+            q = query(f)
+            @test typeof(q) <: File{format"MP4"}
+        end
+        @testset "OGG detection" begin
+            f = download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
+            q = query(f)
+            @test typeof(q) <: File{format"OGG"}
+        end
+        @testset "MATROSKA detection" begin
+            f = download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
+            q = query(f)
+            @test typeof(q) <: File{format"MATROSKA"}
         end
         @testset "WAV detection" begin
             open(joinpath(file_dir, "sin.wav")) do s
