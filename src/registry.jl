@@ -325,7 +325,7 @@ function detecttiff(io)
 end
 # normal TIFF
 detect_noometiff(io) = detecttiff(io) && ((:name ∉ propertynames(io)) || !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>")))
-add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idQuartzImageIO, OSX], [idImageMagick])
+add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idQuartzImageIO, OSX], [idImageMagick])
 # OME-TIFF
 detect_ometiff(io) = detecttiff(io) && (:name ∈ propertynames(io)) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID("2d0ec36b-e807-5756-994b-45af29551fcf")])
