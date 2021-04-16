@@ -384,13 +384,13 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         end
         @testset "AVI Detection" begin
             open(joinpath(file_dir, "bees.avi")) do s
-                @test FileIO.detect_avi(s)
+                @test FileIO.detectavi(s)
             end
             open(joinpath(file_dir, "sin.wav")) do s
-                @test !(FileIO.detect_avi(s))
+                @test !(FileIO.detectavi(s))
             end
             open(joinpath(file_dir, "magic1.tiff")) do s
-                @test !(FileIO.detect_avi(s))
+                @test !(FileIO.detectavi(s))
             end
             q = query(joinpath(file_dir, "bees.avi"))
             @test typeof(q) <: File{format"AVI"}

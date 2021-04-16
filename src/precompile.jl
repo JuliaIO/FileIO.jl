@@ -1,7 +1,7 @@
 function _precompile_()
     ccall(:jl_generating_output, Cint, ()) == 1 || return nothing
     for f in (detect_rdata, detect_rdata_single, detectwav, detect_bedgraph,
-              detecttiff, detect_noometiff, detect_ometiff, detect_avi,
+              detecttiff, detect_noometiff, detect_ometiff, detectavi,
               detecthdf5, detect_stlascii, detect_stlbinary, detect_gadget2)
         @assert precompile(f, (IOStream,))
     end

@@ -178,7 +178,7 @@ add_format(
 # Video formats
 
 # AVI is a subtype of RIFF, as is WAV
-function detect_avi(io)
+function detectavi(io)
     getlength(io) >= 12 || return false
     magic = read!(io, Vector{UInt8}(undef, 4))
     magic == b"RIFF" || return false
@@ -187,7 +187,7 @@ function detect_avi(io)
 
     submagic == b"AVI "
 end
-add_format(format"AVI", detect_avi, ".avi", [idImageMagick], [idVideoIO])
+add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
 add_format(format"MP4", UInt8[0x00,0x00,0x00,0x18,0x66,0x74,0x79,0x70], ".mp4", [idVideoIO])
 add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO])
 add_format(format"MATROSKA", UInt8[0x1A,0x45,0xDF,0xA3], [".mkv",".mks",".webm"], [idVideoIO])
