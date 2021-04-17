@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Implementing loaders/savers · FileIO</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">FileIO</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../registry/">Registry table</a></li><li><a class="tocitem" href="../registering/">Registering a new format</a></li><li class="is-active"><a class="tocitem" href>Implementing loaders/savers</a><ul class="internal"><li><a class="tocitem" href="#Principle-of-operation:-module-qualification"><span>Principle of operation: module qualification</span></a></li><li><a class="tocitem" href="#All-at-once-I/O:-implementing-load-and-save"><span>All-at-once I/O: implementing <code>load</code> and <code>save</code></span></a></li><li><a class="tocitem" href="#Implementing-streaming-I/O"><span>Implementing streaming I/O</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Implementing loaders/savers</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Implementing loaders/savers</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaIO/FileIO.jl/blob/master/docs/src/implementing.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Implementing-loaders/savers"><a class="docs-heading-anchor" href="#Implementing-loaders/savers">Implementing loaders/savers</a><a id="Implementing-loaders/savers-1"></a><a class="docs-heading-anchor-permalink" href="#Implementing-loaders/savers" title="Permalink"></a></h1><h2 id="Principle-of-operation:-module-qualification"><a class="docs-heading-anchor" href="#Principle-of-operation:-module-qualification">Principle of operation: module qualification</a><a id="Principle-of-operation:-module-qualification-1"></a><a class="docs-heading-anchor-permalink" href="#Principle-of-operation:-module-qualification" title="Permalink"></a></h2><p>When FileIO detects that a file or stream should be handled by a particular package, it will try to call <em>private</em> methods in that package for processing the request. For example, suppose you have created a package called <code>MyFileFormat</code> to handle files of a particular format; then <code>load(&quot;somefile.myfmt&quot;)</code> for a suitable file will cause FileIO to:</p><ul><li>attempt to load your package <code>MyFileFormat</code> using <code>Base.require(id::PkgId)</code>, where a <code>PkgId</code> combines the name and <code>UUID</code> that you supplied via <code>add_format</code></li><li>call <code>MyFileFormat.load(file)</code> where <code>file</code> is <a href="../reference/#FileIO.File"><code>File</code></a>.</li></ul><p>A crucial point is that <strong><code>MyFileFormat.load</code> does not extend <code>FileIO.load</code>: it is a private function defined in module <code>MyFileFormat</code></strong>. This is important for ensuring that single formats can be supported by multiple packages; if two or more packages specialized <code>File.load</code> for <code>file::File{format&quot;MYFORMAT&quot;})</code>, then</p><pre><code class="language-julia">using Pkg1, Pkg2   # two packages both inappropriately extending FileIO.load</code></pre><p>would cause all such loads to be handled by <code>Pkg2</code>, but</p><pre><code class="language-julia">using Pkg2, Pkg1</code></pre><p>would cause them to be handled by <code>Pkg1</code>. This would make loading incredibly brittle. For that reason, it is essential to keep <code>load</code> private to your package and let FileIO call it by module-qualification.</p><p>The same applies to <code>save</code>, <code>loadstreaming</code>, and <code>savestreaming</code>.</p><p>If you run into a naming conflict with the <code>load</code> and <code>save</code> functions (for example, you already have another function in your package that has one of these names), you can instead name your loaders <code>fileio_load</code>, <code>fileio_save</code> etc. Note that you cannot mix and match these styles: either all your loaders have to be named <code>load</code>, or all of them should be called <code>fileio_load</code>, but you cannot use both conventions in one module.</p><h2 id="All-at-once-I/O:-implementing-load-and-save"><a class="docs-heading-anchor" href="#All-at-once-I/O:-implementing-load-and-save">All-at-once I/O: implementing <code>load</code> and <code>save</code></a><a id="All-at-once-I/O:-implementing-load-and-save-1"></a><a class="docs-heading-anchor-permalink" href="#All-at-once-I/O:-implementing-load-and-save" title="Permalink"></a></h2><p>In your package, write code like the following:</p><pre><code class="language-julia">module MyFileFormat
+
+using FileIO
+
+# Again, this is a *private* `load` function, do not extend `FileIO.load`!
+function load(f::File{format&quot;PNG&quot;})
+    open(f) do s
+        skipmagic(s)  # skip over the magic bytes
+        # You can just call the `load(::Stream)` method below...
+        ret = load(s)
+        # ...or implement everything here instead
+    end
+end
+
+# You can support streams and add keywords:
+function load(s::Stream{format&quot;PNG&quot;}; keywords...)
+    # s is already positioned after the magic bytes
+    # Do the stuff to read a PNG file
+    chunklength = read(s, UInt32)
+    ...
+end
+
+function save(f::File{format&quot;PNG&quot;}, data)
+    open(f, &quot;w&quot;) do s
+        # Don&#39;t forget to write the magic bytes!
+        write(s, magic(format&quot;PNG&quot;))
+        # Do the rest of the stuff needed to save in PNG format
+    end
+end
+
+end # module MyFileFormat</code></pre><p><code>load(::File)</code> and <code>save(::File)</code> should close any streams they open.  (If you use the <code>do</code> syntax, this happens for you automatically even if the code inside the <code>do</code> scope throws an error.) Conversely, <code>load(::Stream)</code> and <code>save(::Stream)</code> should not close the stream argument.</p><h2 id="Implementing-streaming-I/O"><a class="docs-heading-anchor" href="#Implementing-streaming-I/O">Implementing streaming I/O</a><a id="Implementing-streaming-I/O-1"></a><a class="docs-heading-anchor-permalink" href="#Implementing-streaming-I/O" title="Permalink"></a></h2><p><code>loadstreaming</code> and <code>savestreaming</code> use the same query mechanism, but return a decoded stream that users can <code>read</code> or <code>write</code>. You should also implement a <code>close</code> method on your reader or writer type. Just like with <code>load</code> and <code>save</code>, if the user provided a filename, your <code>close</code> method should be responsible for closing any streams you opened in order to read or write the file. If you are given a <code>Stream</code>, your <code>close</code> method should only do the clean up for your reader or writer type, not close the stream.</p><pre><code class="language-jl">struct WAVReader
+    io::IO
+    ownstream::Bool
+end
+
+function Base.read(reader::WAVReader, frames::Int)
+    # read and decode audio samples from reader.io
+end
+
+function Base.close(reader::WAVReader)
+    # do whatever cleanup the reader needs
+    reader.ownstream &amp;&amp; close(reader.io)
+end
+
+# FileIO has fallback functions that make these work using `do` syntax as well,
+# and will automatically call `close` on the returned object.
+loadstreaming(f::File{format&quot;WAV&quot;}) = WAVReader(open(f), true)
+loadstreaming(s::Stream{format&quot;WAV&quot;}) = WAVReader(s, false)</code></pre><p>If you choose to implement <code>loadstreaming</code> and <code>savestreaming</code> in your package, you can easily add <code>save</code> and <code>load</code> methods in the form of:</p><pre><code class="language-julia">function save(q::Formatted{format&quot;WAV&quot;}, data, args...; kwargs...)
+    savestreaming(q, args...; kwargs...) do stream
+        write(stream, data)
+    end
+end
+
+function load(q::Formatted{format&quot;WAV&quot;}, args...; kwargs...)
+    loadstreaming(q, args...; kwargs...) do stream
+        read(stream)
+    end
+end</code></pre><p>where <code>Formatted</code> is the abstract supertype of <code>File</code> and <code>Stream</code>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../registering/">« Registering a new format</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Saturday 17 April 2021 01:01">Saturday 17 April 2021</span>. Using Julia version 1.7.0-DEV.936.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
