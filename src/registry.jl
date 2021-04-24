@@ -420,4 +420,4 @@ add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles => UUID("d76558cf-badf-52d4-
 
 add_format(format"HTML", (), [".html", ".htm"], [MimeWriter, SAVE])
 
-add_format(format"MIDI", UInt8[0x4d, 0x54, 0x68, 0x64], [".mid", ".midi", ".MID"], [:MIDI => UUID("f57c4921-e30c-5f49-b073-3f2f2ada663e")])
+add_format(format"MIDI", "MThd", [".mid", ".midi", ".MID"], [:MIDI => UUID("f57c4921-e30c-5f49-b073-3f2f2ada663e")])
