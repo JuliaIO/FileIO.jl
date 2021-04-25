@@ -438,6 +438,20 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 @test position(io)  == 0
             end
         end
+        @testset "MIDI detection" begin
+            q = query(joinpath(file_dir, "doxy.mid"))
+            @test typeof(q) <: File{format"MIDI"}
+            q = query(joinpath(file_dir, "doxy.midi"))
+            @test typeof(q) <: File{format"MIDI"}
+            q = query(joinpath(file_dir, "doxy.MID"))
+            @test typeof(q) <: File{format"MIDI"}
+            @test magic(format"MIDI") == b"MThd"
+            open(q) do io
+                @test position(io) == 0
+                skipmagic(io)
+                @test position(io) == 4
+            end
+        end
     end
 
     @testset "Query from IOBuffer" begin

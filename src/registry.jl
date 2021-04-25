@@ -419,3 +419,5 @@ add_format(format"vega", (), [".vega"], [:Vega => UUID("239c3e63-733f-47ad-beb7-
 add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles => UUID("d76558cf-badf-52d4-a17e-381ab0b0d937")])
 
 add_format(format"HTML", (), [".html", ".htm"], [MimeWriter, SAVE])
+
+add_format(format"MIDI", "MThd", [".mid", ".midi", ".MID"], [:MIDI => UUID("f57c4921-e30c-5f49-b073-3f2f2ada663e")])
