@@ -443,7 +443,7 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             @test typeof(q) <: File{format"MIDI"}
             q = query(joinpath(file_dir, "doxy.midi"))
             @test typeof(q) <: File{format"MIDI"}
-            q = query(joinpath(file_dir, "doxy.MID"))
+            q = query(joinpath(file_dir, "doxy2.MID"))
             @test typeof(q) <: File{format"MIDI"}
             @test magic(format"MIDI") == b"MThd"
             open(q) do io
