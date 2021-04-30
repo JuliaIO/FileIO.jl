@@ -388,3 +388,8 @@ end
     end
     @test (@test_logs (:warn, r"incorrectly extends FileIO functions \(see FileIO documentation\)") load(fn)) == 22
 end
+
+@testset "CSV load from URL via CSVFiles (#320)" begin
+    f = joinpath("files", "data.csv")
+    @test collect(load(f)) == collect(load("https://raw.githubusercontent.com/queryverse/CSVFiles.jl/v0.2.0/test/data.csv"))
+end

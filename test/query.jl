@@ -415,6 +415,11 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 @test FileIO.detectwav(s)
             end
         end
+        @testset "CSV detection" begin
+            f = joinpath("files", "data.csv")
+            q = query(f)
+            @test typeof(q) <: File{format"CSV"}
+        end
         @testset "RDA detection" begin
             q = query(joinpath(file_dir, "minimal_ascii.rda"))
             @test typeof(q) <: File{format"RData"}
