@@ -164,7 +164,7 @@ end
 function checkpath_load(file)
     file === nothing && return nothing   # likely stream io
     isa(file, IO) && return nothing
-    !isfile(file) && throw(ArgumentError("No file exists at given path: $file"))
+    _isurl(file) || isfile(file) || throw(ArgumentError("No file exists at given path: $file"))
     return nothing
 end
 function checkpath_save(file)
@@ -175,6 +175,10 @@ function checkpath_save(file)
     !isdir(dn) && mkpath(dn)
     return nothing
 end
+
+# TODO: we may use URI when cases become complex
+_isurl(path::AbstractString) = startswith(path, "http://") || startswith(path, "https://")
+_isurl(path) = false
 
 action(call::Symbol, libraries::Vector{ActionSource}, sym::Symbol, io::IO, args...; options...) =
     action(call, libraries, Stream{DataFormat{sym}}(io), args...; options...)
