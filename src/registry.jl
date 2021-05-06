@@ -188,7 +188,23 @@ function detectavi(io)
     submagic == b"AVI "
 end
 add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
-add_format(format"MP4", UInt8[0x00,0x00,0x00,0x18,0x66,0x74,0x79,0x70], ".mp4", [idVideoIO])
+
+""" detectisom(io)
+
+Detect ISO/IEC 14496-12 ISO/IEC base media format files. These files start with
+a 32-bit big-endian length, and then the string 'ftyp' which is followed by
+details of the container and codec. Finding 'ftyp' is enough to know to dispatch
+to VideoIO.
+"""
+function detectisom(io)
+    getlength(io) >= 8 || return false
+    # skip the length bytes
+    seek(io, 4)
+    # and check for the magic
+    magic = read!(io, Vector{UInt8}(undef, 4))
+    magic == b"ftyp"
+end
+add_format(format"MP4", detectisom, ".mp4", [idVideoIO])
 add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO])
 add_format(format"MATROSKA", UInt8[0x1A,0x45,0xDF,0xA3], [".mkv",".mks",".webm"], [idVideoIO])
 
