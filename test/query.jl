@@ -458,10 +458,10 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             end
         end
         @testset "Sixel detection" begin
-            for filename in ("rand.six", "rand.sixel")
-                q = query(joinpath(file_dir, filename))
-                @test typeof(q) <: File{format"SIXEL"}
-            end
+            q = query(joinpath(file_dir, "rand.six"))
+            @test typeof(q) <: File{format"SIXEL"}
+            q = query(joinpath(file_dir, "rand.sixel"))
+            @test typeof(q) <: File{format"SIXEL"}
             open(q) do io
                 @test position(io) == 0
                 skipmagic(io)
