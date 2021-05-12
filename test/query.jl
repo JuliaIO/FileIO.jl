@@ -457,6 +457,17 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 @test position(io) == 4
             end
         end
+        @testset "Sixel detection" begin
+            for filename in ("rand.six", "rand.sixel")
+                q = query(joinpath(file_dir, filename))
+                @test typeof(q) <: File{format"SIXEL"}
+            end
+            open(q) do io
+                @test position(io) == 0
+                skipmagic(io)
+                @test position(io) == 3
+            end
+        end
     end
 
     @testset "Query from IOBuffer" begin

@@ -174,6 +174,13 @@ add_format(
     ".svg",
     [MimeWriter, SAVE]
 )
+add_format(
+    format"SIXEL",
+    UInt8[0x1b, 0x50, 0x71],
+    [".sixel", ".six"],
+    [idImageIO],
+    [idImageMagick]
+)
 
 # Video formats
 
