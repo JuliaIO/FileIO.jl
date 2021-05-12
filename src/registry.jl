@@ -189,7 +189,7 @@ function detectavi(io)
 end
 add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
 add_format(format"MP4", UInt8[0x00,0x00,0x00,0x18,0x66,0x74,0x79,0x70], ".mp4", [idVideoIO])
-add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO])
+add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO], [:LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") ])
 add_format(format"MATROSKA", UInt8[0x1A,0x45,0xDF,0xA3], [".mkv",".mks",".webm"], [idVideoIO])
 
 #=
@@ -226,8 +226,8 @@ function detectwav(io)
     read!(io, buf)
     buf == b"WAVE"
 end
-add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78f-408fbbb8ef88")])
-add_format(format"FLAC","fLaC",".flac",[:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")])
+add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78f-408fbbb8ef88")], [:LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") ])
+add_format(format"FLAC", "fLaC", ".flac", [:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")], [:LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5")])
 
 ## Profile data
 add_format(format"JLPROF", [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00], ".jlprof", [:FlameGraphs => UUID("08572546-2f56-4bcf-ba4e-bab62c3a3f89")])  # magic is "JLPROF" followed by [0x01, 0x00]
