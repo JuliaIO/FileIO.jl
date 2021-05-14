@@ -82,7 +82,7 @@ end
 
 add_format(format"RDataSingle", detect_rdata_single, [".rds"], [idRData, LOAD])
 
-add_format(format"FLD", "# AVS", [".fld"], [idAVSfldIO])
+add_format(format"AVSfld", "# AVS", [".fld"], [idAVSfldIO])
 add_format(format"CSV", (), [".csv"], [idCSVFiles])
 add_format(format"TSV", (), [".tsv"], [idCSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles => UUID("b675d258-116a-5741-b937-b79f054b0542")])
