@@ -457,6 +457,12 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 @test position(io) == 4
             end
         end
+
+        @testset "AVSfld detection" begin
+            q = query(joinpath(file_dir, "avs-ascii.fld"))
+            @test typeof(q) <: File{format"AVSfld"}
+        end
+
     end
 
     @testset "Query from IOBuffer" begin

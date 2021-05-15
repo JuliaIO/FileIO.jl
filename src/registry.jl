@@ -1,6 +1,7 @@
 ### "Package registry"
 # Useful for packages that get used more than once below
 # Please alphabetize
+const idAVSfldIO = :AVSfldIO => UUID("b6189060-daf9-4c28-845a-cc0984b81781")
 const idCSVFiles = :CSVFiles => UUID("5d742f6a-9f54-50ce-8119-2520741973ca")
 const idImageIO = :ImageIO => UUID("82e4d734-157c-48bb-816b-45c225c6df19")
 const idImageMagick = :ImageMagick => UUID("6218d12a-5da1-5696-b52f-db25d2ecc6d1")
@@ -81,6 +82,7 @@ end
 
 add_format(format"RDataSingle", detect_rdata_single, [".rds"], [idRData, LOAD])
 
+add_format(format"AVSfld", "# AVS", [".fld"], [idAVSfldIO])
 add_format(format"CSV", (), [".csv"], [idCSVFiles])
 add_format(format"TSV", (), [".tsv"], [idCSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles => UUID("b675d258-116a-5741-b937-b79f054b0542")])

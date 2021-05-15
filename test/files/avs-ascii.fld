@@ -1,0 +1,9 @@
+# AVS field file (ascii variant)
+ndim=2
+dim1=3
+dim2=4
+nspace=2
+veclen=1
+data=int
+field=uniform
+variable 1 file=avs-ascii.dat filetype=ascii
