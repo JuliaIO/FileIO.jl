@@ -10,6 +10,7 @@ const idNetpbm = :Netpbm => UUID("f09324ee-3d7c-5217-9330-fc30815ba969")
 const idQuartzImageIO = :QuartzImageIO => UUID("dca85d43-d64c-5e67-8c65-017450d5d020")
 const idRData = :RData => UUID("df47a6cb-8c03-5eed-afd8-b6050d6c41da")
 const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
+const idSixel = :Sixel => UUID("45858cf5-a6b0-47a3-bbea-62219f50df47")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
 
@@ -180,7 +181,8 @@ add_format(
     format"SIXEL",
     UInt8[0x1b, 0x50, 0x71],
     [".sixel", ".six"],
-    [idImageIO],
+    [idSixel],
+    # [idImageIO], # https://github.com/JuliaIO/ImageIO.jl/pull/31
     [idImageMagick]
 )
 
