@@ -216,7 +216,7 @@ function detectisom(io)
     magic == b"ftyp"
 end
 add_format(format"MP4", detectisom, ".mp4", [idVideoIO])
-add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO])
+add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO], [:LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") ])
 add_format(format"MATROSKA", UInt8[0x1A,0x45,0xDF,0xA3], [".mkv",".mks",".webm"], [idVideoIO])
 
 #=
