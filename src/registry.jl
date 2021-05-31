@@ -13,7 +13,7 @@ const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
 const idSixel = :Sixel => UUID("45858cf5-a6b0-47a3-bbea-62219f50df47")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
-const LibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
+const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
 
 ### Simple cases
 
@@ -217,7 +217,7 @@ function detectisom(io)
     magic == b"ftyp"
 end
 add_format(format"MP4", detectisom, ".mp4", [idVideoIO])
-add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO], [LibSndFile])
+add_format(format"OGG", UInt8[0x4F,0x67,0x67,0x53], [".ogg",".ogv"], [idVideoIO], [idLibSndFile])
 add_format(format"MATROSKA", UInt8[0x1A,0x45,0xDF,0xA3], [".mkv",".mks",".webm"], [idVideoIO])
 
 #=
@@ -254,8 +254,8 @@ function detectwav(io)
     read!(io, buf)
     buf == b"WAVE"
 end
-add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78f-408fbbb8ef88")], [LibSndFile])
-add_format(format"FLAC", "fLaC", ".flac", [:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")], [LibSndFile])
+add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78f-408fbbb8ef88")], [idLibSndFile])
+add_format(format"FLAC", "fLaC", ".flac", [:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")], [idLibSndFile])
 
 ## Profile data
 add_format(format"JLPROF", [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00], ".jlprof", [:FlameGraphs => UUID("08572546-2f56-4bcf-ba4e-bab62c3a3f89")])  # magic is "JLPROF" followed by [0x01, 0x00]
