@@ -192,6 +192,7 @@ const fileiofuncs = Dict{Symbol,Function}(:load => load,
                                           :save => save,
                                           :savestreaming => savestreaming)
 
+const require_lock = ReentrantLock()
 function action(call::Symbol, libraries::Vector{ActionSource}, @nospecialize(file::Formatted), args...; options...)
     issave = call ∈ (:save, :savestreaming)
     failures = Tuple{Any,ActionSource,Vector}[]
@@ -199,7 +200,7 @@ function action(call::Symbol, libraries::Vector{ActionSource}, @nospecialize(fil
     local mod
     for library in libraries
         try
-            mod = isa(library, Module) ? library : Base.require(library)
+            mod = isa(library, Module) ? library : lock(() -> Base.require(library), require_lock)
             f = if isdefined(mod, pkgfuncname)
                 getfield(mod, pkgfuncname)
             else
