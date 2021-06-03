@@ -12,6 +12,12 @@ struct MimeSaveTestType
 end
 
 @testset "FileIO" begin
+    # This threaded test should be put before `CSVFiles` is loaded
+    if VERSION >= v"1.3"
+        # FIXME: threaded file io is still somehow broken in old Julia versions
+        include("threaded_loading.jl")
+    end
+
     include("query.jl")
     include("loadsave.jl")
     include("error_handling.jl")
