@@ -518,4 +518,22 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         @test FileIO.formatname(q) == :PNG
         rm("test.png")
     end
+
+    @testset "issue #345" begin
+        iris = joinpath("files", "iris.rda")
+
+        q = query(iris)
+        @test typeof(q) <: File{format"RData"}
+
+        io = open(iris)
+        q = query(io)
+        @test typeof(q) <: Stream{format"GZIP"} # FIXME: should be RData
+        @test FileIO.detect_rdata(io)
+        
+        # issue #345: it errors here
+        io = CodecZlib.GzipDecompressorStream(open(iris))
+        q = query(io)
+        @test FileIO.unknown(q) # FIXME: should be RData
+        @test FileIO.detect_rdata(io)
+    end
 end
