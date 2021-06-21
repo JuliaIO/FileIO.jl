@@ -2,6 +2,7 @@ using FileIO
 using FilePathsBase
 using Test
 using UUIDs
+using CodecZlib
 
 Threads.nthreads() <= 1 && @info "Threads.nthreads() = $(Threads.nthreads()), multithread tests will be disabled"
 

@@ -59,14 +59,24 @@ detect_compressed(io, len=getlength(io); kwargs...) = detect_compressor(io, len;
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
-    getlength(io) <= 4 && return false
-    b = read(io, UInt8)
-    if b == UInt8('R')
-        return read(io, UInt8) == UInt8('D') &&
-               read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
-               read(io, UInt8) in (UInt8('2'), UInt8('3')) &&
-               (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
+    function checked_match(io)
+        for m in (
+                (UInt8('R'), ),
+                (UInt8('D'), ),
+                (UInt8('A'), UInt8('B'), UInt8('X')),
+                (UInt8('2'), UInt8('3')))
+            eof(io) && return false
+            read(io, UInt8) in m || return false
+        end
+        c = read(io, UInt8)
+        if c == UInt8('\r')
+            eof(io) && return false
+            c = read(io, UInt8)
+        end
+        c == UInt8('\n') || return false
+        return true
     end
+    checked_match(io) && return true
     return detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
 end
 
@@ -74,8 +84,19 @@ add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [idRData, 
 
 function detect_rdata_single(io)
     seekstart(io)
-    res = read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) &&
-        (c = read(io, UInt8); c == UInt8('\n') || (c == UInt8('\r') && read(io, UInt8) == UInt8('\n')))
+    function checked_match(io)
+        eof(io) && return false
+        read(io, UInt8) in (UInt8('A'), UInt8('B'), UInt8('X')) || return false
+        c = read(io, UInt8)
+        if c == UInt8('\r')
+            eof(io) && return false
+            c = read(io, UInt8)
+        end
+        c == UInt8('\n') || return false
+        return true
+    end
+    
+    res = checked_match(io)
     if !res
         res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
     end
