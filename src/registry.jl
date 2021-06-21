@@ -382,7 +382,24 @@ function detecthdf5(io)
     end
     false
 end
+
+const MUDATA_MAGIC = UInt8['M', 'u', 'D', 'a', 't', 'a']
+function detect_mudata(io)
+    seekstart(io)
+    if read(io, 6) != MUDATA_MAGIC
+        return false
+    end
+    seekstart(io)
+    return detecthdf5(io)
+end
+
+# h5mu has to be before HDF5 to give it higher priority, since h5mu files are also valid HDF5 files
+add_format(format"h5mu", detect_mudata, [".h5mu"], [:Muon => UUID("446846d7-b4ce-489d-bf74-72da18fe3629")])
+
 add_format(format"HDF5", detecthdf5, [".h5", ".hdf5"], [:HDF5 => UUID("f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f")])
+
+# h5ad has to be after HDF5 to give it less priority
+add_format(format"h5ad", detecthdf5, [".h5ad"], [:Muon => UUID("446846d7-b4ce-489d-bf74-72da18fe3629")])
 
 function detect_stlascii(io)
     pos = position(io)
