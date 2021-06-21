@@ -381,9 +381,11 @@ function detecthdf5(io)
     end
     false
 end
+
+const MUDATA_MAGIC = UInt8['M', 'u', 'D', 'a', 't', 'a']
 function detect_mudata(io)
     seekstart(io)
-    if String(read(io, 6)) != "MuData"
+    if read(io, 6) != MUDATA_MAGIC
         return false
     end
     seekstart(io)
