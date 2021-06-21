@@ -93,7 +93,9 @@ function querysym(filename; checkfile::Bool=true)
             return open(filename) do io
                 match(io, magic) && return sym
                 # if it doesn't match, we prioritize the magic bytes over the guess based on extension
-                return querysym_all(io)[1]
+                fmt = querysym_all(io)[1]
+                # but if it fails to query the magic bytes, still use the extension-based guess
+                return fmt === :UNKNOWN ? sym : fmt
             end
         end
         # There are multiple formats consistent with this extension
@@ -110,7 +112,8 @@ function querysym(filename; checkfile::Bool=true)
                 match(io, magic) && return sym
             end
             badmagic && error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
-            return querysym_all(io)[1]
+            fmt = querysym_all(io)[1]
+            return fmt === :UNKNOWN ? syms[1] : fmt
         end
     end
     !checkfile && return :UNKNOWN

@@ -507,4 +507,15 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             end
         end
     end
+
+    @testset "issue #338" begin
+        open("test.png", "w") do io
+            write(io, UInt8('R'))
+        end
+        q = query("test.png")
+        @test FileIO.formatname(q) == :PNG
+        q = query("test.png"; checkfile=false)
+        @test FileIO.formatname(q) == :PNG
+        rm("test.png")
+    end
 end

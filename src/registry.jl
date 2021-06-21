@@ -59,6 +59,7 @@ detect_compressed(io, len=getlength(io); kwargs...) = detect_compressor(io, len;
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
+    getlength(io) <= 4 && return false
     b = read(io, UInt8)
     if b == UInt8('R')
         return read(io, UInt8) == UInt8('D') &&
