@@ -457,6 +457,16 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 @test position(io) == 4
             end
         end
+        @testset "OpenEXR detection" begin
+            q = query(joinpath(file_dir, "rand.exr"))
+            @test typeof(q) <: File{format"EXR"}
+            @test magic(format"EXR") == UInt8[0x76, 0x2F, 0x31, 0x01]
+            open(q) do io
+                @test position(io) == 0
+                skipmagic(io)
+                @test position(io) == 4
+            end
+        end
         @testset "Sixel detection" begin
             q = query(joinpath(file_dir, "rand.six"))
             @test typeof(q) <: File{format"SIXEL"}
