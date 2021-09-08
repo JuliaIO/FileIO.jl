@@ -83,21 +83,29 @@ end
 add_format(format"BROKEN2", (), ".brok2", [BrokenIO2])
 
 @testset "Broken implementation/limit" begin
+    io = IOBuffer()
     stderr_copy = stderr
     rserr, wrerr = redirect_stderr()
     ex = try save(Stream{format"BROKEN2"}(stdout), [1:1000;]) catch e e end
     @test isa(ex, CapturedException)
-    @test isa(ex.ex, FileIO.WriterError)
-    @test isa(ex.ex.ex, MethodError)
+    @test isa(ex.ex, MethodError)
+    showerror(io, ex)
+    str = String(take!(io))
+    @test startswith(str, "MethodError: no method matching save(::Stream{DataFormat{:BROKEN2}")
+    exw = FileIO.WriterError("BrokenIO2", "a message", ex.ex)
+    showerror(io, exw)
+    str = String(take!(io))
+    @test startswith(str, "BrokenIO2 writer error: a message\n  due to MethodError(")
+    @test !occursin("499", str)   # printing should be with `:limit`
+    @test  occursin("…", str)     # printing should be with `:limit`
     ex = try save(File{format"BROKEN2"}(tempname()), [1:1000;]) catch e e end
     @test isa(ex, CapturedException)
     @test ex.ex == ErrorException("whoops")
-    redirect_stderr(stderr_copy)
-    close(rserr);close(wrerr)
-    io = IOBuffer()
     showerror(io, ex)
     str = String(take!(io))
     @test !occursin("499", str)   # printing should be with `:limit`
+    redirect_stderr(stderr_copy)
+    close(rserr);close(wrerr)
 end
 
 module MultiError1
