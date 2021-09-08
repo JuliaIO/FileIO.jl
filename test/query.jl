@@ -400,15 +400,18 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             q = query(f)
             @test typeof(q) <: File{format"MP4"}
         end
-        @testset "OGG detection" begin
-            f = download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
-            q = query(f)
-            @test typeof(q) <: File{format"OGG"}
-        end
-        @testset "MATROSKA detection" begin
-            f = download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
-            q = query(f)
-            @test typeof(q) <: File{format"MATROSKA"}
+        if Base.VERSION >= v"1.6" || !Sys.iswindows()
+            # FIXME: Windows fails to download the files on Julia 1.0
+            @testset "OGG detection" begin
+                f = download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
+                q = query(f)
+                @test typeof(q) <: File{format"OGG"}
+            end
+            @testset "MATROSKA detection" begin
+                f = download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
+                q = query(f)
+                @test typeof(q) <: File{format"MATROSKA"}
+            end
         end
         @testset "WAV detection" begin
             open(joinpath(file_dir, "sin.wav")) do s
@@ -539,7 +542,7 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         q = query(io)
         @test typeof(q) <: Stream{format"GZIP"} # FIXME: should be RData
         @test FileIO.detect_rdata(io)
-        
+
         # issue #345: it errors here
         io = CodecZlib.GzipDecompressorStream(open(iris))
         q = query(io)
