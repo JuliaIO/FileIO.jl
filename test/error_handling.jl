@@ -74,6 +74,29 @@ add_format(format"BROKEN", (), ".brok", [BrokenIO])
     close(rserr);close(wrerr)
 end
 
+module BrokenIO2
+    using FileIO
+    function save(f::File{format"PNG"}, data)
+        error("whoops")
+    end
+end
+add_format(format"BROKEN2", (), ".brok2", [BrokenIO2])
+
+@testset "Broken implementation/limit" begin
+    stderr_copy = stderr
+    rserr, wrerr = redirect_stderr()
+    ex = try save(Stream{format"BROKEN2"}(stdout), [1:1000;]) catch e e end
+    @test isa(ex, CapturedException)
+    @test isa(ex.ex, FileIO.WriterError)
+    redirect_stderr(stderr_copy)
+    close(rserr);close(wrerr)
+    io = IOBuffer()
+    showerror(io, ex)
+    str = String(take!(io))
+    @test !occursin("499", str)   # printing should be with `:limit`
+    @test occursin("…", str)
+end
+
 module MultiError1
     import FileIO: @format_str, File
     load(file::File{format"MultiError"}) = error("1")
