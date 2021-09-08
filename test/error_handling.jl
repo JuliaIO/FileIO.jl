@@ -76,7 +76,7 @@ end
 
 module BrokenIO2
     using FileIO
-    function save(f::File{format"PNG"}, data)
+    function save(f::File{format"BROKEN2"}, data)
         error("whoops")
     end
 end
@@ -88,13 +88,16 @@ add_format(format"BROKEN2", (), ".brok2", [BrokenIO2])
     ex = try save(Stream{format"BROKEN2"}(stdout), [1:1000;]) catch e e end
     @test isa(ex, CapturedException)
     @test isa(ex.ex, FileIO.WriterError)
+    @test isa(ex.ex.ex, MethodError)
+    ex = try save(File{format"BROKEN2"}(tempname()), [1:1000;]) catch e e end
+    @test isa(ex, CapturedException)
+    @test ex.ex == ErrorException("whoops")
     redirect_stderr(stderr_copy)
     close(rserr);close(wrerr)
     io = IOBuffer()
     showerror(io, ex)
     str = String(take!(io))
     @test !occursin("499", str)   # printing should be with `:limit`
-    @test occursin("…", str)
 end
 
 module MultiError1
