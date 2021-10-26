@@ -473,7 +473,7 @@ function detect_gadget2(io)
     seek(io, sizeof(Int32)+256)
     temp2 = read(io, Int32)
     seek(io, pos)
-    return temp1 == temp2
+    return temp1 == temp2 == 256
 end
 add_format(format"Gadget2", detect_gadget2, [".gadget2", ".Gadget2", ".GADGET2"], [:AstroIO => UUID("c85a633c-0c3f-44a2-bffe-7f9d0681b3e7")])
 
