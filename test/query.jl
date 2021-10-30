@@ -549,4 +549,9 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         @test FileIO.unknown(q) # FIXME: should be RData
         @test FileIO.detect_rdata(io)
     end
+
+    @testset "Gadget2" begin
+        q = query(joinpath(file_dir, "gassphere_littleendian.gadget2"))
+        @test typeof(q) <: File{format"Gadget2"}
+    end
 end
