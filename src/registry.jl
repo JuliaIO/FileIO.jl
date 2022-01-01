@@ -206,7 +206,7 @@ add_format(
     UInt8[0x1b, 0x50, 0x71],
     [".sixel", ".six"],
     [idSixel],
-    # [idImageIO], # https://github.com/JuliaIO/ImageIO.jl/pull/31
+    [idImageIO],
     [idImageMagick]
 )
 
