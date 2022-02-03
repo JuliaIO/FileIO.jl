@@ -14,6 +14,7 @@ const idSixel = :Sixel => UUID("45858cf5-a6b0-47a3-bbea-62219f50df47")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
 const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
+const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
 
 ### Simple cases
 
@@ -179,6 +180,8 @@ add_format(
     format"JPEG",
     UInt8[0xff,0xd8,0xff],
     [".jpeg", ".jpg", ".JPG"],
+    [idJpegTurbo],
+    [idImageIO],
     [idQuartzImageIO, OSX],
     [idImageMagick]
 ) # 0xe1
