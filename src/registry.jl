@@ -15,6 +15,7 @@ const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
 const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
 const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
+const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
 ### Simple cases
 
@@ -26,6 +27,8 @@ add_format(format"JLD2", (unsafe_wrap(Vector{UInt8},"Julia data file (HDF5), ver
 add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz => UUID("2ec943e9-cfe8-584d-b93d-64dcb6d567b7")])
 add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
+add_format(format"NPY", "\x93NUMPY", ".npy", [idNPZ])
+add_format(format"NPZ", "", ".npz", [idNPZ])
 
 function detect_compressor(io, len=getlength(io); formats=["GZIP", "BZIP2", "XZ", "LZ4"])
     seekstart(io)
