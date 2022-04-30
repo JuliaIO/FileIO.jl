@@ -13,8 +13,16 @@ const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
 const idSixel = :Sixel => UUID("45858cf5-a6b0-47a3-bbea-62219f50df47")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
-const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
+const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5")
 const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
+
+### Generic utilities
+padzeros(str::AbstractString, total_length::Integer) = padzeros!(UInt8.(collect(str)), total_length)
+function padzeros!(chars::AbstractVector{UInt8}, total_length::Integer)
+    length(chars) > total_length && throw(ArgumentError("requested padding to length $total_length, but the length is already $(length(chars))"))
+    length(chars) == total_length && return chars
+    return append!(chars, zeros(UInt8, total_length - length(chars)))
+end
 
 ### Simple cases
 
@@ -96,7 +104,7 @@ function detect_rdata_single(io)
         c == UInt8('\n') || return false
         return true
     end
-    
+
     res = checked_match(io)
     if !res
         res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
@@ -383,6 +391,9 @@ add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idQu
 # OME-TIFF
 detect_ometiff(io) = detecttiff(io) && (:name ∈ propertynames(io)) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID("2d0ec36b-e807-5756-994b-45af29551fcf")])
+
+# CZI (OME-TIFF-like)
+add_format(format"CZI", padzeros("ZISRAWFILE", 16), [".czi"], [:ZeissMicroscopyFormat => UUID("5b7fe9ef-1e3c-4728-b6f6-0419187eab5e")])
 
 # custom skipmagic functions for function-based tiff magic detection
 skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
