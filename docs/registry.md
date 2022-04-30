@@ -46,4 +46,4 @@ format binary_little_endian 1.0 |
 | STL_ASCII | .stl, .STL | loads and saves on **all** platforms with [MeshIO](http:///github.com/JuliaIO/MeshIO.jl.git)  | has detection function |
 | STL_BINARY | .stl, .STL | loads and saves on **all** platforms with [MeshIO](http:///github.com/JuliaIO/MeshIO.jl.git)  | has detection function |
 | NPY | .npy | loads and saves on **all** platforms with [NPZ](https://github.com/fhs/NPZ.jl)  | "\x93NUMPY" |
-| NPZ | .npz | loads and saves on **all** platforms with [NPZ](https://github.com/fhs/NPZ.jl)  | only extension |
+| NPZ | .npz | loads and saves on **all** platforms with [NPZ](https://github.com/fhs/NPZ.jl)  | "PK\x03\x04" |

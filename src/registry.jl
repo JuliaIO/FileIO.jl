@@ -28,7 +28,7 @@ add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz => UUID("2ec943e9-cfe8-584d
 add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
 add_format(format"NPY", "\x93NUMPY", ".npy", [idNPZ])
-add_format(format"NPZ", "", ".npz", [idNPZ])
+add_format(format"NPZ", "PK\x03\x04", ".npz", [idNPZ])
 
 function detect_compressor(io, len=getlength(io); formats=["GZIP", "BZIP2", "XZ", "LZ4"])
     seekstart(io)
