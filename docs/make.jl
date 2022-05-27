@@ -12,6 +12,7 @@ makedocs(
         "registry.md",
         "registering.md",
         "implementing.md",
+        "world_age_issue.md",
         "reference.md",
     ],
 )
