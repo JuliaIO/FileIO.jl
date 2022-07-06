@@ -540,7 +540,7 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
 
         io = open(iris)
         q = query(io)
-        @test typeof(q) <: Stream{format"GZIP"} # FIXME: should be RData
+        @test typeof(q) <: Stream{format"RData"}
         @test FileIO.detect_rdata(io)
 
         # issue #345: it errors here

@@ -24,7 +24,6 @@ add_format(format"JLD", (unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), ver
                          unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")), ".jld", [:JLD => UUID("4138dd39-2aa7-5051-a626-17a0bb65d9c8")])
 add_format(format"JLD2", (unsafe_wrap(Vector{UInt8},"Julia data file (HDF5), version 0.2"),
                           unsafe_wrap(Vector{UInt8}, "HDF5-based Julia Data Format, version ")), ".jld2", [:JLD2 => UUID("033835bb-8acc-5ee8-8aae-3f567f8a3819")])
-add_format(format"GZIP", [0x1f, 0x8b], ".gz", [:Libz => UUID("2ec943e9-cfe8-584d-b93d-64dcb6d567b7")])
 add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
 add_format(format"NPY", "\x93NUMPY", ".npy", [idNPZ])
@@ -60,6 +59,9 @@ end
 
 detect_compressed(io, len=getlength(io); kwargs...) = detect_compressor(io, len; kwargs...) !== nothing
 
+const compressed_fits_exten = r"\.(fit|fits|fts|FIT|FITS|FTS)\.(gz|GZ)\>"
+name_matches_compressed_fits(io) = (:name ∈ propertynames(io)) && endswith(io.name, compressed_fits_exten)
+
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
@@ -81,7 +83,7 @@ function detect_rdata(io)
         return true
     end
     checked_match(io) && return true
-    return detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
+    return detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"]) && !name_matches_compressed_fits(io)
 end
 
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [idRData, LOAD])
@@ -102,7 +104,7 @@ function detect_rdata_single(io)
     
     res = checked_match(io)
     if !res
-        res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
+        res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"]) && !name_matches_compressed_fits(io)
     end
     seekstart(io)
     return res
@@ -463,11 +465,39 @@ end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [idMeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [idMeshIO])
 
+# GZip has two simple magic bytes [0x1f, 0x8b] but we don't want to dispatch to Libz
+# for file extensions like .fits.gz
+function detect_gzip(io)
+    if name_matches_compressed_fits(io)
+        return false
+    end
+    getlength(io) >= 2 || return false
+    magic = read!(io, Vector{UInt8}(undef, 2))
+    return magic == [0x1f, 0x8b]
+end
+add_format(format"GZIP", detect_gzip, ".gz", [:Libz => UUID("2ec943e9-cfe8-584d-b93d-64dcb6d567b7")])
+
+
 # Astro Data
+# FITS files are often gziped and given the extension ".fits.gz". We want to load those directly and not dispatch to Libz 
+function detect_fits(io) 
+    # FITS files can have 
+    if name_matches_compressed_fits(io)
+        return true
+    end
+    getlength(io) >= 30 || return false
+    magic = read!(io, Vector{UInt8}(undef, 30))
+    return magic == [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54]
+end
 add_format(format"FITS",
-           # See https://www.loc.gov/preservation/digital/formats/fdd/fdd000317.shtml#sign
-           [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54],
-           [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS"], [:FITSIO => UUID("525bcba6-941b-5504-bd06-fd0dc1a4d2eb")])
+        # See https://www.loc.gov/preservation/digital/formats/fdd/fdd000317.shtml#sign
+        # [0x53,0x49,0x4d,0x50,0x4c,0x45,0x20,0x20,0x3d,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x20,0x54],
+        detect_fits,
+        [".fit", ".fits", ".fts", ".FIT", ".FITS", ".FTS", ".fit",],
+        [:FITSIO => UUID("525bcba6-941b-5504-bd06-fd0dc1a4d2eb")],
+        [:AstroImages => UUID("fe3fc30c-9b16-11e9-1c73-17dabf39f4ad")])
+
+
 
 function detect_gadget2(io)
     pos = position(io)
