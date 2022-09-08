@@ -527,3 +527,6 @@ add_format(format"HTML", (), [".html", ".htm"], [MimeWriter, SAVE])
 add_format(format"MIDI", "MThd", [".mid", ".midi", ".MID"], [:MIDI => UUID("f57c4921-e30c-5f49-b073-3f2f2ada663e")])
 
 add_format(format"QOI", "qoif", ".qoi", [:QOI => UUID("4b34888f-f399-49d4-9bb3-47ed5cae4e65")], [idImageIO])
+
+# Bibliography files.
+add_format(format"BIB", (), [".bib"], [:Bibliography => UUID("f1be7e48-bf82-45af-a471-ae754a193061")])
