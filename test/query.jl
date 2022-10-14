@@ -508,6 +508,11 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             q = query(joinpath(file_dir, "file2.h5"))
             @test typeof(q) <: File{format"HDF5"}
         end
+
+        @testset "Bibliography detection" begin
+            q = query(joinpath(file_dir, "file.bib"))
+            @test typeof(q) <: File{format"BIB"}
+        end
     end
 
     @testset "Query from IOBuffer" begin
