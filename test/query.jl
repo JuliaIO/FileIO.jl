@@ -347,7 +347,7 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
                 @test position(io) == 0
                 skipmagic(io)
                 @test position(io) == 0 # no skipping for functions
-                # @test FileIO.detect_bedgraph(io) # MethodError: no method matching readline(::FileIO.Stream{FileIO.DataFormat{:bedGraph},IOStream}; chomp=false)
+                # @test FileIO.detect_bedgraph(io) # MethodError: no method matching for call to readline(::FileIO.Stream{FileIO.DataFormat{:bedGraph},IOStream}; chomp=false)
             end
             open(joinpath(file_dir, "file.bedgraph")) do io
                 @test (FileIO.detect_bedgraph(io))
