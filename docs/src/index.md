@@ -15,7 +15,7 @@ Install FileIO within Julia via
 ```julia
 julia> using Pkg
 
-julia> Pkg.add("FileIO")`
+julia> Pkg.add("FileIO")
 ```
 
 ## Usage
