@@ -5,7 +5,7 @@ using ..FileIO: File, @format_str
 function save(file::File{format"PNG"}, data; ppi::Union{Nothing,Number}=nothing)
     if showable("image/png", data)
         open(file.filename, "w") do s
-            if isnothing(ppi)
+            if ppi === nothing
                 show(IOContext(s, :full_fidelity=>true), "image/png", data)
             else
                 show(IOContext(s, :full_fidelity=>true, :ppi=>ppi), "image/png", data)
