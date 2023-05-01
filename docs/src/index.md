@@ -48,6 +48,12 @@ Likewise, saving might be as simple as
 save(filename, obj)
 ```
 
+You can also utilize a piping style to save values to files like this
+
+```julia
+obj |> save(filename)
+```
+
 If you just want to inspect a file to determine its format, then
 
 ```julia
