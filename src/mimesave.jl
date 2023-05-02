@@ -2,10 +2,14 @@ module MimeWriter
 
 using ..FileIO: File, @format_str
 
-function save(file::File{format"PNG"}, data)
+function save(file::File{format"PNG"}, data; ppi::Union{Nothing,Number}=nothing)
     if showable("image/png", data)
         open(file.filename, "w") do s
-            show(IOContext(s, :full_fidelity=>true), "image/png", data)
+            if ppi === nothing
+                show(IOContext(s, :full_fidelity=>true), "image/png", data)
+            else
+                show(IOContext(s, :full_fidelity=>true, :ppi=>ppi), "image/png", data)
+            end
         end
     else
         throw(ArgumentError("Argument does not support conversion to png."))
