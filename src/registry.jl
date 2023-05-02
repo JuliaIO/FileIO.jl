@@ -156,7 +156,6 @@ add_format(format"PGM", UInt8[0x50,0x35,0x0a],                          ".pgm", 
 add_format(format"PSD", UInt8[0x38,0x42,0x50,0x53],                     ".psd", [idImageMagick])
 add_format(format"RGB", UInt8[0x01,0xda,0x01,0x01,0x00,0x03],           ".rgb", [idImageMagick])
 add_format(format"WMF", UInt8[0xd7,0xcd,0xc6,0x9a],                     ".wmf", [idImageMagick])
-add_format(format"EMF", UInt8[0x01,0x00,0x00,0x00],                     ".emf", [idImageMagick])
 add_format(format"WPG", UInt8[0xff,0x57,0x50,0x43],                     ".wpg", [idImageMagick])
 add_format(format"Imagine", "IMAGINE",                                  ".imagine", [:ImagineFormat => UUID("4bab44a2-5ff2-5a6b-8e10-825fb9ac126a")])
 
