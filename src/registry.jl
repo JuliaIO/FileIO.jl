@@ -150,7 +150,7 @@ add_format(format"EXR", UInt8[0x76,0x2f,0x31,0x01],                     ".exr", 
 add_format(format"HDR", UInt8[0x23,0x3f,0x52,0x41,0x44,0x49,0x41,0x4e], ".hdr", [idImageMagick])
 add_format(format"ICO", UInt8[0x00,0x00,0x01,0x00],                     ".ico", [idImageMagick])
 add_format(format"INFO", UInt8[0x7a,0x62,0x65,0x78],                    ".info",[idImageMagick])
-add_format(format"JP2", UInt8[0x00,0x00,0x00,0x0c,0x6a,0x50,0x20,0x20], ".jp2", [idImageMagick])
+add_format(format"JP2", UInt8[0x00,0x00,0x00,0x0c,0x6a,0x50,0x20,0x20], ".jp2", [idImageMagick], [idOpenCV])
 add_format(format"PDB", UInt8[0x73,0x7a,0x65,0x7a],                     ".pdb", [idImageMagick])
 add_format(format"PDF", UInt8[0x25,0x50,0x44,0x46],                     ".pdf", [idImageMagick], [MimeWriter, SAVE])
 add_format(format"PGM", UInt8[0x50,0x35,0x0a],                          ".pgm", [idImageMagick])
@@ -199,7 +199,8 @@ add_format(
     UInt8[0x42,0x4d],
     ".bmp",
     [idQuartzImageIO, OSX],
-    [idImageMagick]
+    [idImageMagick],
+    [idOpenCV]
 )
 add_format(
     format"PCX",
@@ -388,7 +389,7 @@ function detecttiff(io)
 end
 # normal TIFF
 detect_noometiff(io) = detecttiff(io) && ((:name ∉ propertynames(io)) || !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>")))
-add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idQuartzImageIO, OSX], [idImageMagick])
+add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idQuartzImageIO, OSX], [idImageMagick], [idOpenCV])
 # OME-TIFF
 detect_ometiff(io) = detecttiff(io) && (:name ∈ propertynames(io)) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID("2d0ec36b-e807-5756-994b-45af29551fcf")])
