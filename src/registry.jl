@@ -7,6 +7,7 @@ const idImageIO = :ImageIO => UUID("82e4d734-157c-48bb-816b-45c225c6df19")
 const idImageMagick = :ImageMagick => UUID("6218d12a-5da1-5696-b52f-db25d2ecc6d1")
 const idMeshIO = :MeshIO => UUID("7269a6da-0436-5bbc-96c2-40638cbb6118")
 const idNetpbm = :Netpbm => UUID("f09324ee-3d7c-5217-9330-fc30815ba969")
+const idOpenCV = :OpenCV => UUID("f878e3a2-a245-4720-8660-60795d644f2a")
 const idQuartzImageIO = :QuartzImageIO => UUID("dca85d43-d64c-5e67-8c65-017450d5d020")
 const idRData = :RData => UUID("df47a6cb-8c03-5eed-afd8-b6050d6c41da")
 const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
@@ -180,6 +181,7 @@ add_format(
     [idImageIO],
     [idQuartzImageIO, OSX],
     [idImageMagick],
+    [idOpenCV],
     [MimeWriter, SAVE]
 )
 add_format(
@@ -189,7 +191,8 @@ add_format(
     [idJpegTurbo],
     [idImageIO],
     [idQuartzImageIO, OSX],
-    [idImageMagick]
+    [idImageMagick],
+    [idOpenCV]
 ) # 0xe1
 add_format(
     format"BMP",
