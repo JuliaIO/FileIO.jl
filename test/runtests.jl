@@ -25,3 +25,6 @@ end
     include("test_mimesave.jl")
     include("integration.jl")
 end
+
+using Aqua
+Aqua.test_all(FileIO)
