@@ -18,21 +18,21 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-13, macOS-14]
         exclude:
           - os: ubuntu-latest
-            arch: aarch64
+            julia-arch: aarch64
           - os: windows-latest
-            arch: aarch64
+            julia-arch: aarch64
           - os: macOS-13
-            arch: x86
+            julia-arch: x86
           - os: macOS-13
-            arch: aarch64
+            julia-arch: aarch64
           - os: macOS-14
-            arch: x86
+            julia-arch: x86
           - os: macOS-14
-            arch: x64
+            julia-arch: x64
           - os: macOS-14
-            version: '1.6'
+            julia-version: '1.6'
           - os: macOS-14
-            version: '1.0'
+            julia-version: '1.0'
 
     steps:
       - name: Set git to use LF (Windows only)
