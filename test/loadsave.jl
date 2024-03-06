@@ -14,6 +14,7 @@ module TestLoadSave2
     import FileIO: File, @format_str
     fileio_load(file::File{format"HDF5"})      = "HDF5"
     fileio_load(file::File{format"BIB"})       = "BIB"
+    fileio_load(file::File{format"DCM"})       = "DCM"
 end
 
 @testset "FakeIO" begin
@@ -34,6 +35,7 @@ end
             add_loader(format"JLD", TestLoadSave)
             add_loader(format"GZIP", TestLoadSave)
             add_loader(format"BIB", TestLoadSave2)
+            add_loader(format"DCM", TestLoadSave2)
 
             @test load(joinpath(fp,"file1.pbm")) == "PBMText"
             @test load(joinpath(fp,"file2.pbm")) == "PBMBinary"
@@ -53,6 +55,8 @@ end
             @test load(joinpath(fp,"file.csv.gz")) == "GZIP"
             # Bibliography file saved with .bib extension
             @test load(joinpath(fp,"file.bib")) == "BIB"
+            # DICOM file saved with .dcm extension
+            @test load(joinpath(fp,"CT_JPEG70.dcm")) == "DCM"
             @test_throws Exception load("missing.fmt")
         end
     finally
