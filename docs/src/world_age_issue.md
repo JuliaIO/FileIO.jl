@@ -58,7 +58,7 @@ julia> f() = size(load("indexed_image.png"))
 f (generic function with 1 method)
 
 julia> f()
-ERROR: MethodError: no method matching size(::IndirectArrays.IndirectArray{ColorTypes.RGB{FixedPointNumbers.N0f8}, 2, UInt8, Matrix{UInt8}, OffsetArrays.OffsetVector{ColorTypes.RGB{FixedPointNumbers.N0f8}, Vector{ColorTypes.RGB{FixedPointNumbers.N0f8}}}})
+ERROR: MethodError: no method matching for call to size(::IndirectArrays.IndirectArray{ColorTypes.RGB{FixedPointNumbers.N0f8}, 2, UInt8, Matrix{UInt8}, OffsetArrays.OffsetVector{ColorTypes.RGB{FixedPointNumbers.N0f8}, Vector{ColorTypes.RGB{FixedPointNumbers.N0f8}}}})
 The applicable method may be too new: running in world age 32382, while current world is 32416.
 Closest candidates are:
   size(::IndirectArrays.IndirectArray) at ~/.julia/packages/IndirectArrays/BUQO3/src/IndirectArrays.jl:52 (method too new to be called from this world context.)
