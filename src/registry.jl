@@ -8,13 +8,12 @@ const idImageMagick = :ImageMagick => UUID("6218d12a-5da1-5696-b52f-db25d2ecc6d1
 const idMeshIO = :MeshIO => UUID("7269a6da-0436-5bbc-96c2-40638cbb6118")
 const idNetpbm = :Netpbm => UUID("f09324ee-3d7c-5217-9330-fc30815ba969")
 const idOpenCV = :OpenCV => UUID("f878e3a2-a245-4720-8660-60795d644f2a")
-const idQuartzImageIO = :QuartzImageIO => UUID("dca85d43-d64c-5e67-8c65-017450d5d020")
 const idRData = :RData => UUID("df47a6cb-8c03-5eed-afd8-b6050d6c41da")
 const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
 const idSixel = :Sixel => UUID("45858cf5-a6b0-47a3-bbea-62219f50df47")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
-const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
+const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5")
 const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
 const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
@@ -102,7 +101,7 @@ function detect_rdata_single(io)
         c == UInt8('\n') || return false
         return true
     end
-    
+
     res = checked_match(io)
     if !res
         res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"]) && !name_matches_compressed_fits(io)
@@ -164,14 +163,12 @@ add_format(
     format"TGA",
     (),
     ".tga",
-    [idQuartzImageIO, OSX],
     [idImageMagick]
 )
 add_format(
     format"GIF",
     UInt8[0x47,0x49,0x46,0x38],
     ".gif",
-    [idQuartzImageIO, OSX],
     [idImageMagick]
 )
 add_format(
@@ -179,7 +176,6 @@ add_format(
     UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
     ".png",
     [idImageIO],
-    [idQuartzImageIO, OSX],
     [idImageMagick],
     [idOpenCV],
     [MimeWriter, SAVE]
@@ -190,7 +186,6 @@ add_format(
     [".jpeg", ".jpg", ".JPG"],
     [idJpegTurbo],
     [idImageIO],
-    [idQuartzImageIO, OSX],
     [idImageMagick],
     [idOpenCV]
 ) # 0xe1
@@ -198,7 +193,6 @@ add_format(
     format"BMP",
     UInt8[0x42,0x4d],
     ".bmp",
-    [idQuartzImageIO, OSX],
     [idImageMagick],
     [idOpenCV]
 )
@@ -389,7 +383,7 @@ function detecttiff(io)
 end
 # normal TIFF
 detect_noometiff(io) = detecttiff(io) && ((:name ∉ propertynames(io)) || !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>")))
-add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idQuartzImageIO, OSX], [idImageMagick], [idOpenCV])
+add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idImageMagick], [idOpenCV])
 # OME-TIFF
 detect_ometiff(io) = detecttiff(io) && (:name ∈ propertynames(io)) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID("2d0ec36b-e807-5756-994b-45af29551fcf")])
@@ -482,9 +476,9 @@ add_format(format"GZIP", detect_gzip, ".gz", [:Libz => UUID("2ec943e9-cfe8-584d-
 
 
 # Astro Data
-# FITS files are often gziped and given the extension ".fits.gz". We want to load those directly and not dispatch to Libz 
-function detect_fits(io) 
-    # FITS files can have 
+# FITS files are often gziped and given the extension ".fits.gz". We want to load those directly and not dispatch to Libz
+function detect_fits(io)
+    # FITS files can have
     if name_matches_compressed_fits(io)
         return true
     end
