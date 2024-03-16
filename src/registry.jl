@@ -455,9 +455,7 @@ function detect_stlbinary(io)
     number_of_triangle_blocks = read(io, UInt32)
      #1 normal, 3 vertices in Float32 + attrib count, usually 0
     len != (number_of_triangle_blocks*size_triangleblock)+size_header && (seekstart(io); return false)
-    skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(UInt16))
-    attrib_byte_count = read(io, UInt16) # read last attrib_byte
-    attrib_byte_count != zero(UInt16) && (seekstart(io); return false) # should be zero as not used
+    skip(io, number_of_triangle_blocks*size_triangleblock)
     result = eof(io) # if end of file, we have a stl!
     return result
 end
