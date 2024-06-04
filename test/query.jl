@@ -358,6 +358,9 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             @test typeof(q) <: File{format"STL_ASCII"}
             q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
             @test typeof(q) <: File{format"STL_BINARY"}
+            # See Pull Request # 388
+            q = query(joinpath(file_dir, "binary_stl_with_nonzero_attribute_byte_count.stl"))
+            @test typeof(q) <: File{format"STL_BINARY"}
             open(q) do io
                 @test position(io) == 0
                 skipmagic(io)
