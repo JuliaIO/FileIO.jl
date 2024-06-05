@@ -5,5 +5,5 @@ ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 PNGFiles = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
 
 [compat]
-Documenter = "0.26"
+Documenter = "1"
 HTTP = "0.9"
