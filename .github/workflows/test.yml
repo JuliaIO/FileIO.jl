@@ -9,31 +9,36 @@ on:
 
 jobs:
   test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+
+    permissions:
+      actions: write
+      contents: read
+    
     strategy:
       fail-fast: false
       matrix:
-        julia-version: ['1.0', '1.6', '1', 'nightly']
-        julia-arch: [x64, x86, aarch64]
-        os: [ubuntu-latest, windows-latest, macOS-13, macOS-14]
-        exclude:
+        version:
+          - '1'    # Current stable version
+        os:
+          - ubuntu-latest
+          - windows-latest
+        arch:
+          - x64
+        include:
+          - os: macOS-latest
+            arch: aarch64
+            version: '1'
           - os: ubuntu-latest
-            julia-arch: aarch64
-          - os: windows-latest
-            julia-arch: aarch64
-          - os: macOS-13
-            julia-arch: x86
-          - os: macOS-13
-            julia-arch: aarch64
-          - os: macOS-14
-            julia-arch: x86
-          - os: macOS-14
-            julia-arch: x64
-          - os: macOS-14
-            julia-version: '1.6'
-          - os: macOS-14
-            julia-version: '1.0'
-
+            arch: x86
+            version: '1'
+          - os: ubuntu-latest
+            arch: x64
+            version: '1.6'
+          - os: ubuntu-latest
+            arch: x64
+            version: 'nightly'
     steps:
       - name: Set git to use LF (Windows only)
         if: matrix.os == 'windows-latest'
@@ -48,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
         with:
-          version: ${{ matrix.julia-version }}
+          version: ${{ matrix.version }}
       - uses: julia-actions/julia-runtest@latest
         env:
           JULIA_NUM_THREADS: 2
