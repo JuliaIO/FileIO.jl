@@ -87,9 +87,11 @@ function add_format(fmt, magic, extension, load_save_libraries...)
 end
 
 """
-`add_format(fmt, magic, extension)` registers a new [`DataFormat`](@ref).
-For example:
+    add_format(fmt, magic, extension)
 
+registers a new [`DataFormat`](@ref).
+
+For example:
     add_format(format"TIFF", (UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00]), [".tiff", ".tif"])
     add_format(format"PNG", [0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a], ".png")
     add_format(format"NRRD", "NRRD", [".nrrd",".nhdr"])
@@ -154,7 +156,9 @@ function add_format(sym::Symbol, @nospecialize(magic::Function), extension)
 end
 
 """
-`del_format(fmt::DataFormat)` deletes `fmt` from the format registry.
+    del_format(fmt::DataFormat)
+
+deletes `fmt` from the format registry.
 """
 del_format(@nospecialize(fmt::Type)) = del_format(formatname(fmt)::Symbol)
 function del_format(sym::Symbol)

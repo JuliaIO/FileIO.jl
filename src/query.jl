@@ -1,7 +1,9 @@
 # This file contains code that helps to query from the registry to determine the format
 
 """
-`unknown(f)` returns true if the format of `f` is unknown.
+    unknown(f)
+
+Returns true if the format of `f` is unknown.
 """
 unknown(@nospecialize(f::Union{Formatted,Type})) = unknown(formatname(f)::Symbol)
 unknown(name::Symbol) = name === :UNKNOWN
@@ -10,18 +12,25 @@ const unknown_df = DataFormat{:UNKNOWN}
 
 
 """
-`info(fmt)` returns the magic bytes/extension information for
-`fmt`.
+    info(fmt)
+
+Returns the magic bytes/extension information for `fmt`.
 """
 info(@nospecialize(f::Union{Formatted,Type})) = info(formatname(f)::Symbol)
 info(sym::Symbol) = sym2info[sym]
 
-"`magic(fmt)` returns the magic bytes of format `fmt`"
+"""
+    magic(fmt)
+
+Returns the magic bytes of format `fmt`
+"""
 magic(@nospecialize(fmt::Type)) = magic(formatname(fmt)::Symbol)
 magic(sym::Symbol) = info(sym)[1]
 
 """
-`skipmagic(s::Stream)` sets the position of `s` to be just after the magic bytes.
+    skipmagic(s::Stream)
+
+Sets the position of `s` to be just after the magic bytes.
 For a plain IO object, you can use `skipmagic(io, fmt)`.
 """
 skipmagic(@nospecialize(s::Stream)) = (skipmagic(stream(s), formatname(s)::Symbol); s)
@@ -200,8 +209,9 @@ end
 
 
 """
-`query(io, [filename])` returns a `Stream` object with information about the
-format inferred from the magic bytes.
+    query(io, [filename])
+
+Returns a `Stream` object with information about the format inferred from the magic bytes.
 """
 function query(io::IO, filename = nothing)
     sym = querysym(io)

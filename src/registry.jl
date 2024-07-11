@@ -231,7 +231,8 @@ function detectavi(io)
 end
 add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
 
-""" detectisom(io)
+"""
+    detectisom(io)
 
 Detect ISO/IEC 14496-12 ISO/IEC base media format files. These files start with
 a 32-bit big-endian length, and then the string 'ftyp' which is followed by
