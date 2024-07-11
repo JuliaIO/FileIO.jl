@@ -14,7 +14,7 @@ You'll need to [`pkg> dev FileIO`](https://julialang.github.io/Pkg.jl/v1/managin
 Before going into detail explaining the arguments of `add_format`,
 here is a real example that could be used to register an I/O package for one of the [Netpbm image formats](https://en.wikipedia.org/wiki/Netpbm#File_formats):
 
-```
+```julia
 add_format(format"PPMBinary", "P6", ".ppm", [:Netpbm => UUID("f09324ee-3d7c-5217-9330-fc30815ba969")]
 ```
 

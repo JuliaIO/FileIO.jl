@@ -3,7 +3,9 @@
 
 `LoaderError` should be thrown when loader library code fails, and other libraries should
 be given the chance to recover from the error.  Reports the library name and an error message:
+```julia
 LoaderError("ImageMagick", "Foo not available")
+```
 """
 struct LoaderError <: Exception
     library::String
@@ -18,7 +20,9 @@ Base.showerror(io::IO, e::LoaderError) = println(IOContext(io, :limit=>true), e.
 
 `WriterError` should be thrown when writer library code fails, and other libraries should
 be given the chance to recover from the error.  Reports the library name and an error message:
+```julia
 WriterError("ImageMagick", "Foo not available")
+```
 """
 struct WriterError <: Exception
     library::String
