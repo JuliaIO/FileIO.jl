@@ -120,7 +120,8 @@ function querysym(filename; checkfile::Bool=true)
                 end
                 match(io, magic) && return sym
             end
-            badmagic && error("Some formats with extension ", ext, " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
+            badmagic && error("Some formats with extension ", ext,
+                              " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
             fmt = querysym_all(io)[1]
             return fmt === :UNKNOWN ? syms[1] : fmt
         end
