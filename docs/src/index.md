@@ -13,9 +13,8 @@ provide support for standard file formats through functions named
 Install FileIO within Julia via
 
 ```julia
-julia> using Pkg
-
-julia> Pkg.add("FileIO")
+using Pkg
+Pkg.add("FileIO")
 ```
 
 ## Usage
