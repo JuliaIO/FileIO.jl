@@ -90,7 +90,7 @@ fs = open(joinpath(pkgdir(FileIO), "docs", "src", "registry.md"), "w")
 
     println(fs, """
     | Format Name | extensions | IO library | detection or magic number |
-    | ----------- | ---------- | ---------- | ---------- |""")
+    | ----------- | ---------- | ---------- | ------------------------- |""")
     include(joinpath(pkgdir(FileIO), "src", "registry.jl"))
 
 close(fs)
