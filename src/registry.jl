@@ -392,6 +392,16 @@ add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID
 skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
 skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
 
+# DICOM: DICOM files should begin with a 128-bytes (which are ignored) followed by the string DICM
+const dicommagic = UInt8['D', 'I', 'C', 'M']
+function detectdicom(io)
+    len = getlength(io)
+    len < 132 && return false
+    magic = Vector{UInt8}(read(io, 132)[end-3:end])
+    magic == dicommagic
+end
+add_format(format"DCM", detectdicom, [".dcm"], [:ImageMagick => UUID("6218d12a-5da1-5696-b52f-db25d2ecc6d1")])
+
 # HDF5: the complication is that the magic bytes may start at
 # 0, 512, 1024, 2048, or any multiple of 2 thereafter
 const h5magic = [0x89,0x48,0x44,0x46,0x0d,0x0a,0x1a,0x0a]

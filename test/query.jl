@@ -516,6 +516,11 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             q = query(joinpath(file_dir, "file.bib"))
             @test typeof(q) <: File{format"BIB"}
         end
+
+        @testset "DICOM detection" begin
+            q = query(joinpath(file_dir, "CT_JPEG70.dcm"))
+            @test typeof(q) <: File{format"DCM"}
+        end
     end
 
     @testset "Query from IOBuffer" begin
