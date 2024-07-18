@@ -9,6 +9,7 @@ on:
 jobs:
   Documenter:
     permissions:
+      actions: write
       contents: write
       pull-requests: read
       statuses: write
@@ -20,6 +21,7 @@ jobs:
         with:
           version: '1.10'
           show-versioninfo: true         # this causes versioninfo to be printed to the action log
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-docdeploy@latest
         env:
