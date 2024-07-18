@@ -15,7 +15,7 @@ makedocs(
         "world_age_issue.md",
         "reference.md",
     ],
-    checkdocs = :none
+    checkdocs = :exports,
 )
 
 deploydocs(
