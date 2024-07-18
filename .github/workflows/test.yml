@@ -54,6 +54,8 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
+          show-versioninfo: true
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-runtest@latest
         env:
           JULIA_NUM_THREADS: 2
