@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: nightly               # change this to 1.6 once's that's official
+          version: '1.10'
           show-versioninfo: true         # this causes versioninfo to be printed to the action log
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-docdeploy@latest
