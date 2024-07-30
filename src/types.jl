@@ -94,7 +94,11 @@ Stream{F}(file::File, io::IO) where {F<:DataFormat} = Stream{F, typeof(io)}(file
 Stream(file::File{F}, io::IO) where {F<:DataFormat} = Stream{F}(io, filename(file))
 
 stream(@nospecialize(s::Stream)) = s.io
-"`stream(s)` returns the stream associated with [`Stream`](@ref) `s`"
+"""
+    stream(s)
+
+Returns the stream associated with [`Stream`](@ref) `s`.
+"""
 stream(::Stream)
 
 filename(@nospecialize(s::Stream)) = s.filename
