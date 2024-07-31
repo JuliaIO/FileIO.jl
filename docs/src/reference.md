@@ -4,3 +4,6 @@
 Modules = [FileIO]
 Private = false
 ```
+```@docs
+FileIO.info
+```

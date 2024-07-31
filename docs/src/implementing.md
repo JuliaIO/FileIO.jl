@@ -87,7 +87,7 @@ closing any streams you opened in order to read or write the file. If you are
 given a `Stream`, your `close` method should only do the clean up for your
 reader or writer type, not close the stream.
 
-```jl
+```julia
 struct WAVReader
     io::IO
     ownstream::Bool

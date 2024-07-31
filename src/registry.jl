@@ -21,10 +21,12 @@ const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
 # data formats
 add_format(format"JLD", (unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.0"),
-                         unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")), ".jld", [:JLD => UUID("4138dd39-2aa7-5051-a626-17a0bb65d9c8")])
+                         unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")),
+           ".jld", [:JLD => UUID("4138dd39-2aa7-5051-a626-17a0bb65d9c8")])
 add_format(format"JLD2", (unsafe_wrap(Vector{UInt8},"Julia data file (HDF5), version 0.2"),
-                          unsafe_wrap(Vector{UInt8}, "HDF5-based Julia Data Format, version ")), ".jld2", [:JLD2 => UUID("033835bb-8acc-5ee8-8aae-3f567f8a3819")])
-add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
+                          unsafe_wrap(Vector{UInt8}, "HDF5-based Julia Data Format, version ")),
+           ".jld2", [:JLD2 => UUID("033835bb-8acc-5ee8-8aae-3f567f8a3819")])
+add_format(format"BSON", (), ".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
 add_format(format"NPY", "\x93NUMPY", ".npy", [idNPZ])
 add_format(format"NPZ", "PK\x03\x04", ".npz", [idNPZ])
@@ -231,7 +233,8 @@ function detectavi(io)
 end
 add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
 
-""" detectisom(io)
+"""
+    detectisom(io)
 
 Detect ISO/IEC 14496-12 ISO/IEC base media format files. These files start with
 a 32-bit big-endian length, and then the string 'ftyp' which is followed by
@@ -288,7 +291,12 @@ add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78
 add_format(format"FLAC", "fLaC", ".flac", [:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")], [idLibSndFile])
 
 ## Profile data
-add_format(format"JLPROF", [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00], ".jlprof", [:FlameGraphs => UUID("08572546-2f56-4bcf-ba4e-bab62c3a3f89")])  # magic is "JLPROF" followed by [0x01, 0x00]
+add_format(
+    format"JLPROF",
+    [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00],
+    ".jlprof",
+    [:FlameGraphs => UUID("08572546-2f56-4bcf-ba4e-bab62c3a3f89")]
+)  # magic is "JLPROF" followed by [0x01, 0x00]
 
 ### Complex cases
 
@@ -374,7 +382,8 @@ end
 add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles => UUID("85eb9095-274b-55ce-be28-9e90f41ac741")])
 
 # Handle OME-TIFFs, which are identical to normal TIFFs with the primary difference being the filename and embedded XML metadata
-const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
+const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b],
+                    UInt8[0x49,0x49,0x2a,0x00], UInt8[0x49,0x49,0x2b,0x00])
 function detecttiff(io)
     getlength(io) >= 4 || return false
     magic = read!(io, Vector{UInt8}(undef, 4))

@@ -1,7 +1,7 @@
 using Documenter
 using FileIO
 
-include("make_docs.jl")
+include("populate_registry.jl")
 
 makedocs(
     sitename = "FileIO",
