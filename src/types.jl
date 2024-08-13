@@ -21,7 +21,7 @@ end
 formatname(::Type{DataFormat{sym}}) where sym = sym
 
 
-abstract type Formatted{F<:DataFormat} end  # A specific file or stream
+abstract type Formatted{F<:DataFormat} <: IO end  # A specific file or stream
 
 formatname(::Formatted{F}) where F<:DataFormat = formatname(F)
 
@@ -146,15 +146,8 @@ Base.seekend(@nospecialize(s::Stream)) = (seekend(stream(s)); s)
 Base.skip(@nospecialize(s::Stream), offset::Integer) = (skip(stream(s), offset); s)
 Base.eof(s::Stream) = eof(stream(s))
 
-@inline Base.read(s::Stream, args...)  = read(stream(s), args...)
-Base.read!(s::Stream, array::Array) = read!(stream(s), array)
-@inline Base.write(s::Stream, args...) = write(stream(s), args...)
-# Note: we can't sensibly support the all keyword. If you need that,
-# call read(stream(s), ...; all=value) manually
-Base.readbytes!(s::Stream, b) = readbytes!(stream(s), b)
-Base.readbytes!(s::Stream, b, nb) = readbytes!(stream(s), b, nb)
-Base.read(s::Stream) = read(stream(s))
-Base.read(s::Stream, nb) = read(stream(s), nb)
+@inline Base.write(s::Stream, x::UInt8) = write(stream(s), x)
+@inline Base.read(s::Stream, ::Type{UInt8}) = read(stream(s), UInt8)
 Base.flush(s::Stream) = flush(stream(s))
 
 Base.isreadonly(s::Stream) = isreadonly(stream(s))
