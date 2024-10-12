@@ -1,7 +1,11 @@
 """
+    LoaderError <: Exception
+
 `LoaderError` should be thrown when loader library code fails, and other libraries should
 be given the chance to recover from the error.  Reports the library name and an error message:
+```julia
 LoaderError("ImageMagick", "Foo not available")
+```
 """
 struct LoaderError <: Exception
     library::String
@@ -12,9 +16,13 @@ Base.showerror(io::IO, e::LoaderError) = println(IOContext(io, :limit=>true), e.
                                                  e.msg, "\n  due to ", e.ex, "\n  Will try next loader.")
 
 """
+    WriterError <: Exception
+
 `WriterError` should be thrown when writer library code fails, and other libraries should
 be given the chance to recover from the error.  Reports the library name and an error message:
+```julia
 WriterError("ImageMagick", "Foo not available")
+```
 """
 struct WriterError <: Exception
     library::String
@@ -34,6 +42,8 @@ end
 Base.showerror(io::IO, e::SpecError) = print(io, e.mod, " is missing $(e.call) and fileio_$(e.call)")
 
 """
+    handle_exceptions(exceptions::Vector, action)
+
 Handles a list of thrown errors after no IO library was found working
 """
 function handle_exceptions(exceptions::Vector, action)

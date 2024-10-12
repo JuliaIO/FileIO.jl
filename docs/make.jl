@@ -1,7 +1,7 @@
 using Documenter
 using FileIO
 
-include("make_docs.jl")
+include("populate_registry.jl")
 
 makedocs(
     sitename = "FileIO",
@@ -15,6 +15,7 @@ makedocs(
         "world_age_issue.md",
         "reference.md",
     ],
+    checkdocs = :exports,
 )
 
 deploydocs(

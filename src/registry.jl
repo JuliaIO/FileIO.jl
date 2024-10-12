@@ -8,13 +8,12 @@ const idImageMagick = :ImageMagick => UUID("6218d12a-5da1-5696-b52f-db25d2ecc6d1
 const idMeshIO = :MeshIO => UUID("7269a6da-0436-5bbc-96c2-40638cbb6118")
 const idNetpbm = :Netpbm => UUID("f09324ee-3d7c-5217-9330-fc30815ba969")
 const idOpenCV = :OpenCV => UUID("f878e3a2-a245-4720-8660-60795d644f2a")
-const idQuartzImageIO = :QuartzImageIO => UUID("dca85d43-d64c-5e67-8c65-017450d5d020")
 const idRData = :RData => UUID("df47a6cb-8c03-5eed-afd8-b6050d6c41da")
 const idStatFiles = :StatFiles => UUID("1463e38c-9381-5320-bcd4-4134955f093a")
 const idSixel = :Sixel => UUID("45858cf5-a6b0-47a3-bbea-62219f50df47")
 const idVegaLite = :VegaLite => UUID("112f6efa-9a02-5b7d-90c0-432ed331239a")
 const idVideoIO = :VideoIO => UUID("d6d074c3-1acf-5d4c-9a43-ef38773959a2")
-const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5") 
+const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5")
 const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
 const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
@@ -22,10 +21,12 @@ const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
 # data formats
 add_format(format"JLD", (unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.0"),
-                         unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")), ".jld", [:JLD => UUID("4138dd39-2aa7-5051-a626-17a0bb65d9c8")])
+                         unsafe_wrap(Vector{UInt8}, "Julia data file (HDF5), version 0.1")),
+           ".jld", [:JLD => UUID("4138dd39-2aa7-5051-a626-17a0bb65d9c8")])
 add_format(format"JLD2", (unsafe_wrap(Vector{UInt8},"Julia data file (HDF5), version 0.2"),
-                          unsafe_wrap(Vector{UInt8}, "HDF5-based Julia Data Format, version ")), ".jld2", [:JLD2 => UUID("033835bb-8acc-5ee8-8aae-3f567f8a3819")])
-add_format(format"BSON",(),".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
+                          unsafe_wrap(Vector{UInt8}, "HDF5-based Julia Data Format, version ")),
+           ".jld2", [:JLD2 => UUID("033835bb-8acc-5ee8-8aae-3f567f8a3819")])
+add_format(format"BSON", (), ".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
 add_format(format"NPY", "\x93NUMPY", ".npy", [idNPZ])
 add_format(format"NPZ", "PK\x03\x04", ".npz", [idNPZ])
@@ -102,7 +103,7 @@ function detect_rdata_single(io)
         c == UInt8('\n') || return false
         return true
     end
-    
+
     res = checked_match(io)
     if !res
         res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"]) && !name_matches_compressed_fits(io)
@@ -164,14 +165,12 @@ add_format(
     format"TGA",
     (),
     ".tga",
-    [idQuartzImageIO, OSX],
     [idImageMagick]
 )
 add_format(
     format"GIF",
     UInt8[0x47,0x49,0x46,0x38],
     ".gif",
-    [idQuartzImageIO, OSX],
     [idImageMagick]
 )
 add_format(
@@ -179,7 +178,6 @@ add_format(
     UInt8[0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a],
     ".png",
     [idImageIO],
-    [idQuartzImageIO, OSX],
     [idImageMagick],
     [idOpenCV],
     [MimeWriter, SAVE]
@@ -190,7 +188,6 @@ add_format(
     [".jpeg", ".jpg", ".JPG"],
     [idJpegTurbo],
     [idImageIO],
-    [idQuartzImageIO, OSX],
     [idImageMagick],
     [idOpenCV]
 ) # 0xe1
@@ -198,7 +195,6 @@ add_format(
     format"BMP",
     UInt8[0x42,0x4d],
     ".bmp",
-    [idQuartzImageIO, OSX],
     [idImageMagick],
     [idOpenCV]
 )
@@ -237,7 +233,8 @@ function detectavi(io)
 end
 add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
 
-""" detectisom(io)
+"""
+    detectisom(io)
 
 Detect ISO/IEC 14496-12 ISO/IEC base media format files. These files start with
 a 32-bit big-endian length, and then the string 'ftyp' which is followed by
@@ -294,7 +291,12 @@ add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78
 add_format(format"FLAC", "fLaC", ".flac", [:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")], [idLibSndFile])
 
 ## Profile data
-add_format(format"JLPROF", [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00], ".jlprof", [:FlameGraphs => UUID("08572546-2f56-4bcf-ba4e-bab62c3a3f89")])  # magic is "JLPROF" followed by [0x01, 0x00]
+add_format(
+    format"JLPROF",
+    [0x4a, 0x4c, 0x50, 0x52, 0x4f, 0x46, 0x01, 0x00],
+    ".jlprof",
+    [:FlameGraphs => UUID("08572546-2f56-4bcf-ba4e-bab62c3a3f89")]
+)  # magic is "JLPROF" followed by [0x01, 0x00]
 
 ### Complex cases
 
@@ -380,7 +382,8 @@ end
 add_format(format"bedGraph", detect_bedgraph, [".bedgraph"], [:BedgraphFiles => UUID("85eb9095-274b-55ce-be28-9e90f41ac741")])
 
 # Handle OME-TIFFs, which are identical to normal TIFFs with the primary difference being the filename and embedded XML metadata
-const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b], UInt8[0x49,0x49,0x2a,0x00],UInt8[0x49,0x49,0x2b,0x00])
+const tiff_magic = (UInt8[0x4d,0x4d,0x00,0x2a], UInt8[0x4d,0x4d,0x00,0x2b],
+                    UInt8[0x49,0x49,0x2a,0x00], UInt8[0x49,0x49,0x2b,0x00])
 function detecttiff(io)
     getlength(io) >= 4 || return false
     magic = read!(io, Vector{UInt8}(undef, 4))
@@ -389,7 +392,7 @@ function detecttiff(io)
 end
 # normal TIFF
 detect_noometiff(io) = detecttiff(io) && ((:name ∉ propertynames(io)) || !(endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>")))
-add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idQuartzImageIO, OSX], [idImageMagick], [idOpenCV])
+add_format(format"TIFF", detect_noometiff, [".tiff", ".tif"], [idImageIO], [idImageMagick], [idOpenCV])
 # OME-TIFF
 detect_ometiff(io) = detecttiff(io) && (:name ∈ propertynames(io)) && (endswith(io.name, ".ome.tif>") || endswith(io.name, ".ome.tiff>"))
 add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID("2d0ec36b-e807-5756-994b-45af29551fcf")])
@@ -397,6 +400,16 @@ add_format(format"OMETIFF", detect_ometiff, [".tif", ".tiff"], [:OMETIFF => UUID
 # custom skipmagic functions for function-based tiff magic detection
 skipmagic(io, ::typeof(detect_ometiff)) = seek(io, 4)
 skipmagic(io, ::typeof(detect_noometiff)) = seek(io, 4)
+
+# DICOM: DICOM files should begin with a 128-bytes (which are ignored) followed by the string DICM
+const dicommagic = UInt8['D', 'I', 'C', 'M']
+function detectdicom(io)
+    len = getlength(io)
+    len < 132 && return false
+    magic = Vector{UInt8}(read(io, 132)[end-3:end])
+    magic == dicommagic
+end
+add_format(format"DCM", detectdicom, [".dcm"], [:ImageMagick => UUID("6218d12a-5da1-5696-b52f-db25d2ecc6d1")])
 
 # HDF5: the complication is that the magic bytes may start at
 # 0, 512, 1024, 2048, or any multiple of 2 thereafter
@@ -461,9 +474,7 @@ function detect_stlbinary(io)
     number_of_triangle_blocks = read(io, UInt32)
      #1 normal, 3 vertices in Float32 + attrib count, usually 0
     len != (number_of_triangle_blocks*size_triangleblock)+size_header && (seekstart(io); return false)
-    skip(io, number_of_triangle_blocks*size_triangleblock-sizeof(UInt16))
-    attrib_byte_count = read(io, UInt16) # read last attrib_byte
-    attrib_byte_count != zero(UInt16) && (seekstart(io); return false) # should be zero as not used
+    skip(io, number_of_triangle_blocks*size_triangleblock)
     result = eof(io) # if end of file, we have a stl!
     return result
 end
@@ -484,9 +495,9 @@ add_format(format"GZIP", detect_gzip, ".gz", [:Libz => UUID("2ec943e9-cfe8-584d-
 
 
 # Astro Data
-# FITS files are often gziped and given the extension ".fits.gz". We want to load those directly and not dispatch to Libz 
-function detect_fits(io) 
-    # FITS files can have 
+# FITS files are often gziped and given the extension ".fits.gz". We want to load those directly and not dispatch to Libz
+function detect_fits(io)
+    # FITS files can have
     if name_matches_compressed_fits(io)
         return true
     end
