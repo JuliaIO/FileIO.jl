@@ -1,6 +1,7 @@
 using FileIO
 using Test
 using Random
+import Downloads
 
 @testset "OS" begin
     if Sys.islinux()
@@ -358,6 +359,9 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             @test typeof(q) <: File{format"STL_ASCII"}
             q = query(joinpath(file_dir, "binary_stl_from_solidworks.STL"))
             @test typeof(q) <: File{format"STL_BINARY"}
+            # See Pull Request # 388
+            q = query(joinpath(file_dir, "binary_stl_with_nonzero_attribute_byte_count.stl"))
+            @test typeof(q) <: File{format"STL_BINARY"}
             open(q) do io
                 @test position(io) == 0
                 skipmagic(io)
@@ -396,19 +400,19 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             @test typeof(q) <: File{format"AVI"}
         end
         @testset "MP4 detection" begin
-            f = download("https://archive.org/download/LadybirdOpeningWingsCCBYNatureClip/Ladybird%20opening%20wings%20CC-BY%20NatureClip.mp4")
+            f = Downloads.download("https://archive.org/download/LadybirdOpeningWingsCCBYNatureClip/Ladybird%20opening%20wings%20CC-BY%20NatureClip.mp4")
             q = query(f)
             @test typeof(q) <: File{format"MP4"}
         end
         if Base.VERSION >= v"1.6" || !Sys.iswindows()
             # FIXME: Windows fails to download the files on Julia 1.0
             @testset "OGG detection" begin
-                f = download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
+                f = Downloads.download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
                 q = query(f)
                 @test typeof(q) <: File{format"OGG"}
             end
             @testset "MATROSKA detection" begin
-                f = download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
+                f = Downloads.download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
                 q = query(f)
                 @test typeof(q) <: File{format"MATROSKA"}
             end
@@ -512,6 +516,11 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         @testset "Bibliography detection" begin
             q = query(joinpath(file_dir, "file.bib"))
             @test typeof(q) <: File{format"BIB"}
+        end
+
+        @testset "DICOM detection" begin
+            q = query(joinpath(file_dir, "CT_JPEG70.dcm"))
+            @test typeof(q) <: File{format"DCM"}
         end
     end
 

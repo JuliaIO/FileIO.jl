@@ -13,7 +13,7 @@ thing related to image IO.
 To avoid such unnecessary loading latency, FileIO defers package loading until it's actually used.
 For instance, when you use FileIO, you'll probably observe something like this:
 
-```julia
+```julia-repl
 julia> using TestImages, FileIO
 
 julia> path = testimage("cameraman"; download_only=true)
@@ -38,12 +38,12 @@ after initial compilation finishes) than the one you called them from.
 Let's demonstrate the problem concretely. In case you don't have a suitable file to play with, let's
 first create one:
 
-```julia
+```julia-repl
 julia> using IndirectArrays, ImageCore
 
 julia> img = IndirectArray(rand(1:5, 4, 4), rand(RGB, 5))
 4×4 IndirectArray{RGB{Float64}, 2, Int64, Matrix{Int64}, Vector{RGB{Float64}}}:
-...
+[...]
 
 julia> save("indexed_image.png", img)
 ```
@@ -51,7 +51,7 @@ julia> save("indexed_image.png", img)
 Now, **reopen a new julia REPL** (this is crucial for demonstrating the problem) and call `load`
 from **within a function** (this is also crucial):
 
-```julia
+```julia-repl
 julia> using FileIO
 
 julia> f() = size(load("indexed_image.png"))
@@ -95,7 +95,7 @@ which you called `f()`. This leads to the observed error.
 
 The good news is it's easy to fix, just try calling `f()` again:
 
-```julia
+```julia-repl
 julia> f()
 (4, 4)
 ```
@@ -113,7 +113,7 @@ around this world-age dispatch problem. Literally, `invokelatest` dispatches the
 the latest world age (which may be newer than when you typed `f()` at the REPL). **In a fresh Julia
 session**,
 
-```julia
+```julia-repl
 julia> using FileIO
 
 julia> f() = Base.invokelatest(size, load("indexed_image.png"))
@@ -138,7 +138,7 @@ Another solution to the world age issue is simple and doesn't have long-term dow
 load the needed packages**. For instance, if you're seeing world age issue complaining methods
 related to `IndirectArray`, then load IndirectArrays eagerly:
 
-```julia
+```julia-repl
 julia> using FileIO, IndirectArrays # try this on a new Julia REPL
 
 julia> f() = size(load("indexed_image.png"))
