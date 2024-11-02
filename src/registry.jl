@@ -17,6 +17,23 @@ const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5")
 const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
 const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
+function detect_riff(io::IO, expected_magic::AbstractVector{UInt8})
+    file_length = getlength(io)
+    file_length >= 12 || return false
+    buf = Vector{UInt8}(undef, 4)
+
+    fourcc = read!(io, buf)
+    fourcc == b"RIFF" || return false
+
+    # Cf. https://developers.google.com/speed/webp/docs/riff_container#riff_file_format, and https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff-#chunks
+    payload_length = ltoh(read(io, UInt32))
+    padded_payload_length = payload_length + payload_length % 2
+    padded_payload_length == file_length - 8 || return false
+
+    magic = read!(io, buf)
+    return magic == expected_magic
+end
+
 ### Simple cases
 
 # data formats
@@ -205,6 +222,13 @@ add_format(
     [idImageMagick]
 )
 add_format(
+    format"QOI",
+    "qoif",
+    ".qoi",
+    [:QOI => UUID("4b34888f-f399-49d4-9bb3-47ed5cae4e65")],
+    [idImageIO]
+)
+add_format(
     format"SVG",
     (),
     ".svg",
@@ -218,19 +242,18 @@ add_format(
     [idImageIO],
     [idImageMagick]
 )
+detect_webp(io) = detect_riff(io, b"WEBP")
+add_format(
+    format"WebP",
+    detect_webp,
+    ".webp",
+    [:WebP => UUID("e3aaa7dc-3e4b-44e0-be63-ffb868ccd7c1")],
+    [idImageIO]
+)
 
 # Video formats
 
-# AVI is a subtype of RIFF, as is WAV
-function detectavi(io)
-    getlength(io) >= 12 || return false
-    magic = read!(io, Vector{UInt8}(undef, 4))
-    magic == b"RIFF" || return false
-    seek(io, 8)
-    submagic = read!(io, Vector{UInt8}(undef, 4))
-
-    submagic == b"AVI "
-end
+detectavi(io) = detect_riff(io, b"AVI ")
 add_format(format"AVI", detectavi, ".avi", [idImageMagick], [idVideoIO])
 
 """
@@ -278,15 +301,7 @@ add_format(format"OUT", "# Bundle file v0.3\n", ".out", [:BundlerIO => UUID("654
 add_format(format"GSLIB", (), [".gslib",".sgems"], [:GslibIO => UUID("4610876b-9b01-57c8-9ad9-06315f1a66a5")])
 
 ### Audio formats
-function detectwav(io)
-    getlength(io) >= 12 || return false
-    buf = Vector{UInt8}(undef, 4)
-    read!(io, buf)
-    buf == b"RIFF" || return false
-    seek(io, 8)
-    read!(io, buf)
-    buf == b"WAVE"
-end
+detectwav(io) = detect_riff(io, b"WAVE")
 add_format(format"WAV", detectwav, ".wav", [:WAV => UUID("8149f6b0-98f6-5db9-b78f-408fbbb8ef88")], [idLibSndFile])
 add_format(format"FLAC", "fLaC", ".flac", [:FLAC => UUID("abae9e3b-a9a0-4778-b5c6-ca109b507d99")], [idLibSndFile])
 
@@ -541,8 +556,6 @@ add_format(format"FCS", "FCS", [".fcs"], [:FCSFiles => UUID("d76558cf-badf-52d4-
 add_format(format"HTML", (), [".html", ".htm"], [MimeWriter, SAVE])
 
 add_format(format"MIDI", "MThd", [".mid", ".midi", ".MID"], [:MIDI => UUID("f57c4921-e30c-5f49-b073-3f2f2ada663e")])
-
-add_format(format"QOI", "qoif", ".qoi", [:QOI => UUID("4b34888f-f399-49d4-9bb3-47ed5cae4e65")], [idImageIO])
 
 # Bibliography files.
 add_format(format"BIB", (), [".bib"], [:Bibliography => UUID("f1be7e48-bf82-45af-a471-ae754a193061")])
