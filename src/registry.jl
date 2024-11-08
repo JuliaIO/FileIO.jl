@@ -546,3 +546,6 @@ add_format(format"QOI", "qoif", ".qoi", [:QOI => UUID("4b34888f-f399-49d4-9bb3-4
 
 # Bibliography files.
 add_format(format"BIB", (), [".bib"], [:Bibliography => UUID("f1be7e48-bf82-45af-a471-ae754a193061")])
+
+# sparse matrices
+add_format(format"SMS", (), ".sms", [:SpaSM => UUID("017bf598-072c-475c-a75e-c3e68736ce70")])
