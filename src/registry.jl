@@ -17,19 +17,13 @@ const idLibSndFile = :LibSndFile => UUID("b13ce0c6-77b0-50c6-a2db-140568b8d1a5")
 const idJpegTurbo = :JpegTurbo => UUID("b835a17e-a41a-41e7-81f0-2f016b05efe0")
 const idNPZ = :NPZ => UUID("15e1cf62-19b3-5cfa-8e77-841668bca605")
 
+# Cf. https://developers.google.com/speed/webp/docs/riff_container#riff_file_format, and https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff-#chunks
 function detect_riff(io::IO, expected_magic::AbstractVector{UInt8})
-    file_length = getlength(io)
-    file_length >= 12 || return false
+    getlength(io) >= 12 || return false
     buf = Vector{UInt8}(undef, 4)
-
     fourcc = read!(io, buf)
     fourcc == b"RIFF" || return false
-
-    # Cf. https://developers.google.com/speed/webp/docs/riff_container#riff_file_format, and https://learn.microsoft.com/en-us/windows/win32/xaudio2/resource-interchange-file-format--riff-#chunks
-    payload_length = ltoh(read(io, UInt32))
-    padded_payload_length = payload_length + payload_length % 2
-    padded_payload_length == file_length - 8 || return false
-
+    seek(io, 8)
     magic = read!(io, buf)
     return magic == expected_magic
 end
