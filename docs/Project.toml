@@ -6,4 +6,4 @@ PNGFiles = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
 
 [compat]
 Documenter = "1"
-HTTP = "0.9"
+HTTP = "0.9, 1"

@@ -64,11 +64,13 @@ include("registry.jl")
 """
 FileIO
 
+@static if !isdefined(Base, :get_extension)
 function __init__()
     @require HTTP="cd3eb016-35fb-5094-929b-558a96fad6f3" begin
-        load(uri::HTTP.URI) = load(IOBuffer(HTTP.get(uri).body))
+        include("../ext/HTTPExt.jl")
     end
 end
+end # @static
 
 if VERSION >= v"1.4.2" # https://github.com/JuliaLang/julia/pull/35378
     include("precompile.jl")
