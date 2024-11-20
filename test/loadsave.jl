@@ -401,7 +401,9 @@ end
 if VERSION >= v"1.3" begin
     @testset "CSV load from URL via CSVFiles (#320)" begin
         f = joinpath("files", "data.csv")
-        @test collect(load(f)) == collect(load("https://raw.githubusercontent.com/queryverse/CSVFiles.jl/v0.2.0/test/data.csv"))
+        c1 = load(f)
+        c2 = load("https://raw.githubusercontent.com/queryverse/CSVFiles.jl/v0.2.0/test/data.csv")
+        @test collect(c1) == collect(c2)
     end
 end
 
