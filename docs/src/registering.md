@@ -30,7 +30,7 @@ You should generally choose something that makes it easy to guess what format it
 Examples of some existing `fmt`s are:
 
 - `format"PNG"`: the format for [png image files](https://en.wikipedia.org/wiki/Portable_Network_Graphics)
-- `format"HDF5"`: the format for [hierachical data files v5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format)
+- `format"HDF5"`: the format for [hierarchical data files v5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format)
 
 ## Argument `magic`
 
