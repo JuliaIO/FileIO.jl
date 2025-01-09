@@ -556,3 +556,6 @@ add_format(format"BIB", (), [".bib"], [:Bibliography => UUID("f1be7e48-bf82-45af
 
 # sparse matrices
 add_format(format"SMS", (), ".sms", [:SpaSM => UUID("017bf598-072c-475c-a75e-c3e68736ce70")])
+
+# Hanoi Omega-Automata. Header is "HOA:"
+add_format(format"HOA", UInt8[0x48,0x4f,0x41,0x3a], ".hoa", [:Buchi => UUID("484f28d2-1a9e-4e02-bb9b-910131567e8f")])
