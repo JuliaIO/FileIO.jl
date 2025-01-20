@@ -556,3 +556,13 @@ add_format(format"BIB", (), [".bib"], [:Bibliography => UUID("f1be7e48-bf82-45af
 
 # sparse matrices
 add_format(format"SMS", (), ".sms", [:SpaSM => UUID("017bf598-072c-475c-a75e-c3e68736ce70")])
+
+# Hanoi Omega-Automata. Header is "HOA:"
+add_format(format"HOA", UInt8[0x48,0x4f,0x41,0x3a], ".hoa", [:Buchi => UUID("484f28d2-1a9e-4e02-bb9b-910131567e8f")])
+
+# BA "Buchi Automata" format, see https://languageinclusion.org/doku.php?id=tools#the_ba_format, used by
+# FORKLIST https://github.com/Mazzocchi/FORKLIFT
+# RABIT https://languageinclusion.org/doku.php?id=tools
+# GOAL http://goal.im.ntu.edu.tw/wiki/doku.php
+# ROLL https://iscasmc.ios.ac.cn/roll/doku.php?id=start
+add_format(format"BA", (), ".ba", [:Buchi => UUID("484f28d2-1a9e-4e02-bb9b-910131567e8f")])
