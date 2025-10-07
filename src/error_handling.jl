@@ -68,7 +68,13 @@ function handle_exceptions(exceptions::Vector, action)
     end
 end
 
-handle_error(e, q, bt) = throw(CapturedException(e, trim!(stacktrace(bt))))
+function handle_error(e, q, bt)
+    if VERSION >= v"1.13.0-DEV.927"
+        throw(CapturedException(e, bt))
+    else
+        throw(CapturedException(e, trim!(stacktrace(bt))))
+    end
+end
 
 function trim!(sfs)
     i = firstindex(sfs)
