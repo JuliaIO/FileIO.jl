@@ -21,7 +21,7 @@ jobs:
         with:
           version: '1.10'
           show-versioninfo: true         # this causes versioninfo to be printed to the action log
-      - uses: julia-actions/cache@v2
+      - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-docdeploy@latest
         env:
