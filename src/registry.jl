@@ -532,7 +532,6 @@ add_format(format"ASDF",
         [".asdf"],
         [:ASDF => UUID("686f71d1-807d-59a4-a860-28280ea06d7b")])
 
-
 function detect_gadget2(io)
     pos = position(io)
     seekend(io)
