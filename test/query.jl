@@ -405,17 +405,33 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             # q = query(f)
             # @test typeof(q) <: File{format"MP4"}
         end
+        function try_download(url)
+            try
+                return Downloads.download(url)
+            catch e
+                (e isa RequestError || e isa Downloads.RequestError) && return nothing
+                rethrow()
+            end
+        end
         if Base.VERSION >= v"1.6" || !Sys.iswindows()
             # FIXME: Windows fails to download the files on Julia 1.0
             @testset "OGG detection" begin
-                f = Downloads.download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
-                q = query(f)
-                @test typeof(q) <: File{format"OGG"}
+                tmpfile = try_download("https://upload.wikimedia.org/wikipedia/commons/8/87/Annie_Oakley_shooting_glass_balls%2C_1894.ogv")
+                if tmpfile == nothing
+                    @test_skip "Skipped: network unavailable (download failed)"
+                else
+                    q = query(tmpfile)
+                    @test typeof(q) <: File{format"OGG"}
+                end
             end
             @testset "MATROSKA detection" begin
-                f = Downloads.download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
-                q = query(f)
-                @test typeof(q) <: File{format"MATROSKA"}
+                tmpfile = try_download("https://upload.wikimedia.org/wikipedia/commons/1/13/Artist%E2%80%99s_impression_of_the_black_hole_inside_NGC_300_X-1_%28ESO_1004c%29.webm")
+                if tmpfile == nothing
+                    @test_skip "Skipped: network unavailable (download failed)"
+                else
+                    q = query(tmpfile)
+                    @test typeof(q) <: File{format"MATROSKA"}
+                end
             end
         end
         @testset "WAV detection" begin
