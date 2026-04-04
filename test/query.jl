@@ -409,7 +409,7 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
             try
                 return Downloads.download(url)
             catch e
-                (e isa RequestError || e isa Downloads.RequestError) && return nothing
+                e isa Downloads.RequestError && return nothing
                 rethrow()
             end
         end
