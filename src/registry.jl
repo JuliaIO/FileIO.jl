@@ -40,6 +40,7 @@ add_format(format"JLD2", (unsafe_wrap(Vector{UInt8},"Julia data file (HDF5), ver
            ".jld2", [:JLD2 => UUID("033835bb-8acc-5ee8-8aae-3f567f8a3819")])
 add_format(format"BSON", (), ".bson", [:BSON => UUID("fbb218c0-5317-5bc6-957e-2ee96dd4b1f0")])
 add_format(format"JLSO", (), ".jlso", [:JLSO => UUID("9da8a3cd-07a3-59c0-a743-3fdc52c30d11")])
+add_format(format"MAT", (), ".mat", [:MAT => UUID("23992714-dd62-5051-b70f-ba57cb901cac")])
 add_format(format"NPY", "\x93NUMPY", ".npy", [idNPZ])
 add_format(format"NPZ", "PK\x03\x04", ".npz", [idNPZ])
 
