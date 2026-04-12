@@ -9,5 +9,6 @@ else
 end
 
 FileIO.load(uri::HTTP.URI) = load(IOBuffer(HTTP.get(uri).body))
+FileIO.metadata(uri::HTTP.URI) = metadata(IOBuffer(HTTP.get(uri).body))
 
 end # module
