@@ -408,9 +408,8 @@ let file_dir = joinpath(@__DIR__, "files"), file_path = Path(file_dir)
         function try_download(url)
             try
                 return Downloads.download(url)
-            catch e
-                e isa Downloads.RequestError && return nothing
-                rethrow()
+            catch
+                return nothing
             end
         end
         if Base.VERSION >= v"1.6" || !Sys.iswindows()
