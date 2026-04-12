@@ -525,7 +525,12 @@ add_format(format"FITS",
         [:FITSIO => UUID("525bcba6-941b-5504-bd06-fd0dc1a4d2eb")],
         [:AstroImages => UUID("fe3fc30c-9b16-11e9-1c73-17dabf39f4ad")])
 
-
+add_format(format"ASDF",
+        # See https://www.asdf-format.org/projects/asdf-standard/en/latest/file_layout.html#header
+        # #ASDF == ([0x23,0x41,0x53,0x44,0x46])
+        [0x23,0x41,0x53,0x44,0x46],
+        [".asdf"],
+        [:ASDF => UUID("686f71d1-807d-59a4-a860-28280ea06d7b")])
 
 function detect_gadget2(io)
     pos = position(io)
