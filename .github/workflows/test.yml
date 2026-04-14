@@ -22,7 +22,7 @@ jobs:
         version:
           - '1'    # Current stable version
           - 'lts'  # Current LTS version
-          - '1.6'  # Previous LTS version
+          - 'min'  # Minimum supported version from Project.toml
         os:
           - macOS-15-intel
           - ubuntu-latest
