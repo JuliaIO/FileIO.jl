@@ -132,7 +132,7 @@ add_format(format"CSV", (), [".csv"], [idCSVFiles])
 add_format(format"TSV", (), [".tsv"], [idCSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles => UUID("b675d258-116a-5741-b937-b79f054b0542")])
 add_format(format"Arrow", b"ARROW1\0\0", [".arrow"], [:Arrow => UUID("69666777-d1a9-59fb-9406-91d4454c9d45")])
-add_format(format"Excel", (), [".xlsx", "xltx", "xlsm", "xltm"], [:XLSX => UUID("fdbf4ff8-1666-58a4-91e7-1b58723a45e0")])
+add_format(format"Excel", (), [".xlsx", ".xltx", ".xlsm", ".xltm"], [:XLSX => UUID("fdbf4ff8-1666-58a4-91e7-1b58723a45e0")])
 add_format(format"Stata", (), [".dta"], [idStatFiles, LOAD])
 add_format(format"SPSS", "\$FL2", [".sav"], [idStatFiles, LOAD])
 add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
