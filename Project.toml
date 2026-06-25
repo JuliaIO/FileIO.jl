@@ -24,7 +24,7 @@ CodecZlib = "0.7"
 ColorTypes = "0.11"
 Downloads = "1.4"
 FilePathsBase = "0.9"
-HTTP = "1"
+HTTP = "1, 2"
 Random = "<0.0.1, 1"
 Test = "<0.0.1, 1"
 
