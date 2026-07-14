@@ -125,6 +125,19 @@ function detect_rdata_single(io)
     return res
 end
 
+function detect_excel(io)
+    # All OOXML Excel files are ZIPs starting with PK\x03\x04
+    magic = try
+        read(io, 4)
+    catch
+        return false
+    end
+    magic == UInt8[0x50, 0x4b, 0x03, 0x04]
+    # Note: a more precise check would unzip and inspect [Content_Types].xml,
+    # but the extension list already constrains to Excel extensions,
+    # so just claiming the ZIP magic is sufficient to beat NPZ.
+end
+
 add_format(format"RDataSingle", detect_rdata_single, [".rds"], [idRData, LOAD])
 
 add_format(format"AVSfld", "# AVS", [".fld"], [idAVSfldIO])
@@ -132,7 +145,7 @@ add_format(format"CSV", (), [".csv"], [idCSVFiles])
 add_format(format"TSV", (), [".tsv"], [idCSVFiles])
 add_format(format"Feather", "FEA1", [".feather"], [:FeatherFiles => UUID("b675d258-116a-5741-b937-b79f054b0542")])
 add_format(format"Arrow", b"ARROW1\0\0", [".arrow"], [:Arrow => UUID("69666777-d1a9-59fb-9406-91d4454c9d45")])
-add_format(format"Excel", (), [".xls", ".xlsx"], [:ExcelFiles => UUID("89b67f3b-d1aa-5f6f-9ca4-282e8d98620d")])
+add_format(format"Excel", detect_excel, [".xlsx", ".xltx", ".xlsm", ".xltm"], [:XLSX => UUID("fdbf4ff8-1666-58a4-91e7-1b58723a45e0")])
 add_format(format"Stata", (), [".dta"], [idStatFiles, LOAD])
 add_format(format"SPSS", "\$FL2", [".sav"], [idStatFiles, LOAD])
 add_format(format"SAS", UInt8[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
