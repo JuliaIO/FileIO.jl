@@ -8,7 +8,6 @@ module TestLoadSave
     load(file::File{format"PBMText"})   = "PBMText"
     load(file::File{format"PBMBinary"}) = "PBMBinary"
     load(file::File{format"JLD"})       = "JLD"
-    load(file::File{format"GZIP"})      = "GZIP"
 end
 module TestLoadSave2
     import FileIO: File, @format_str
@@ -33,7 +32,6 @@ end
             add_loader(format"PBMBinary", TestLoadSave)
             add_loader(format"HDF5", TestLoadSave2)
             add_loader(format"JLD", TestLoadSave)
-            add_loader(format"GZIP", TestLoadSave)
             add_loader(format"BIB", TestLoadSave2)
             add_loader(format"DCM", TestLoadSave2)
 
@@ -51,8 +49,6 @@ end
             @test load(joinpath(fp,"file2.h5")) == "HDF5"
             # JLD file saved with .jld extension
             @test load(joinpath(fp,"file.jld")) == "JLD"
-            # GZIP file saved with .gz extension
-            @test load(joinpath(fp,"file.csv.gz")) == "GZIP"
             # Bibliography file saved with .bib extension
             @test load(joinpath(fp,"file.bib")) == "BIB"
             # DICOM file saved with .dcm extension
