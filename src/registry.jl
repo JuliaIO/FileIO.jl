@@ -77,6 +77,12 @@ detect_compressed(io, len=getlength(io); kwargs...) = detect_compressor(io, len;
 const compressed_fits_exten = r"\.(fit|fits|fts|FIT|FITS|FTS)\.(gz|GZ)\>"
 name_matches_compressed_fits(io) = (:name ∈ propertynames(io)) && endswith(io.name, compressed_fits_exten)
 
+# We only fall back to treating a bare
+# compressed stream as RData when the filename actually carries an RData
+# extension; otherwise `detect_rdata` would claim any compressed file.
+const rdata_exten = r"\.(rda|RData|rdata)\>"
+name_matches_rdata(io) = (:name ∈ propertynames(io)) && endswith(io.name, rdata_exten)
+
 # test for RD?n magic sequence at the beginning of R data input stream
 function detect_rdata(io)
     seekstart(io)
@@ -98,10 +104,13 @@ function detect_rdata(io)
         return true
     end
     checked_match(io) && return true
-    return detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"]) && !name_matches_compressed_fits(io)
+    return name_matches_rdata(io) && detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
 end
 
 add_format(format"RData", detect_rdata, [".rda", ".RData", ".rdata"], [idRData, LOAD])
+
+const rdata_single_exten = r"\.rds\>"
+name_matches_rdata_single(io) = (:name ∈ propertynames(io)) && endswith(io.name, rdata_single_exten)
 
 function detect_rdata_single(io)
     seekstart(io)
@@ -119,11 +128,13 @@ function detect_rdata_single(io)
 
     res = checked_match(io)
     if !res
-        res = detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"]) && !name_matches_compressed_fits(io)
+        res = name_matches_rdata_single(io) && detect_compressed(io; formats=["GZIP", "BZIP2", "XZ"])
     end
     seekstart(io)
     return res
 end
+
+add_format(format"RDataSingle", detect_rdata_single, [".rds"], [idRData, LOAD])
 
 function detect_excel(io)
     # All OOXML Excel files are ZIPs starting with PK\x03\x04
@@ -137,8 +148,6 @@ function detect_excel(io)
     # but the extension list already constrains to Excel extensions,
     # so just claiming the ZIP magic is sufficient to beat NPZ.
 end
-
-add_format(format"RDataSingle", detect_rdata_single, [".rds"], [idRData, LOAD])
 
 add_format(format"AVSfld", "# AVS", [".fld"], [idAVSfldIO])
 add_format(format"CSV", (), [".csv"], [idCSVFiles])
@@ -506,18 +515,6 @@ function detect_stlbinary(io)
 end
 add_format(format"STL_ASCII", detect_stlascii, [".stl", ".STL"], [idMeshIO])
 add_format(format"STL_BINARY", detect_stlbinary, [".stl", ".STL"], [idMeshIO])
-
-# GZip has two simple magic bytes [0x1f, 0x8b] but we don't want to dispatch to Libz
-# for file extensions like .fits.gz
-function detect_gzip(io)
-    if name_matches_compressed_fits(io)
-        return false
-    end
-    getlength(io) >= 2 || return false
-    magic = read!(io, Vector{UInt8}(undef, 2))
-    return magic == [0x1f, 0x8b]
-end
-add_format(format"GZIP", detect_gzip, ".gz", [:Libz => UUID("2ec943e9-cfe8-584d-b93d-64dcb6d567b7")])
 
 
 # Astro Data
