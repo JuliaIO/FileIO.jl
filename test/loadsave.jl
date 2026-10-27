@@ -374,6 +374,40 @@ end
     del_format(format"AmbigExt2")
 end
 
+module UNVExt
+using FileIO: File, @format_str, stream, skipmagic
+
+load(f::File{format"UNV"}) = open(f) do io
+    skipmagic(io)
+    read(stream(io), String)
+end
+
+save(f::File{format"UNV"}, testdata) = open(f, "w") do io
+    s = stream(io)
+    print(s, testdata)
+end
+end
+
+@testset "Ambiguous extension vs registry" begin
+    A = "this is a test"
+    fn = string(tempname(), ".unv")
+
+    # Shows that without a relevant loaded package, the recommendation to use the registered package is thrown
+    @test_throws CapturedException save(fn, A)
+    
+    # Shows that a user defined extension is ignored if a format is registered
+    add_format(format"UNV", (), ".unv", [UNVExt])
+    save(format"UNV", fn, A)
+    save(fn, A)
+
+    B = load(fn)
+    @test B == A
+    @test typeof(query(fn)) <: File{format"UNV"}
+    rm(fn)
+
+    del_format(format"UNV")
+end
+
 @testset "Absent file" begin
     @test_throws Union{ArgumentError,SystemError} load("nonexistent.oops")
 end
