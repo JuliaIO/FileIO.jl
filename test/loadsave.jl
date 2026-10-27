@@ -357,17 +357,17 @@ end
     # coming to the rescue here, we want to rely on FileIO's logic.
     # `save(fn, A)` will load Netpbm, which could conceivably mask a failure
     # in the next line.
-    save(format"AmbigExt2", fn, A)
+    save(format"AmbigExt1", fn, A)
 
     B = load(fn)
     @test B == A
-    @test typeof(query(fn)) <: File{format"AmbigExt2"}
+    @test typeof(query(fn)) <: File{format"AmbigExt1"}
     rm(fn)
 
     save(fn, A)
     B = load(fn)
     @test B == A
-    @test typeof(query(fn)) <: File{format"AmbigExt1"}
+    @test typeof(query(fn)) <: File{format"AmbigExt2"}
 
     rm(fn)
     del_format(format"AmbigExt1")
