@@ -306,8 +306,8 @@ add_saver(format"ZIP", :ZipeFile)
 
 # Mesh formats
 add_format(format"OBJ", (), ".obj", [idMeshIO])
-add_format(format"PLY_ASCII", "ply\nformat ascii 1.0", ".ply", [idMeshIO])
 add_format(format"PLY_BINARY", "ply\nformat binary_little_endian 1.0", ".ply", [idMeshIO])
+add_format(format"PLY_ASCII", "ply\nformat ascii 1.0", ".ply", [idMeshIO])
 add_format(format"2DM", "MESH2D", ".2dm", [idMeshIO])
 add_format(format"OFF", "OFF", ".off", [idMeshIO])
 add_format(format"MSH", (), ".msh", [idMeshIO])
