@@ -109,7 +109,9 @@ function querysym(filename; checkfile::Bool=true)
         end
         # There are multiple formats consistent with this extension
         syms = sym::Vector{Symbol}
-        checkfile || return syms[1]     # with !checkfile we default to the first. TODO?: change to an error?
+        checkfile || return last(syms)
+        # No registered format for this extension type has a magic byte, return last sym registered
+        !any(sym -> hasmagic(first(sym2info[sym])), syms) && return last(syms)
         return open(filename) do io
             badmagic = false
             for sym in syms
@@ -123,7 +125,7 @@ function querysym(filename; checkfile::Bool=true)
             badmagic && error("Some formats with extension ", ext,
                               " have no magic bytes; use `File{format\"FMT\"}(filename)` to resolve the ambiguity.")
             fmt = querysym_all(io)[1]
-            return fmt === :UNKNOWN ? syms[1] : fmt
+            return fmt === :UNKNOWN ? last(syms) : fmt
         end
     end
     !checkfile && return :UNKNOWN
