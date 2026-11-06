@@ -46,30 +46,13 @@ for add_ in (:add_loader, :add_saver)
                     end
                 end
                 if id === nothing
-                    # Look it up in the registries. The tricky part here is supporting different Julia versions
-                    ctx = Pkg.API.Context()
-                    uuids = UUID[]
-                    @static if Base.VERSION >= v"1.2"
-                        if hasfield(typeof(ctx), :registries)
-                            for reg in ctx.registries
-                                append!(uuids, Pkg.Registry.uuids_from_name(reg, pkgname))
-                            end
-                        else
-                            ctx = Pkg.API.Context!(ctx)
-                            if isdefined(Pkg.Types, :find_registered!) && hasmethod(Pkg.Types.find_registered!, (typeof(ctx.env), Vector{String}))
-                                Pkg.Types.find_registered!(ctx.env, [pkgname])
-                            elseif isdefined(Pkg.Types, :find_registered!) && hasmethod(Pkg.Types.find_registered!, (typeof(ctx), Vector{String}))
-                                Pkg.Types.find_registered!(ctx, [pkgname])
-                            end
-                            append!(uuids, get(ctx.env.uuids, pkgname, UUID[]))
-                        end
-                    else
-                        Pkg.Types.find_registered!(ctx.env)
-                        append!(uuids, get(ctx.env.uuids, pkgname, UUID[]))
-                    end
-                    isempty(uuids) && throw(ArgumentError("no UUID found for $pkg"))
-                    length(uuids) == 1 || throw(ArgumentError("multiple UUIDs found for $pkg"))
-                    id = PkgId(uuids[1], pkgname)
+                    # See if a package by that name has already been loaded (e.g., a package
+                    # registering itself from its `__init__`)
+                    ids = PkgId[k for k in keys(Base.loaded_modules) if k.name == pkgname]
+                    length(ids) == 1 && (id = only(ids))
+                end
+                if id === nothing
+                    throw(ArgumentError("could not resolve package \"$pkgname\" from the active environment; pass it as a Module or as `:$pkgname => uuid`"))
                 end
             end
             $add_(sym, id)

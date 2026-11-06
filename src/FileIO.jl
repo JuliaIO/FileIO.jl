@@ -24,7 +24,6 @@ export DataFormat,
 
 import Base.showerror
 using Base: RefValue, PkgId
-using Pkg
 using UUIDs
 using Requires
 
